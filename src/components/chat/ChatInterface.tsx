@@ -76,7 +76,7 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4 h-16 flex items-center justify-between w-full">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-3 h-14 flex items-center justify-between w-full">
         <div className="flex-1">
           <h1 className="text-xl font-medium truncate max-w-[80%]">
             {currentChat ? currentChat.title : 'Neuer Chat'}
@@ -104,7 +104,7 @@ const ChatInterface: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-144px)] w-full">
+      <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-128px)] w-full">
         {!currentChat || currentChat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full w-full">
             <div className="text-center text-gray-500">
