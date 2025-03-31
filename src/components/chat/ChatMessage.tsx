@@ -13,14 +13,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   return (
     <div 
       className={cn(
-        "flex w-full mb-6", // Increased spacing between messages
+        "flex w-full mb-6", // Behält den vollen Container bei
         message.type === 'user' ? "justify-end" : "justify-start"
       )}
     >
       <div 
         className={cn(
-          "max-w-[80%] px-4 py-3",
-          message.type === 'user' ? "chat-message-user" : "chat-message-ai"
+          "px-4 py-3",
+          message.type === 'user' ? "chat-message-user ml-auto" : "chat-message-ai mr-auto", 
+          // Festgelegte Breiten für Konsistenz:
+          "w-full max-w-[80%] md:max-w-[70%] lg:max-w-[60%]"
         )}
       >
         <div className="prose">

@@ -5,8 +5,8 @@ import ChatInterface from '@/components/chat/ChatInterface';
 
 const ChatPage: React.FC = () => {
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="w-72 border-r border-gray-200 hidden md:block">
+    <div className="flex h-screen w-screen overflow-hidden">
+      <div className="w-72 border-r border-gray-200 hidden md:block flex-shrink-0">
         <ChatSidebar />
       </div>
       <div className="flex-1 w-full overflow-hidden">

@@ -107,7 +107,7 @@ const ChatInterface: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="space-y-6 w-full">
+          <div className="w-full space-y-6">
             {currentChat.messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
@@ -116,7 +116,7 @@ const ChatInterface: React.FC = () => {
 
         {isLoading && (
           <div className="flex w-full justify-start mt-6">
-            <div className="chat-message-ai px-4 py-3 max-w-[80%]">
+            <div className="chat-message-ai px-4 py-3 mr-auto w-full max-w-[80%] md:max-w-[70%] lg:max-w-[60%]">
               <div className="flex space-x-2 items-center">
                 <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse"></div>
                 <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse delay-75"></div>

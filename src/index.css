@@ -134,10 +134,12 @@
 
 .chat-message-user {
   @apply bg-primary/10 rounded-r-2xl rounded-tl-2xl;
+  min-width: 200px; /* Minimale Breite für visuelle Konsistenz */
 }
 
 .chat-message-ai {
   @apply bg-gray-100 rounded-l-2xl rounded-tr-2xl;
+  min-width: 200px; /* Minimale Breite für visuelle Konsistenz */
 }
 
 /* Custom styles for the workflow builder */
