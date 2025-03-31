@@ -82,18 +82,18 @@ const ChatInterface: React.FC = () => {
   }, [input]);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen w-full">
       {/* Fixed Header - always the same height */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4 h-16 flex items-center justify-center">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 h-16 flex items-center justify-center w-full">
         <h1 className="text-xl font-medium truncate max-w-full">
           {currentChat ? currentChat.title : 'Neuer Chat'}
         </h1>
       </div>
       
       {/* Chat Messages Container - fixed height, scrollable */}
-      <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-144px)]">
+      <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-144px)] w-full">
         {!currentChat || currentChat.messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full w-full">
             <div className="text-center text-gray-500">
               <img 
                 src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" 
@@ -107,7 +107,7 @@ const ChatInterface: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 w-full">
             {currentChat.messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
@@ -130,8 +130,8 @@ const ChatInterface: React.FC = () => {
       </div>
       
       {/* Fixed Footer Input Area - always the same height */}
-      <div className="bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200 h-32">
-        <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
+      <div className="bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200 h-32 w-full">
+        <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm w-full">
           <Textarea
             ref={textareaRef}
             value={input}
