@@ -14,13 +14,6 @@ const ChatSidebar: React.FC = () => {
   return (
     <div className="flex flex-col h-full w-full bg-gray-50">
       <div className="p-4 border-b border-gray-200">
-        <div className="mb-4">
-          <img 
-            src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" 
-            alt="Immofinanz Logo" 
-            className="h-12 mx-auto" 
-          />
-        </div>
         <Button 
           onClick={createNewChat}
           className="w-full gap-2 bg-immo-green hover:bg-immo-green/90"
