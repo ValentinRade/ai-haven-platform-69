@@ -108,11 +108,6 @@ const ChatInterface: React.FC = () => {
         {!currentChat || currentChat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full w-full">
             <div className="text-center text-gray-500">
-              <img 
-                src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" 
-                alt="Immofinanz Logo" 
-                className="mx-auto h-16 mb-4" 
-              />
               <h2 className="text-2xl font-medium mb-2">Willkommen bei Immofinanz AI</h2>
               <p className="max-w-md">
                 Stellen Sie Fragen zu Immobilien, Workflows oder der Plattform.
