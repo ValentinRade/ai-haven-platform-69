@@ -3,6 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { BrainCircuit, Settings } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { UserRound } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
@@ -11,7 +13,7 @@ const Header: React.FC = () => {
         <Link to="/" className="flex items-center">
           <img src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" alt="Immofinanz Logo" className="h-12" />
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="text-secondary" asChild>
             <Link to="/" className="flex items-center gap-2">
               <BrainCircuit size={18} />
@@ -24,6 +26,12 @@ const Header: React.FC = () => {
               <span>Admin</span>
             </Link>
           </Button>
+          <Avatar className="h-9 w-9 border border-gray-200">
+            <AvatarImage src="" />
+            <AvatarFallback>
+              <UserRound size={20} />
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
     </header>
