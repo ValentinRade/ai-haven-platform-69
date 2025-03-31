@@ -9,7 +9,7 @@ const ChatPage: React.FC = () => {
       <div className="w-72 border-r border-gray-200 hidden md:block">
         <ChatSidebar />
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-hidden">
         <ChatInterface />
       </div>
     </div>

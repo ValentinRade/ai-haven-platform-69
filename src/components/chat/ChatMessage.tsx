@@ -13,7 +13,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   return (
     <div 
       className={cn(
-        "flex w-full mb-4",
+        "flex w-full mb-6", // Increased spacing between messages
         message.type === 'user' ? "justify-end" : "justify-start"
       )}
     >

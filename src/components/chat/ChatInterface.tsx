@@ -82,22 +82,16 @@ const ChatInterface: React.FC = () => {
   }, [input]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Fixed Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4 sticky top-0 z-10">
-        <h1 className="text-xl font-medium text-center">
+    <div className="flex flex-col h-screen">
+      {/* Fixed Header - always the same height */}
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 h-16 flex items-center justify-center">
+        <h1 className="text-xl font-medium truncate max-w-full">
           {currentChat ? currentChat.title : 'Neuer Chat'}
         </h1>
       </div>
       
-      {/* Chat Messages Container with fixed height */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 space-y-6"
-        style={{ 
-          minHeight: 'calc(100vh - 180px)',
-          maxHeight: 'calc(100vh - 180px)'
-        }}
-      >
+      {/* Chat Messages Container - fixed height, scrollable */}
+      <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-144px)]">
         {!currentChat || currentChat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-gray-500">
@@ -113,7 +107,7 @@ const ChatInterface: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="min-h-[calc(100vh-250px)]">
+          <div className="space-y-6">
             {currentChat.messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
@@ -121,7 +115,7 @@ const ChatInterface: React.FC = () => {
         )}
 
         {isLoading && (
-          <div className="flex w-full justify-start">
+          <div className="flex w-full justify-start mt-6">
             <div className="chat-message-ai px-4 py-3 max-w-[80%]">
               <div className="flex space-x-2 items-center">
                 <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse"></div>
@@ -135,8 +129,8 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Fixed Footer Input Area */}
-      <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200">
+      {/* Fixed Footer Input Area - always the same height */}
+      <div className="bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200 h-32">
         <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
           <Textarea
             ref={textareaRef}
