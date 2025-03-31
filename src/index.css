@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,22 +33,15 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -97,5 +91,79 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Avenir font import */
+  @font-face {
+    font-family: 'Avenir';
+    src: url('/fonts/Avenir-Light.woff2') format('woff2'),
+         url('/fonts/Avenir-Light.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Avenir';
+    src: url('/fonts/Avenir-Regular.woff2') format('woff2'),
+         url('/fonts/Avenir-Regular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Avenir';
+    src: url('/fonts/Avenir-Medium.woff2') format('woff2'),
+         url('/fonts/Avenir-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'Avenir';
+    src: url('/fonts/Avenir-Bold.woff2') format('woff2'),
+         url('/fonts/Avenir-Bold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+}
+
+.chat-message-user {
+  @apply bg-primary/10 rounded-r-2xl rounded-tl-2xl;
+}
+
+.chat-message-ai {
+  @apply bg-gray-100 rounded-l-2xl rounded-tr-2xl;
+}
+
+/* Custom styles for the workflow builder */
+.workflow-node {
+  @apply border border-gray-200 bg-white shadow-sm rounded-lg p-4 cursor-grab;
+}
+
+.workflow-node.is-dragging {
+  @apply shadow-lg border-primary;
+}
+
+.workflow-connection {
+  @apply stroke-secondary stroke-2;
+}
+
+.workflow-canvas {
+  @apply bg-gray-50 border border-gray-200 rounded-lg;
+}
+
+/* Admin dashboard cards */
+.stat-card {
+  @apply bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-primary/20 transition-colors;
+}
+
+/* Fix for font smoothing */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
