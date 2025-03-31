@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +5,7 @@ import { Send, UserRound, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore } from '@/store/chatStore';
 import ChatMessage from './ChatMessage';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
@@ -83,21 +83,25 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      {/* Fixed Header - Full width with profile icon */}
+      {/* Fixed Header - Full width with icons on right */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-4 h-16 flex items-center justify-between w-full">
-        <h1 className="text-xl font-medium truncate max-w-[80%]">
-          {currentChat ? currentChat.title : 'Neuer Chat'}
-        </h1>
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon" className="rounded-full" asChild>
-            <a href="/profile">
-              <UserRound size={20} />
-            </a>
+        <div className="flex-1">
+          <h1 className="text-xl font-medium truncate max-w-[80%]">
+            {currentChat ? currentChat.title : 'Neuer Chat'}
+          </h1>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Button variant="outline" size="sm" className="rounded-full flex items-center space-x-2 border-gray-200">
+            <div className="flex items-center gap-2">
+              <UserRound size={16} className="text-gray-600" />
+              <span>AI Chat</span>
+            </div>
           </Button>
-          <Button variant="ghost" size="icon" className="rounded-full" asChild>
-            <a href="/settings">
-              <Settings size={20} />
-            </a>
+          <Button variant="outline" size="sm" className="rounded-full flex items-center space-x-2 border-gray-200">
+            <div className="flex items-center gap-2">
+              <Settings size={16} className="text-gray-600" />
+              <span>Admin</span>
+            </div>
           </Button>
         </div>
       </div>
