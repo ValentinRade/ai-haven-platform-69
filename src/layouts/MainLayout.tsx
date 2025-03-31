@@ -5,9 +5,9 @@ import Header from '@/components/Header';
 
 const MainLayout: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-6 md:px-6">
+      <main className="flex-1 overflow-hidden">
         <Outlet />
       </main>
     </div>
