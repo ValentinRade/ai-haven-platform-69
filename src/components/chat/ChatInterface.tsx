@@ -16,11 +16,9 @@ const ChatInterface: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Function to simulate AI response
   const simulateAIResponse = async (userMessage: string) => {
     setIsLoading(true);
     
-    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     let response: string;
@@ -47,17 +45,14 @@ const ChatInterface: React.FC = () => {
   const handleSend = () => {
     if (input.trim() === '' || isLoading) return;
     
-    // Add user message
     addMessageToCurrentChat({
       type: 'user',
       content: input.trim(),
       timestamp: new Date()
     });
     
-    // Clear input
     setInput('');
     
-    // Simulate AI response
     simulateAIResponse(input);
   };
   
@@ -68,12 +63,10 @@ const ChatInterface: React.FC = () => {
     }
   };
   
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentChat?.messages]);
 
-  // Auto resize textarea based on content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -83,7 +76,6 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      {/* Fixed Header - Full width with icons on right */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-4 h-16 flex items-center justify-between w-full">
         <div className="flex-1">
           <h1 className="text-xl font-medium truncate max-w-[80%]">
@@ -106,7 +98,6 @@ const ChatInterface: React.FC = () => {
         </div>
       </div>
       
-      {/* Chat Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-144px)] w-full">
         {!currentChat || currentChat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full w-full">
@@ -145,7 +136,6 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Fixed Footer Input Area */}
       <div className="bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200 h-32 w-full">
         <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm w-full">
           <Textarea
