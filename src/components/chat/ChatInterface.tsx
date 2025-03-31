@@ -15,6 +15,7 @@ const ChatInterface: React.FC = () => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Function to simulate AI response
   const simulateAIResponse = async (userMessage: string) => {
@@ -84,11 +85,35 @@ const ChatInterface: React.FC = () => {
   if (!currentChat) return null;
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {currentChat.messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
+    <div className="flex flex-col h-full">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+        <h1 className="text-xl font-medium text-center">{currentChat.title}</h1>
+      </div>
+      
+      <div 
+        ref={chatContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-6"
+        style={{ minHeight: '200px' }} // Ensures minimum height
+      >
+        {currentChat.messages.length > 0 ? (
+          currentChat.messages.map((message) => (
+            <ChatMessage key={message.id} message={message} />
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center text-gray-500">
+              <img 
+                src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" 
+                alt="Immofinanz Logo" 
+                className="mx-auto h-16 mb-4" 
+              />
+              <h2 className="text-2xl font-medium mb-2">Willkommen bei Immofinanz AI</h2>
+              <p className="max-w-md">
+                Stellen Sie Fragen zu Immobilien, Workflows oder der Plattform.
+              </p>
+            </div>
+          </div>
+        )}
 
         {isLoading && (
           <div className="flex w-full justify-start">
@@ -105,7 +130,7 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4 px-4">
+      <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200">
         <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
           <Textarea
             ref={textareaRef}
@@ -113,7 +138,7 @@ const ChatInterface: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Schreiben Sie eine Nachricht..."
-            className="flex-1 resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px]"
+            className="flex-1 resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-[120px]"
             rows={1}
           />
           <Button 
