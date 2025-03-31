@@ -11,7 +11,7 @@ const Header: React.FC = () => {
     <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <img src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" alt="Immofinanz Logo" className="h-12" />
+          <img src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" alt="Immofinanz Logo" className="h-20" />
         </Link>
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" className="text-secondary" asChild>
