@@ -15,7 +15,6 @@ const ChatInterface: React.FC = () => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Function to simulate AI response
   const simulateAIResponse = async (userMessage: string) => {
@@ -82,24 +81,24 @@ const ChatInterface: React.FC = () => {
     }
   }, [input]);
 
-  if (!currentChat) return null;
-
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
-        <h1 className="text-xl font-medium text-center">{currentChat.title}</h1>
+      {/* Fixed Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 sticky top-0 z-10">
+        <h1 className="text-xl font-medium text-center">
+          {currentChat ? currentChat.title : 'Neuer Chat'}
+        </h1>
       </div>
       
+      {/* Chat Messages Container with fixed height */}
       <div 
-        ref={chatContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-6"
-        style={{ minHeight: '200px' }} // Ensures minimum height
+        style={{ 
+          minHeight: 'calc(100vh - 180px)',
+          maxHeight: 'calc(100vh - 180px)'
+        }}
       >
-        {currentChat.messages.length > 0 ? (
-          currentChat.messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))
-        ) : (
+        {!currentChat || currentChat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-gray-500">
               <img 
@@ -112,6 +111,12 @@ const ChatInterface: React.FC = () => {
                 Stellen Sie Fragen zu Immobilien, Workflows oder der Plattform.
               </p>
             </div>
+          </div>
+        ) : (
+          <div className="min-h-[calc(100vh-250px)]">
+            {currentChat.messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
           </div>
         )}
 
@@ -130,6 +135,7 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
+      {/* Fixed Footer Input Area */}
       <div className="sticky bottom-0 bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200">
         <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm">
           <Textarea

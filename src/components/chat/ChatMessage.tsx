@@ -13,7 +13,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   return (
     <div 
       className={cn(
-        "flex w-full",
+        "flex w-full mb-4",
         message.type === 'user' ? "justify-end" : "justify-start"
       )}
     >

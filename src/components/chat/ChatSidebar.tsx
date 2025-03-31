@@ -18,7 +18,7 @@ const ChatSidebar: React.FC = () => {
           <img 
             src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" 
             alt="Immofinanz Logo" 
-            className="h-10 mx-auto" 
+            className="h-12 mx-auto" 
           />
         </div>
         <Button 
