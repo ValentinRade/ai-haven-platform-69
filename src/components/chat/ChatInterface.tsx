@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, UserRound, Settings, BrainCircuit } from 'lucide-react';
+import { Send, UserRound, Settings, BrainCircuit, Mic, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore } from '@/store/chatStore';
 import ChatMessage from './ChatMessage';
@@ -139,6 +139,14 @@ const ChatInterface: React.FC = () => {
       
       <div className="bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200 h-32 w-full">
         <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm w-full">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full h-8 w-8 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0"
+            aria-label="Datei hochladen"
+          >
+            <Paperclip size={18} />
+          </Button>
           <Textarea
             ref={textareaRef}
             value={input}
@@ -148,6 +156,14 @@ const ChatInterface: React.FC = () => {
             className="flex-1 resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[40px] max-h-[120px]"
             rows={1}
           />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full h-8 w-8 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0 mr-1"
+            aria-label="Sprachaufnahme"
+          >
+            <Mic size={18} />
+          </Button>
           <Button 
             onClick={handleSend} 
             size="icon" 
