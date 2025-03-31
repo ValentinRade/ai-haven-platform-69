@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, UserRound, Settings } from 'lucide-react';
+import { Send, UserRound, Settings, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore } from '@/store/chatStore';
 import ChatMessage from './ChatMessage';
@@ -82,19 +83,25 @@ const ChatInterface: React.FC = () => {
             {currentChat ? currentChat.title : 'Neuer Chat'}
           </h1>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" size="sm" className="rounded-full flex items-center space-x-2 border-gray-200">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" className="rounded-full border-gray-200">
             <div className="flex items-center gap-2">
-              <UserRound size={16} className="text-gray-600" />
+              <BrainCircuit size={16} className="text-gray-600" />
               <span>AI Chat</span>
             </div>
           </Button>
-          <Button variant="outline" size="sm" className="rounded-full flex items-center space-x-2 border-gray-200">
+          <Button variant="outline" size="sm" className="rounded-full border-gray-200">
             <div className="flex items-center gap-2">
               <Settings size={16} className="text-gray-600" />
               <span>Admin</span>
             </div>
           </Button>
+          <Avatar className="h-9 w-9 border border-gray-200">
+            <AvatarImage src="" />
+            <AvatarFallback>
+              <UserRound size={20} />
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
       
