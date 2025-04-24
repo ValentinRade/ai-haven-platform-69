@@ -61,13 +61,13 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-immo-lightgray px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-2xl font-bold text-center">
             {isLogin ? 'Anmelden' : 'Registrieren'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-center">
             {isLogin
               ? 'Geben Sie Ihre Anmeldedaten ein'
               : 'Erstellen Sie ein neues Konto'}
