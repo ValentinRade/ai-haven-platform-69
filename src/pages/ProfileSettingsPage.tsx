@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -144,26 +145,29 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
-      // Use Supabase's OAuth flow which will handle the proper authorization code flow
-      // instead of trying to get a token directly
-      const redirectUrl = window.location.origin + '/profile';
+      // Ensure we're using the full, absolute URL for the redirect
+      // Don't rely on window.location.origin which could be localhost during development
+      const currentUrl = window.location.href;
+      // Extract the origin part, but ensure it's the deployed URL not localhost
+      const baseUrl = currentUrl.includes('localhost') 
+        ? 'https://f9c61201-4215-4389-aa38-f78a06432f56.lovableproject.com' // Use your deployed URL here
+        : window.location.origin;
+      
+      const redirectUrl = `${baseUrl}/profile`;
       console.log("Using redirect URL:", redirectUrl);
       
-      // Use the signInWithOAuth method but with skipBrowserRedirect: true
-      // so we can customize how we open the popup
+      // Use Supabase's OAuth flow with the explicit redirect URL
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
           scopes: 'offline_access openid profile email',
           redirectTo: redirectUrl,
-          // This is important - it prevents creating a new session
           skipBrowserRedirect: true,
         }
       });
 
       if (error) throw error;
       
-      // If we get here, we have the authorization URL, open it
       if (data?.url) {
         console.log("Opening Azure OAuth URL:", data.url);
         window.location.href = data.url;
