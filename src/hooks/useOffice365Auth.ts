@@ -35,24 +35,26 @@ export const useOffice365Auth = (user: User | null) => {
   // Handle OAuth redirect
   useEffect(() => {
     const handleOAuthRedirect = async () => {
-      // Check for authorization code in URL
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       
       if (code && user) {
         setIsLoading(true);
         try {
-          // In a production app, we would send this code to a backend
-          // to exchange it for a token, but for this demo we'll just
-          // store the code (normally we'd store the token)
-          const actualToken = `office365_token_${Date.now()}`;
-          
-          const { error } = await supabase
+          // Exchange code for token using our Edge Function
+          const { data: tokenData, error: tokenError } = await supabase.functions.invoke('office365-token', {
+            body: { code }
+          });
+
+          if (tokenError) throw tokenError;
+
+          // Store the access token in the database
+          const { error: updateError } = await supabase
             .from('profiles')
-            .update({ office365_token: actualToken })
+            .update({ office365_token: tokenData.access_token })
             .eq('id', user.id);
 
-          if (error) throw error;
+          if (updateError) throw updateError;
 
           setIsConnected(true);
           toast({
