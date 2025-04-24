@@ -13,6 +13,7 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -35,6 +36,11 @@ const AuthPage = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              display_name: displayName || email.split('@')[0],
+            },
+          },
         });
 
         if (error) throw error;
@@ -80,6 +86,18 @@ const AuthPage = () => {
                 required
               />
             </div>
+            {!isLogin && (
+              <div className="space-y-2">
+                <Label htmlFor="displayName">Anzeigename (optional)</Label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  placeholder="Ihr Name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password">Passwort</Label>
               <div className="relative">
