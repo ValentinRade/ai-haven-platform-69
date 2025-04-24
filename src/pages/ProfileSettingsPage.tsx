@@ -146,11 +146,16 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
+      // Get the current URL origin to use as redirect URL
+      const redirectUrl = window.location.origin + '/profile';
+      
+      console.log("Using redirect URL:", redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
           scopes: 'offline_access openid profile email',
-          redirectTo: `${window.location.origin}/profile`
+          redirectTo: redirectUrl
         }
       });
 
