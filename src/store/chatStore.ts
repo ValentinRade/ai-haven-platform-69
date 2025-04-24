@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, ChatMessage } from '@/types/chat';
@@ -9,6 +8,7 @@ interface ChatStore {
   currentChatId: string | null;
   setCurrentChat: (chatId: string) => void;
   createNewChat: () => Promise<void>;
+  deleteChat: (chatId: string) => Promise<void>;
   addMessageToCurrentChat: (message: Omit<ChatMessage, 'id'>) => Promise<void>;
   getCurrentChat: () => Chat | undefined;
   loadChats: () => Promise<void>;
@@ -77,9 +77,38 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     set({ currentChatId: chatId });
   },
 
+  deleteChat: async (chatId: string) => {
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', chatId);
+
+      if (error) throw error;
+
+      set((state) => ({
+        chats: state.chats.filter((chat) => chat.id !== chatId),
+        currentChatId: state.currentChatId === chatId ? 
+          (state.chats.length > 1 ? state.chats.find(c => c.id !== chatId)?.id : null) : 
+          state.currentChatId
+      }));
+
+      toast({
+        title: "Chat gelöscht",
+        description: "Der Chat wurde erfolgreich gelöscht.",
+      });
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast({
+        title: "Fehler beim Löschen des Chats",
+        description: "Bitte versuchen Sie es später erneut.",
+        variant: "destructive"
+      });
+    }
+  },
+
   createNewChat: async () => {
     try {
-      // First check if user is authenticated
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user) {
         toast({
@@ -99,7 +128,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         .insert({
           title: 'Neuer Chat', 
           user_id: userId,
-          creator_display_name: userDisplayName // Explicitly set display name
+          creator_display_name: userDisplayName
         })
         .select()
         .single();
@@ -123,7 +152,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         title: chat.title,
         lastMessage: message.content,
         timestamp: new Date(chat.created_at),
-        creator_display_name: userDisplayName, // Add display name to the chat object
+        creator_display_name: userDisplayName,
         messages: [{
           id: message.id,
           type: 'ai',
@@ -151,7 +180,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (!currentChatId) return;
 
     try {
-      // First check if user is authenticated
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user) {
         console.error('User not authenticated');
@@ -190,7 +218,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           return chat;
         });
 
-        // Move current chat to top
         const currentChat = updatedChats.find(c => c.id === currentChatId);
         const otherChats = updatedChats.filter(c => c.id !== currentChatId);
         return { 

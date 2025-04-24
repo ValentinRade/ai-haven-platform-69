@@ -2,15 +2,26 @@
 import React, { useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare, UserRound } from 'lucide-react';
+import { PlusCircle, MessageSquare, UserRound, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const ChatSidebar: React.FC = () => {
-  const { chats, currentChatId, setCurrentChat, createNewChat, loadChats } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createNewChat, loadChats, deleteChat } = useChatStore();
 
   useEffect(() => {
     loadChats();
@@ -32,9 +43,8 @@ const ChatSidebar: React.FC = () => {
         <div className="px-3 py-2">
           <div className="space-y-2">
             {chats.map((chat) => (
-              <button
+              <div
                 key={chat.id}
-                onClick={() => setCurrentChat(chat.id)}
                 className={cn(
                   "flex flex-col w-full text-left rounded-lg px-3 py-3 transition-colors",
                   "hover:bg-gray-200",
@@ -43,25 +53,61 @@ const ChatSidebar: React.FC = () => {
                     : "bg-white"
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarFallback>
-                      <UserRound size={14} />
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-gray-600">{chat.creator_display_name || 'Unbenannt'}</span>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setCurrentChat(chat.id)}
+                    className="flex-1 text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback>
+                          <UserRound size={14} />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-gray-600">{chat.creator_display_name || 'Unbenannt'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 overflow-hidden mt-1">
+                      <MessageSquare size={16} className="flex-shrink-0 text-gray-500" />
+                      <span className="font-medium truncate">{chat.title}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
+                      <span className="truncate max-w-[180px]">{chat.lastMessage}</span>
+                      <span className="flex-shrink-0">
+                        {format(chat.timestamp, 'dd. MMM', { locale: de })}
+                      </span>
+                    </div>
+                  </button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-2 h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Chat löschen</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Möchten Sie diesen Chat wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteChat(chat.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Löschen
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
-                <div className="flex items-center gap-2 overflow-hidden mt-1">
-                  <MessageSquare size={16} className="flex-shrink-0 text-gray-500" />
-                  <span className="font-medium truncate">{chat.title}</span>
-                </div>
-                <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
-                  <span className="truncate max-w-[180px]">{chat.lastMessage}</span>
-                  <span className="flex-shrink-0">
-                    {format(chat.timestamp, 'dd. MMM', { locale: de })}
-                  </span>
-                </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
