@@ -30,6 +30,13 @@ const AuthPage = () => {
         });
 
         if (error) throw error;
+        
+        // After successful login, show success toast and navigate to chat page
+        toast({
+          title: 'Anmeldung erfolgreich',
+          description: 'Willkommen! Sie werden zur Chat-Seite weitergeleitet.',
+        });
+        
         navigate('/');
       } else {
         const { error } = await supabase.auth.signUp({
@@ -152,3 +159,4 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+
