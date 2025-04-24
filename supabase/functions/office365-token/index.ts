@@ -23,6 +23,8 @@ serve(async (req) => {
     const origin = new URL(req.headers.get('origin') || 'http://localhost:5173').origin
     const redirectUri = `${origin}/profile`
 
+    console.log('Exchange code for token with redirect URI:', redirectUri)
+
     // Exchange authorization code for tokens
     const tokenResponse = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
       method: 'POST',
@@ -45,28 +47,52 @@ serve(async (req) => {
       throw new Error(tokenData.error_description || 'Failed to exchange token')
     }
 
-    // Get user data from Microsoft Graph API
-    const userResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
-      headers: {
-        'Authorization': `Bearer ${tokenData.access_token}`
-      }
-    })
-
-    const userData = await userResponse.json()
+    // Log success with access and refresh tokens (masked for security)
+    console.log('Successfully obtained tokens, access token length:', tokenData.access_token?.length)
     
-    if (!userResponse.ok) {
-      console.error('User data fetch error:', userData)
-      throw new Error(userData.error?.message || 'Failed to fetch user data')
+    // Extract email from ID token if available
+    let email = null
+    if (tokenData.id_token) {
+      try {
+        // ID token is a JWT, we can decode it to get the email
+        const [, payload] = tokenData.id_token.split('.')
+        const decodedPayload = JSON.parse(atob(payload))
+        email = decodedPayload.email || decodedPayload.preferred_username
+        console.log('Email extracted from ID token:', email)
+      } catch (error) {
+        console.error('Failed to decode ID token:', error)
+      }
     }
+    
+    // If email not found in ID token, try to get it from MS Graph
+    if (!email) {
+      try {
+        const userResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+          headers: {
+            'Authorization': `Bearer ${tokenData.access_token}`
+          }
+        })
 
-    // Log successful authentication
-    console.log('Successfully authenticated user:', userData.userPrincipalName)
+        if (userResponse.ok) {
+          const userData = await userResponse.json()
+          email = userData.userPrincipalName || userData.mail
+          console.log('Email fetched from Graph API:', email)
+        } else {
+          const errorData = await userResponse.json()
+          console.error('Graph API error:', errorData)
+          // Continue even if Graph API fails, we still have the tokens
+        }
+      } catch (graphError) {
+        console.error('Failed to fetch user data from Graph:', graphError)
+        // Continue execution, we still have the tokens
+      }
+    }
 
     // Return the access token, refresh token and email
     return new Response(JSON.stringify({
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
-      email: userData.userPrincipalName || userData.mail
+      email: email
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

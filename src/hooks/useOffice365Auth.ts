@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 
@@ -27,6 +27,7 @@ export const useOffice365Auth = (user: User | null) => {
         if (data?.office365_token) {
           setIsConnected(true);
           setOffice365Email(data.office365_email);
+          console.log('Office 365 connection found:', { email: data.office365_email });
         }
       } catch (error) {
         console.error("Error checking Office 365 connection:", error);
@@ -41,8 +42,22 @@ export const useOffice365Auth = (user: User | null) => {
     const handleOAuthRedirect = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
+      const errorParam = urlParams.get('error');
+      
+      if (errorParam) {
+        const errorDescription = urlParams.get('error_description');
+        setIsLoading(false);
+        toast({
+          title: 'Microsoft Login fehlgeschlagen',
+          description: errorDescription || 'Authentifizierung fehlgeschlagen.',
+          variant: 'destructive',
+        });
+        window.history.replaceState({}, document.title, '/profile');
+        return;
+      }
       
       if (code && user) {
+        console.log('OAuth code detected, starting token exchange');
         setIsLoading(true);
         try {
           // Exchange code for token using our Edge Function
@@ -50,7 +65,17 @@ export const useOffice365Auth = (user: User | null) => {
             body: { code }
           });
 
-          if (tokenError) throw tokenError;
+          if (tokenError) {
+            console.error('Token exchange error:', tokenError);
+            throw new Error(tokenError.message || 'Token exchange failed');
+          }
+
+          if (!tokenData || !tokenData.access_token) {
+            console.error('Invalid token data received:', tokenData);
+            throw new Error('Keine gültigen Token erhalten');
+          }
+
+          console.log('Token exchange successful, email received:', tokenData.email);
 
           // Store the access token and email in the database
           const { error: updateError } = await supabase
@@ -61,23 +86,31 @@ export const useOffice365Auth = (user: User | null) => {
             })
             .eq('id', user.id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('Database update error:', updateError);
+            throw updateError;
+          }
 
           setIsConnected(true);
           setOffice365Email(tokenData.email);
           toast({
             title: 'Office 365 verbunden',
-            description: `Ihr Office 365 Konto ${tokenData.email} wurde erfolgreich verbunden.`,
+            description: tokenData.email 
+              ? `Ihr Office 365 Konto ${tokenData.email} wurde erfolgreich verbunden.`
+              : 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
           });
           
           // Clean up the URL
           window.history.replaceState({}, document.title, '/profile');
         } catch (error: any) {
+          console.error('Office 365 connection error:', error);
           toast({
             title: 'Fehler',
-            description: error.message,
+            description: error.message || 'Verbindung zu Office 365 fehlgeschlagen',
             variant: 'destructive',
           });
+          // Clean up the URL even on error
+          window.history.replaceState({}, document.title, '/profile');
         } finally {
           setIsLoading(false);
         }
@@ -91,14 +124,16 @@ export const useOffice365Auth = (user: User | null) => {
 
   const connectToOffice365 = async () => {
     try {
+      setIsLoading(true);
+      
       // Client ID from Azure AD App registration
       const clientId = '7a666ed4-fb0e-4d83-b1aa-8e8750d69141';
       
       // Dynamically get the current site URL
       const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
       
-      // Required permissions
-      const scope = encodeURIComponent('offline_access openid profile email');
+      // Required permissions - More specific than before
+      const scope = encodeURIComponent('offline_access openid profile email User.Read');
       
       // Build the OAuth URL with response_type=code for Authorization Code flow
       const oauthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&response_mode=query`;
@@ -108,6 +143,7 @@ export const useOffice365Auth = (user: User | null) => {
       // Redirect user to the OAuth page
       window.location.href = oauthUrl;
     } catch (error: any) {
+      setIsLoading(false);
       toast({
         title: 'Fehler',
         description: error.message,
