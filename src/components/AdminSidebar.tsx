@@ -26,7 +26,7 @@ const AdminSidebar: React.FC = () => {
       <Sidebar>
         <SidebarHeader className="p-4">
           <div className="flex items-center justify-between">
-            <img src="/lovable-uploads/70e3d10a-20be-4809-8385-3ffda9ff9893.png" alt="Immofinanz Logo" className="h-8" />
+            <img src="/lovable-uploads/70e3d10a-20be-4809-8385-3ffda9ff9893.png" alt="Immofinanz Logo" className="h-6" />
             <SidebarTrigger />
           </div>
         </SidebarHeader>
