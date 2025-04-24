@@ -43,10 +43,14 @@ const AuthPage = () => {
         });
 
         if (error) throw error;
+        
+        // After successful registration, show success toast and navigate to chat page
         toast({
           title: 'Registrierung erfolgreich',
-          description: 'Bitte überprüfen Sie Ihre E-Mails für die Bestätigung.',
+          description: 'Willkommen! Sie werden zur Chat-Seite weitergeleitet.',
         });
+        
+        navigate('/');
       }
     } catch (error: any) {
       toast({
