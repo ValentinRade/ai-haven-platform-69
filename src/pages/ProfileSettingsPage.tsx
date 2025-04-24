@@ -1,69 +1,25 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+
+// Components
+import ProfileForm from '@/components/ProfileForm';
+import PasswordReset from '@/components/PasswordReset';
+import Office365Auth from '@/components/Office365Auth';
+
+// Hooks
+import { useOffice365Auth } from '@/hooks/useOffice365Auth';
 
 const ProfileSettingsPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTokenSaved, setIsTokenSaved] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Handle Office 365 OAuth redirect
-  useEffect(() => {
-    const handleOAuthRedirect = async () => {
-      // Check for authorization code in URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      
-      if (code && user) {
-        setIsLoading(true);
-        try {
-          // In einer echten Anwendung würde hier ein Backend-Aufruf folgen,
-          // um den Code gegen ein Token einzutauschen
-          console.log("Authorization code received:", code);
-          
-          // For demo purposes, we'll just save the code to indicate success
-          // In a real application, you would exchange this for a token via a backend
-          const { error } = await supabase
-            .from('profiles')
-            .update({ office365_token: `code_received_${Date.now()}` })
-            .eq('id', user.id);
-
-          if (error) throw error;
-
-          setIsTokenSaved(true);
-          toast({
-            title: 'Office 365 verbunden',
-            description: 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
-          });
-          
-          // Clean up the URL
-          window.history.replaceState({}, document.title, '/profile');
-        } catch (error: any) {
-          toast({
-            title: 'Fehler',
-            description: error.message,
-            variant: 'destructive',
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (user) {
-      handleOAuthRedirect();
-    }
-  }, [user, toast]);
+  
+  // Office 365 auth logic
+  const { isConnected, isLoading, connectToOffice365 } = useOffice365Auth(user);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -72,17 +28,6 @@ const ProfileSettingsPage = () => {
         setUser(session.user);
         setDisplayName(session.user.user_metadata.display_name || '');
         setEmail(session.user.email || '');
-        
-        // Check if token is already saved
-        const { data } = await supabase
-          .from('profiles')
-          .select('office365_token')
-          .eq('id', session.user.id)
-          .single();
-          
-        if (data?.office365_token) {
-          setIsTokenSaved(true);
-        }
       } else {
         navigate('/auth');
       }
@@ -91,136 +36,29 @@ const ProfileSettingsPage = () => {
     fetchUserProfile();
   }, [navigate]);
 
-  const handleUpdateProfile = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: { display_name: displayName }
-      });
-
-      if (error) throw error;
-
-      // Update profile in the profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ display_name: displayName })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      toast({
-        title: 'Profil aktualisiert',
-        description: 'Ihr Profilname wurde erfolgreich geändert.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
-      if (error) throw error;
-
-      toast({
-        title: 'Passwort zurücksetzen',
-        description: 'Eine E-Mail zum Zurücksetzen des Passworts wurde gesendet.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleConnectOffice365 = async () => {
-    try {
-      // Client ID from Azure AD App registration
-      const clientId = '7a666ed4-fb0e-4d83-b1aa-8e8750d69141';
-      
-      // Dynamically get the current site URL
-      const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
-      
-      // Required permissions
-      const scope = encodeURIComponent('offline_access openid profile email');
-      
-      // Build the OAuth URL with response_type=code for Authorization Code flow
-      const oauthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&response_mode=query`;
-      
-      console.log("Redirecting to OAuth URL:", oauthUrl);
-      
-      // Redirect user to the OAuth page
-      window.location.href = oauthUrl;
-    } catch (error: any) {
-      toast({
-        title: 'Fehler',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
   if (!user) return null;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md">
       <h1 className="text-2xl font-bold mb-6">Profileinstellungen</h1>
       
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="displayName">Anzeigename</Label>
-          <Input
-            id="displayName"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Ihr Anzeigename"
-          />
-        </div>
-
-        <Button 
-          onClick={handleUpdateProfile} 
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? 'Wird aktualisiert...' : 'Profil aktualisieren'}
-        </Button>
-
-        <div className="border-t border-gray-200 pt-4 space-y-2">
-          <Label>Passwort</Label>
-          <Button 
-            variant="outline" 
-            onClick={handleResetPassword} 
-            className="w-full"
-          >
-            Passwort zurücksetzen
-          </Button>
-        </div>
-
-        <div className="border-t border-gray-200 pt-4 space-y-2">
-          <Label>Office 365 Verbindung</Label>
-          <Button 
-            variant="outline"
-            onClick={handleConnectOffice365}
-            className="w-full"
-            disabled={isTokenSaved}
-          >
-            {isTokenSaved ? 'Office 365 verbunden ✓' : 'Mit Office 365 verbinden'}
-          </Button>
-          {isTokenSaved && (
-            <p className="text-sm text-green-600">Ihr Office 365 Konto ist bereits verbunden.</p>
-          )}
-        </div>
+      <div className="space-y-6">
+        {/* Profile Form Component */}
+        <ProfileForm 
+          user={user} 
+          displayName={displayName} 
+          onUpdate={setDisplayName} 
+        />
+        
+        {/* Password Reset Component */}
+        <PasswordReset email={email} />
+        
+        {/* Office365 Auth Component */}
+        <Office365Auth 
+          isConnected={isConnected}
+          isLoading={isLoading}
+          onConnect={connectToOffice365}
+        />
       </div>
     </div>
   );
