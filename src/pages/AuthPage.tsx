@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,97 +62,87 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        <Card className="w-full">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">
-              {isLogin ? 'Anmelden' : 'Registrieren'}
-            </CardTitle>
-            <CardDescription>
-              {isLogin
-                ? 'Geben Sie Ihre Anmeldedaten ein'
-                : 'Erstellen Sie ein neues Konto'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">
+            {isLogin ? 'Anmelden' : 'Registrieren'}
+          </CardTitle>
+          <CardDescription>
+            {isLogin
+              ? 'Geben Sie Ihre Anmeldedaten ein'
+              : 'Erstellen Sie ein neues Konto'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="displayName">Anzeigename (optional)</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  id="displayName"
+                  type="text"
+                  placeholder="Ihr Name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
                 />
               </div>
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="displayName">Anzeigename (optional)</Label>
-                  <Input
-                    id="displayName"
-                    type="text"
-                    placeholder="Ihr Name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                  />
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="password">Passwort</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-500" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-500" />
-                    )}
-                  </button>
-                </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="password">Passwort</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading
-                  ? 'Wird verarbeitet...'
-                  : isLogin
-                  ? 'Anmelden'
-                  : 'Registrieren'}
-              </Button>
-            </form>
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-primary hover:underline"
-              >
-                {isLogin
-                  ? 'Noch kein Konto? Registrieren'
-                  : 'Bereits registriert? Anmelden'}
-              </button>
             </div>
-          </CardContent>
-        </Card>
-        
-        <div className="hidden md:block h-full">
-          <img 
-            src="/lovable-uploads/392f7212-20cd-4926-b162-675d2f6f872f.png" 
-            alt="Business Meeting" 
-            className="w-full h-[600px] object-cover rounded-lg shadow-lg"
-          />
-        </div>
-      </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading
+                ? 'Wird verarbeitet...'
+                : isLogin
+                ? 'Anmelden'
+                : 'Registrieren'}
+            </Button>
+          </form>
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-sm text-primary hover:underline"
+            >
+              {isLogin
+                ? 'Noch kein Konto? Registrieren'
+                : 'Bereits registriert? Anmelden'}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
