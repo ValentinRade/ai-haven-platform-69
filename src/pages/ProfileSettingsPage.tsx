@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,15 +24,15 @@ const ProfileSettingsPage = () => {
           window.location.hash.substring(1) // remove the # character
         );
         
-        const providerToken = hashParams.get('provider_token');
+        const accessToken = hashParams.get('access_token');
         
-        if (providerToken && user) {
+        if (accessToken && user) {
           setIsLoading(true);
           try {
             // Store the token in the profiles table
             const { error } = await supabase
               .from('profiles')
-              .update({ office365_token: providerToken })
+              .update({ office365_token: accessToken })
               .eq('id', user.id);
 
             if (error) throw error;
@@ -145,33 +144,23 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
-      // Ensure we're using the full, absolute URL for the redirect
-      // Don't rely on window.location.origin which could be localhost during development
-      const currentUrl = window.location.href;
-      // Extract the origin part, but ensure it's the deployed URL not localhost
-      const baseUrl = currentUrl.includes('localhost') 
-        ? 'https://f9c61201-4215-4389-aa38-f78a06432f56.lovableproject.com' // Use your deployed URL here
-        : window.location.origin;
+      // Client ID from Azure AD App registration
+      const clientId = '8ee4e6ce-5891-4e6d-8ca9-1167beaaff7c';
       
-      const redirectUrl = `${baseUrl}/profile`;
-      console.log("Using redirect URL:", redirectUrl);
+      // Use deployed URL for redirect to avoid localhost issues
+      const deployedUrl = 'https://f9c61201-4215-4389-aa38-f78a06432f56.lovableproject.com';
+      const redirectUri = encodeURIComponent(`${deployedUrl}/profile`);
       
-      // Use Supabase's OAuth flow with the explicit redirect URL
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'azure',
-        options: {
-          scopes: 'offline_access openid profile email',
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        }
-      });
-
-      if (error) throw error;
+      // Required permissions
+      const scope = encodeURIComponent('offline_access openid profile email');
       
-      if (data?.url) {
-        console.log("Opening Azure OAuth URL:", data.url);
-        window.location.href = data.url;
-      }
+      // Build the OAuth URL manually
+      const oauthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${scope}&response_mode=fragment`;
+      
+      console.log("Redirecting to OAuth URL:", oauthUrl);
+      
+      // Redirect user to the OAuth page
+      window.location.href = oauthUrl;
     } catch (error: any) {
       toast({
         title: 'Fehler',
