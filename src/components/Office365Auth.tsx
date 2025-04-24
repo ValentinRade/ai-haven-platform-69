@@ -8,20 +8,26 @@ type Office365AuthProps = {
   isLoading: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
+  email?: string | null;
 };
 
 const Office365Auth: React.FC<Office365AuthProps> = ({ 
   isConnected, 
   isLoading, 
   onConnect,
-  onDisconnect
+  onDisconnect,
+  email
 }) => {
   return (
     <div className="border-t border-gray-200 pt-4 space-y-2">
       <h3 className="font-medium">Office 365 Verbindung</h3>
       {isConnected ? (
         <div className="space-y-4">
-          <p className="text-sm text-green-600">Ihr Office 365 Konto ist erfolgreich verbunden.</p>
+          <p className="text-sm text-green-600">
+            {email 
+              ? `Ihr Office 365 Konto ${email} ist erfolgreich verbunden.` 
+              : 'Ihr Office 365 Konto ist erfolgreich verbunden.'}
+          </p>
           <Button 
             variant="destructive"
             onClick={onDisconnect}

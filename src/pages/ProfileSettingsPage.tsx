@@ -18,7 +18,13 @@ const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   
   // Office 365 auth logic
-  const { isConnected, isLoading, connectToOffice365, disconnectFromOffice365 } = useOffice365Auth(user);
+  const { 
+    isConnected, 
+    isLoading, 
+    connectToOffice365, 
+    disconnectFromOffice365,
+    email: office365Email 
+  } = useOffice365Auth(user);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -58,6 +64,7 @@ const ProfileSettingsPage = () => {
           isLoading={isLoading}
           onConnect={connectToOffice365}
           onDisconnect={disconnectFromOffice365}
+          email={office365Email}
         />
       </div>
     </div>

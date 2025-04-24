@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +7,7 @@ import { User } from '@supabase/supabase-js';
 export const useOffice365Auth = (user: User | null) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [office365Email, setOffice365Email] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Check if token is already saved
@@ -16,12 +18,13 @@ export const useOffice365Auth = (user: User | null) => {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('office365_token')
+          .select('office365_token, office365_email')
           .eq('id', user.id)
           .single();
           
         if (data?.office365_token) {
           setIsConnected(true);
+          setOffice365Email(data.office365_email);
         }
       } catch (error) {
         console.error("Error checking Office 365 connection:", error);
@@ -47,18 +50,22 @@ export const useOffice365Auth = (user: User | null) => {
 
           if (tokenError) throw tokenError;
 
-          // Store the access token in the database
+          // Store the access token and email in the database
           const { error: updateError } = await supabase
             .from('profiles')
-            .update({ office365_token: tokenData.access_token })
+            .update({ 
+              office365_token: tokenData.access_token,
+              office365_email: tokenData.email 
+            })
             .eq('id', user.id);
 
           if (updateError) throw updateError;
 
           setIsConnected(true);
+          setOffice365Email(tokenData.email);
           toast({
             title: 'Office 365 verbunden',
-            description: 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
+            description: `Ihr Office 365 Konto ${tokenData.email} wurde erfolgreich verbunden.`,
           });
           
           // Clean up the URL
@@ -114,12 +121,16 @@ export const useOffice365Auth = (user: User | null) => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ office365_token: null })
+        .update({ 
+          office365_token: null,
+          office365_email: null 
+        })
         .eq('id', user.id);
 
       if (error) throw error;
 
       setIsConnected(false);
+      setOffice365Email(null);
       toast({
         title: 'Office 365 getrennt',
         description: 'Die Verbindung zu Ihrem Office 365 Konto wurde erfolgreich getrennt.',
@@ -135,5 +146,11 @@ export const useOffice365Auth = (user: User | null) => {
     }
   };
 
-  return { isConnected, isLoading, connectToOffice365, disconnectFromOffice365 };
+  return { 
+    isConnected, 
+    isLoading, 
+    connectToOffice365, 
+    disconnectFromOffice365,
+    email: office365Email 
+  };
 };
