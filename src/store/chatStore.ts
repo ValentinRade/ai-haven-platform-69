@@ -91,12 +91,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
       
       const userId = session.session.user.id;
+      const userDisplayName = session.session.user.user_metadata.display_name || 
+                               session.session.user.email.split('@')[0];
       
       const { data: chat, error: chatError } = await supabase
         .from('chats')
         .insert({
-          title: 'Neuer Chat',
-          user_id: userId
+          title: 'Neuer Chat', 
+          user_id: userId,
+          creator_display_name: userDisplayName // Explicitly set display name
         })
         .select()
         .single();
@@ -120,6 +123,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         title: chat.title,
         lastMessage: message.content,
         timestamp: new Date(chat.created_at),
+        creator_display_name: userDisplayName, // Add display name to the chat object
         messages: [{
           id: message.id,
           type: 'ai',
