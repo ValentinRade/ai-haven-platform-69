@@ -1,11 +1,13 @@
+
 import React, { useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare } from 'lucide-react';
+import { PlusCircle, MessageSquare, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const ChatSidebar: React.FC = () => {
   const { chats, currentChatId, setCurrentChat, createNewChat, loadChats } = useChatStore();
@@ -41,7 +43,15 @@ const ChatSidebar: React.FC = () => {
                     : "bg-white"
                 )}
               >
-                <div className="flex items-center gap-2 overflow-hidden">
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback>
+                      <UserRound size={14} />
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-gray-600">{chat.creator_display_name || 'Unbenannt'}</span>
+                </div>
+                <div className="flex items-center gap-2 overflow-hidden mt-1">
                   <MessageSquare size={16} className="flex-shrink-0 text-gray-500" />
                   <span className="font-medium truncate">{chat.title}</span>
                 </div>

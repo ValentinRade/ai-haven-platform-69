@@ -20,7 +20,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   loadChats: async () => {
     try {
-      // First check if user is authenticated
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user) {
         console.log('User not authenticated, skipping chat load');
@@ -33,6 +32,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           id,
           title,
           updated_at,
+          creator_display_name,
           messages:messages (
             id,
             content,
@@ -49,6 +49,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         title: chat.title,
         timestamp: new Date(chat.updated_at),
         lastMessage: chat.messages?.[0]?.content || '',
+        creator_display_name: chat.creator_display_name,
         messages: (chat.messages || []).map(msg => ({
           id: msg.id,
           type: msg.type as 'user' | 'ai',
@@ -59,7 +60,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       set({ chats: formattedChats });
       
-      // Set current chat if none selected
       if (!get().currentChatId && formattedChats.length > 0) {
         set({ currentChatId: formattedChats[0].id });
       }

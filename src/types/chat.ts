@@ -12,4 +12,5 @@ export interface Chat {
   lastMessage: string;
   timestamp: Date;
   messages: ChatMessage[];
+  creator_display_name?: string;
 }
