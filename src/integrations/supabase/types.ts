@@ -75,6 +75,7 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          office365_token: string | null
           updated_at: string
         }
         Insert: {
@@ -83,6 +84,7 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          office365_token?: string | null
           updated_at?: string
         }
         Update: {
@@ -91,6 +93,7 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          office365_token?: string | null
           updated_at?: string
         }
         Relationships: []

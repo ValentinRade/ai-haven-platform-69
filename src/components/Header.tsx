@@ -2,17 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { BrainCircuit, Settings, ArrowLeft, LogIn } from 'lucide-react';
+import { BrainCircuit, Settings, ArrowLeft, LogIn, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin');
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
     // Check current session
@@ -56,12 +56,14 @@ const Header: React.FC = () => {
                 </Link>
               </Button>
               {user && (
-                <Button variant="outline" size="sm" className="text-secondary" asChild>
-                  <Link to="/admin" className="flex items-center gap-2">
-                    <Settings size={18} />
-                    <span>Admin</span>
-                  </Link>
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" className="text-secondary" asChild>
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <Settings size={18} />
+                      <span>Admin</span>
+                    </Link>
+                  </Button>
+                </>
               )}
             </>
           )}
@@ -69,6 +71,12 @@ const Header: React.FC = () => {
             <div className="flex items-center gap-4">
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 Abmelden
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/profile" className="flex items-center gap-2">
+                  <User size={18} />
+                  <span>Profil</span>
+                </Link>
               </Button>
               <Avatar className="h-9 w-9 border border-gray-200">
                 <AvatarImage src={user.user_metadata.avatar_url || ''} />
