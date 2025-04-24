@@ -144,11 +144,11 @@ const AuthPage = () => {
           </CardContent>
         </Card>
         
-        <div className="hidden md:block">
+        <div className="hidden md:block h-full">
           <img 
             src="/lovable-uploads/392f7212-20cd-4926-b162-675d2f6f872f.png" 
             alt="Business Meeting" 
-            className="w-full h-full object-cover rounded-lg shadow-lg"
+            className="w-full h-[600px] object-cover rounded-lg shadow-lg"
           />
         </div>
       </div>
