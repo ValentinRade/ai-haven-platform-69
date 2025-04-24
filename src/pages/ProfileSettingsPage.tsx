@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -145,25 +144,30 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
-      // Instead of using Supabase auth flow, we'll directly open the Microsoft login page
-      // with the correct client ID and redirect URL
+      // Use Supabase's OAuth flow which will handle the proper authorization code flow
+      // instead of trying to get a token directly
       const redirectUrl = window.location.origin + '/profile';
+      console.log("Using redirect URL:", redirectUrl);
       
-      // Get the Azure client ID from Supabase OAuth settings
-      // This will use the existing OAuth configuration but without creating a new user
-      const baseUrl = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
+      // Use the signInWithOAuth method but with skipBrowserRedirect: true
+      // so we can customize how we open the popup
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          scopes: 'offline_access openid profile email',
+          redirectTo: redirectUrl,
+          // This is important - it prevents creating a new session
+          skipBrowserRedirect: true,
+        }
+      });
+
+      if (error) throw error;
       
-      // You need to get your client ID from the Supabase dashboard under Auth > Providers > Microsoft/Azure
-      // This is just a placeholder - the real client ID would come from your Supabase config
-      // We're using a special URL that will redirect back with the token but won't create a new session
-      
-      // Construct the OAuth URL manually - request for offline_access to get refresh token
-      const authUrl = `${baseUrl}?client_id=${AZURE_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUrl)}&scope=offline_access%20openid%20profile%20email&response_mode=fragment`;
-      
-      console.log("Opening Azure OAuth URL:", authUrl);
-      
-      // Open the authorization URL in the same window
-      window.location.href = authUrl;
+      // If we get here, we have the authorization URL, open it
+      if (data?.url) {
+        console.log("Opening Azure OAuth URL:", data.url);
+        window.location.href = data.url;
+      }
     } catch (error: any) {
       toast({
         title: 'Fehler',
@@ -227,8 +231,5 @@ const ProfileSettingsPage = () => {
     </div>
   );
 };
-
-// Replace this with your actual Azure client ID from Supabase dashboard
-const AZURE_CLIENT_ID = "7a666ed4-fb0e-4d83-b1aa-8e8750d69141";
 
 export default ProfileSettingsPage;
