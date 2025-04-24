@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,9 +148,8 @@ const ProfileSettingsPage = () => {
       // Client ID from Azure AD App registration
       const clientId = '8ee4e6ce-5891-4e6d-8ca9-1167beaaff7c';
       
-      // Use deployed URL for redirect to avoid localhost issues
-      const deployedUrl = 'https://f9c61201-4215-4389-aa38-f78a06432f56.lovableproject.com';
-      const redirectUri = encodeURIComponent(`${deployedUrl}/profile`);
+      // Dynamically get the current site URL
+      const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
       
       // Required permissions
       const scope = encodeURIComponent('offline_access openid profile email');
