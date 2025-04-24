@@ -45,10 +45,28 @@ serve(async (req) => {
       throw new Error(tokenData.error_description || 'Failed to exchange token')
     }
 
-    // Return the access token and refresh token
+    // Get user data from Microsoft Graph API
+    const userResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    })
+
+    const userData = await userResponse.json()
+    
+    if (!userResponse.ok) {
+      console.error('User data fetch error:', userData)
+      throw new Error(userData.error?.message || 'Failed to fetch user data')
+    }
+
+    // Log successful authentication
+    console.log('Successfully authenticated user:', userData.userPrincipalName)
+
+    // Return the access token, refresh token and email
     return new Response(JSON.stringify({
       access_token: tokenData.access_token,
       refresh_token: tokenData.refresh_token,
+      email: userData.userPrincipalName || userData.mail
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
