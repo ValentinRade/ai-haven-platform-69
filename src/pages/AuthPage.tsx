@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -61,88 +60,89 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-immo-lightgray px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? 'Anmelden' : 'Registrieren'}
-          </CardTitle>
-          <CardDescription className="text-center">
-            {isLogin
-              ? 'Geben Sie Ihre Anmeldedaten ein'
-              : 'Erstellen Sie ein neues Konto'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-sm p-6 bg-white rounded-lg shadow-sm">
+        <h1 className="text-2xl font-bold text-center mb-2">
+          {isLogin ? 'Anmelden' : 'Registrieren'}
+        </h1>
+        <p className="text-gray-500 text-center mb-6">
+          {isLogin
+            ? 'Geben Sie Ihre Anmeldedaten ein'
+            : 'Erstellen Sie ein neues Konto'}
+        </p>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          {!isLogin && (
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="displayName">Anzeigename (optional)</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                id="displayName"
+                type="text"
+                placeholder="Ihr Name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
               />
             </div>
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Anzeigename (optional)</Label>
-                <Input
-                  id="displayName"
-                  type="text"
-                  placeholder="Ihr Name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-500" />
-                  )}
-                </button>
-              </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Passwort</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </button>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading
-                ? 'Wird verarbeitet...'
-                : isLogin
-                ? 'Anmelden'
-                : 'Registrieren'}
-            </Button>
-          </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-primary hover:underline"
-            >
-              {isLogin
-                ? 'Noch kein Konto? Registrieren'
-                : 'Bereits registriert? Anmelden'}
-            </button>
           </div>
-        </CardContent>
-      </Card>
+          
+          <Button type="submit" className="w-full bg-primary" disabled={loading}>
+            {loading
+              ? 'Wird verarbeitet...'
+              : isLogin
+              ? 'Anmelden'
+              : 'Registrieren'}
+          </Button>
+        </form>
+        
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-primary hover:underline"
+          >
+            {isLogin
+              ? 'Noch kein Konto? Registrieren'
+              : 'Bereits registriert? Anmelden'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
