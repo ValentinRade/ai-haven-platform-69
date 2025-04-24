@@ -13,8 +13,57 @@ const ProfileSettingsPage = () => {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTokenSaved, setIsTokenSaved] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Handle Office 365 OAuth redirect
+  useEffect(() => {
+    const handleOAuthRedirect = async () => {
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(
+          window.location.hash.substring(1) // remove the # character
+        );
+        
+        const accessToken = hashParams.get('access_token');
+        const providerToken = hashParams.get('provider_token');
+        
+        if (accessToken && providerToken && user) {
+          setIsLoading(true);
+          try {
+            // Store the token in the profiles table
+            const { error } = await supabase
+              .from('profiles')
+              .update({ office365_token: providerToken })
+              .eq('id', user.id);
+
+            if (error) throw error;
+
+            setIsTokenSaved(true);
+            toast({
+              title: 'Office 365 verbunden',
+              description: 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
+            });
+            
+            // Clean up the URL
+            window.history.replaceState({}, document.title, '/profile');
+          } catch (error: any) {
+            toast({
+              title: 'Fehler',
+              description: error.message,
+              variant: 'destructive',
+            });
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+    };
+
+    if (user) {
+      handleOAuthRedirect();
+    }
+  }, [user, toast]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -23,6 +72,17 @@ const ProfileSettingsPage = () => {
         setUser(session.user);
         setDisplayName(session.user.user_metadata.display_name || '');
         setEmail(session.user.email || '');
+        
+        // Check if token is already saved
+        const { data } = await supabase
+          .from('profiles')
+          .select('office365_token')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (data?.office365_token) {
+          setIsTokenSaved(true);
+        }
       } else {
         navigate('/auth');
       }
@@ -86,22 +146,15 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
-      // Implement Office 365 OAuth flow
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'azure',
         options: {
-          // You'll need to configure Azure AD in Supabase settings
           scopes: 'offline_access openid profile email',
+          redirectTo: `${window.location.origin}/profile`
         }
       });
 
       if (error) throw error;
-
-      // When the OAuth flow completes, the token will be automatically stored
-      toast({
-        title: 'Office 365 verbunden',
-        description: 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
-      });
     } catch (error: any) {
       toast({
         title: 'Fehler',
@@ -150,12 +203,16 @@ const ProfileSettingsPage = () => {
         <div className="border-t border-gray-200 pt-4 space-y-2">
           <Label>Office 365 Verbindung</Label>
           <Button 
-            variant="outline" 
-            onClick={handleConnectOffice365} 
+            variant="outline"
+            onClick={handleConnectOffice365}
             className="w-full"
+            disabled={isTokenSaved}
           >
-            Mit Office 365 verbinden
+            {isTokenSaved ? 'Office 365 verbunden ✓' : 'Mit Office 365 verbinden'}
           </Button>
+          {isTokenSaved && (
+            <p className="text-sm text-green-600">Ihr Office 365 Konto ist bereits verbunden.</p>
+          )}
         </div>
       </div>
     </div>
