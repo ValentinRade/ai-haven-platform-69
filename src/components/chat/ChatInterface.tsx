@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,15 +7,28 @@ import { cn } from '@/lib/utils';
 import { useChatStore } from '@/store/chatStore';
 import ChatMessage from './ChatMessage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { getCurrentChat, addMessageToCurrentChat } = useChatStore();
   const currentChat = getCurrentChat();
+  const navigate = useNavigate();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const simulateAIResponse = async (userMessage: string) => {
     setIsLoading(true);
@@ -33,7 +47,7 @@ const ChatInterface: React.FC = () => {
       response = 'Danke für Ihre Anfrage. Als Immofinanz AI kann ich Ihnen bei Fragen zu Immobilien, Workflows und der Plattform helfen. Wie kann ich Ihnen weiterhelfen?';
     }
     
-    addMessageToCurrentChat({
+    await addMessageToCurrentChat({
       type: 'ai',
       content: response,
       timestamp: new Date()
@@ -42,18 +56,19 @@ const ChatInterface: React.FC = () => {
     setIsLoading(false);
   };
   
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim() === '' || isLoading) return;
     
-    addMessageToCurrentChat({
+    const userMessage = input.trim();
+    setInput('');
+    
+    await addMessageToCurrentChat({
       type: 'user',
-      content: input.trim(),
+      content: userMessage,
       timestamp: new Date()
     });
     
-    setInput('');
-    
-    simulateAIResponse(input);
+    await simulateAIResponse(userMessage);
   };
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

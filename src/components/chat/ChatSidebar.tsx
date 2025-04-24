@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MessageSquare } from 'lucide-react';
@@ -9,7 +8,11 @@ import { de } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ChatSidebar: React.FC = () => {
-  const { chats, currentChatId, setCurrentChat, createNewChat } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createNewChat, loadChats } = useChatStore();
+
+  useEffect(() => {
+    loadChats();
+  }, [loadChats]);
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-50">
