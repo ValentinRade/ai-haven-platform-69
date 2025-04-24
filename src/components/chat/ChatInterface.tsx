@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -158,7 +157,7 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="bg-gray-50 pt-2 pb-4 px-4 border-t border-gray-200 h-32 w-full">
+      <div className="bg-gray-50 pt-2 pb-2 px-4 border-t border-gray-200 h-24 w-full">
         <div className="flex items-end gap-2 bg-white rounded-lg border border-gray-200 p-2 shadow-sm w-full">
           <Button 
             variant="ghost" 
@@ -197,7 +196,7 @@ const ChatInterface: React.FC = () => {
             <Send size={16} />
           </Button>
         </div>
-        <div className="text-xs text-center mt-2 text-gray-500">
+        <div className="text-xs text-center mt-1 text-gray-500">
           Immofinanz AI © {new Date().getFullYear()}
         </div>
       </div>
