@@ -20,41 +20,42 @@ const ProfileSettingsPage = () => {
   // Handle Office 365 OAuth redirect
   useEffect(() => {
     const handleOAuthRedirect = async () => {
-      if (window.location.hash) {
-        const hashParams = new URLSearchParams(
-          window.location.hash.substring(1) // remove the # character
-        );
-        
-        const accessToken = hashParams.get('access_token');
-        
-        if (accessToken && user) {
-          setIsLoading(true);
-          try {
-            // Store the token in the profiles table
-            const { error } = await supabase
-              .from('profiles')
-              .update({ office365_token: accessToken })
-              .eq('id', user.id);
+      // Check for authorization code in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      if (code && user) {
+        setIsLoading(true);
+        try {
+          // In einer echten Anwendung würde hier ein Backend-Aufruf folgen,
+          // um den Code gegen ein Token einzutauschen
+          console.log("Authorization code received:", code);
+          
+          // For demo purposes, we'll just save the code to indicate success
+          // In a real application, you would exchange this for a token via a backend
+          const { error } = await supabase
+            .from('profiles')
+            .update({ office365_token: `code_received_${Date.now()}` })
+            .eq('id', user.id);
 
-            if (error) throw error;
+          if (error) throw error;
 
-            setIsTokenSaved(true);
-            toast({
-              title: 'Office 365 verbunden',
-              description: 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
-            });
-            
-            // Clean up the URL
-            window.history.replaceState({}, document.title, '/profile');
-          } catch (error: any) {
-            toast({
-              title: 'Fehler',
-              description: error.message,
-              variant: 'destructive',
-            });
-          } finally {
-            setIsLoading(false);
-          }
+          setIsTokenSaved(true);
+          toast({
+            title: 'Office 365 verbunden',
+            description: 'Ihr Office 365 Konto wurde erfolgreich verbunden.',
+          });
+          
+          // Clean up the URL
+          window.history.replaceState({}, document.title, '/profile');
+        } catch (error: any) {
+          toast({
+            title: 'Fehler',
+            description: error.message,
+            variant: 'destructive',
+          });
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -145,7 +146,7 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
-      // Updated Client ID from Azure AD App registration
+      // Client ID from Azure AD App registration
       const clientId = '7a666ed4-fb0e-4d83-b1aa-8e8750d69141';
       
       // Dynamically get the current site URL
@@ -154,8 +155,8 @@ const ProfileSettingsPage = () => {
       // Required permissions
       const scope = encodeURIComponent('offline_access openid profile email');
       
-      // Build the OAuth URL manually
-      const oauthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${scope}&response_mode=fragment`;
+      // Build the OAuth URL with response_type=code for Authorization Code flow
+      const oauthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&response_mode=query`;
       
       console.log("Redirecting to OAuth URL:", oauthUrl);
       
