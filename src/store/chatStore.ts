@@ -20,6 +20,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   loadChats: async () => {
     try {
+      // First check if user is authenticated
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user) {
+        console.log('User not authenticated, skipping chat load');
+        return;
+      }
+      
       const { data: chats, error } = await supabase
         .from('chats')
         .select(`
@@ -72,11 +79,25 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   createNewChat: async () => {
     try {
+      // First check if user is authenticated
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user) {
+        toast({
+          title: "Nicht angemeldet",
+          description: "Bitte melden Sie sich an, um einen Chat zu erstellen.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const userId = session.session.user.id;
+      
       const { data: chat, error: chatError } = await supabase
         .from('chats')
-        .insert([{
+        .insert({
           title: 'Neuer Chat',
-        }])
+          user_id: userId
+        })
         .select()
         .single();
 
@@ -84,11 +105,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       const { data: message, error: messageError } = await supabase
         .from('messages')
-        .insert([{
+        .insert({
           chat_id: chat.id,
           content: 'Hallo! Ich bin die Immofinanz AI. Wie kann ich Ihnen heute helfen?',
           type: 'ai'
-        }])
+        })
         .select()
         .single();
 
@@ -126,13 +147,20 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     if (!currentChatId) return;
 
     try {
+      // First check if user is authenticated
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user) {
+        console.error('User not authenticated');
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('messages')
-        .insert([{
+        .insert({
           chat_id: currentChatId,
           content: message.content,
           type: message.type
-        }])
+        })
         .select()
         .single();
 
