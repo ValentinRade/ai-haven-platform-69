@@ -145,8 +145,8 @@ const ProfileSettingsPage = () => {
 
   const handleConnectOffice365 = async () => {
     try {
-      // Client ID from Azure AD App registration
-      const clientId = '8ee4e6ce-5891-4e6d-8ca9-1167beaaff7c';
+      // Updated Client ID from Azure AD App registration
+      const clientId = '7a666ed4-fb0e-4d83-b1aa-8e8750d69141';
       
       // Dynamically get the current site URL
       const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
