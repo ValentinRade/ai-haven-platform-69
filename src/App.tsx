@@ -13,6 +13,7 @@ import WorkflowBuilder from "./pages/admin/WorkflowBuilder";
 import WorkflowOverview from "./pages/admin/WorkflowOverview";
 import UserManagement from "./pages/admin/UserManagement";
 import NotFound from "./pages/NotFound";
+import AuthPage from "./pages/AuthPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <SidebarProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<ChatPage />} />
             </Route>
