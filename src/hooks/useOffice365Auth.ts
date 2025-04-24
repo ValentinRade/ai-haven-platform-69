@@ -16,12 +16,14 @@ export const useOffice365Auth = (user: User | null) => {
       if (!user) return;
       
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('office365_token, office365_email')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
           
+        if (error) throw error;
+
         if (data?.office365_token) {
           setIsConnected(true);
           setOffice365Email(data.office365_email);

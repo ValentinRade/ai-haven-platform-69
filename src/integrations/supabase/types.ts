@@ -75,6 +75,7 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          office365_email: string | null
           office365_token: string | null
           updated_at: string
         }
@@ -84,6 +85,7 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          office365_email?: string | null
           office365_token?: string | null
           updated_at?: string
         }
@@ -93,6 +95,7 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          office365_email?: string | null
           office365_token?: string | null
           updated_at?: string
         }
