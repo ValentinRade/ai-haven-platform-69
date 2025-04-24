@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -108,5 +107,33 @@ export const useOffice365Auth = (user: User | null) => {
     }
   };
 
-  return { isConnected, isLoading, connectToOffice365 };
+  const disconnectFromOffice365 = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ office365_token: null })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setIsConnected(false);
+      toast({
+        title: 'Office 365 getrennt',
+        description: 'Die Verbindung zu Ihrem Office 365 Konto wurde erfolgreich getrennt.',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Fehler',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { isConnected, isLoading, connectToOffice365, disconnectFromOffice365 };
 };

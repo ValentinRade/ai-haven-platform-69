@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -19,7 +18,7 @@ const ProfileSettingsPage = () => {
   const navigate = useNavigate();
   
   // Office 365 auth logic
-  const { isConnected, isLoading, connectToOffice365 } = useOffice365Auth(user);
+  const { isConnected, isLoading, connectToOffice365, disconnectFromOffice365 } = useOffice365Auth(user);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -58,6 +57,7 @@ const ProfileSettingsPage = () => {
           isConnected={isConnected}
           isLoading={isLoading}
           onConnect={connectToOffice365}
+          onDisconnect={disconnectFromOffice365}
         />
       </div>
     </div>
