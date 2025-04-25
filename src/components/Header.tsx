@@ -1,9 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { BrainCircuit, ArrowLeft, LogIn, UserRound } from 'lucide-react';
+import { ArrowLeft, LogIn, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { Switch } from './ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,7 @@ const Header: React.FC = () => {
   const isAdmin = location.pathname.startsWith('/admin');
   const isProfile = location.pathname.startsWith('/profile');
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [isPrivate, setIsPrivate] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,6 +40,12 @@ const Header: React.FC = () => {
     navigate('/auth');
   };
 
+  const handlePrivacyToggle = (checked: boolean) => {
+    setIsPrivate(checked);
+    // Here you can implement the logic to update the chat privacy status
+    // For example, make an API call to update the chat's privacy setting
+  };
+
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-4 py-1 flex items-center justify-between">
@@ -44,14 +53,7 @@ const Header: React.FC = () => {
           <img src="/lovable-uploads/70e3d10a-20be-4809-8385-3ffda9ff9893.png" alt="Immofinanz Logo" className="h-8" />
         </Link>
         <div className="flex items-center gap-4">
-          {isAdmin ? (
-            <Button variant="outline" size="sm" className="text-secondary" asChild>
-              <Link to="/" className="flex items-center gap-2">
-                <ArrowLeft size={18} />
-                <span>Back to Chat</span>
-              </Link>
-            </Button>
-          ) : isProfile ? (
+          {isAdmin || isProfile ? (
             <Button variant="outline" size="sm" className="text-secondary" asChild>
               <Link to="/" className="flex items-center gap-2">
                 <ArrowLeft size={18} />
@@ -59,12 +61,13 @@ const Header: React.FC = () => {
               </Link>
             </Button>
           ) : (
-            <Button variant="ghost" size="sm" className="text-secondary" asChild>
-              <Link to="/" className="flex items-center gap-2">
-                <BrainCircuit size={18} />
-                <span>AI Chat</span>
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Privat</span>
+              <Switch
+                checked={isPrivate}
+                onCheckedChange={handlePrivacyToggle}
+              />
+            </div>
           )}
           {user ? (
             <div className="flex items-center gap-4">
