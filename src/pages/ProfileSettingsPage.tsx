@@ -47,7 +47,7 @@ const ProfileSettingsPage = () => {
   return (
     <div className="flex h-[calc(100vh-56px)] w-screen overflow-hidden">
       <div className="flex-1 overflow-auto bg-gray-50 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-lg mx-auto space-y-6">
           <h1 className="text-2xl font-bold">Profileinstellungen</h1>
           
           <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
