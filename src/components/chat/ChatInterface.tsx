@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +14,7 @@ import { toast } from '@/hooks/use-toast';
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { getCurrentChat, addMessageToCurrentChat } = useChatStore();
+  const { getCurrentChat, addMessageToCurrentChat, createNewChat, currentChatId } = useChatStore();
   const currentChat = getCurrentChat();
   const navigate = useNavigate();
   
@@ -66,6 +67,11 @@ const ChatInterface: React.FC = () => {
     
     const userMessage = input.trim();
     setInput('');
+
+    // If no chat exists or no chat is selected, create a new one first
+    if (!currentChatId) {
+      await createNewChat();
+    }
     
     await addMessageToCurrentChat({
       type: 'user',
@@ -130,7 +136,7 @@ const ChatInterface: React.FC = () => {
             <div className="text-center text-gray-500">
               <h2 className="text-2xl font-medium mb-2">Willkommen bei Immofinanz AI</h2>
               <p className="max-w-md">
-                Stellen Sie Fragen zu Immobilien, Workflows oder der Plattform.
+                Stellen Sie Ihre Frage unten im Textfeld.
               </p>
             </div>
           </div>

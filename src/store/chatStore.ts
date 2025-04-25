@@ -165,7 +165,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       
       const userId = session.session.user.id;
       const userDisplayName = session.session.user.user_metadata.display_name || 
-                               session.session.user.email.split('@')[0];
+                             session.session.user.email.split('@')[0];
       
       let chat;
       try {
@@ -183,7 +183,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         if (error) throw error;
         chat = data;
       } catch (e) {
-        if (String(e).includes('does not exist')) {
+        if (String(e).includes('is_private does not exist')) {
           const { data, error } = await supabase
             .from('chats')
             .insert({
@@ -201,31 +201,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         }
       }
 
-      const { data: message, error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          chat_id: chat.id,
-          content: 'Hallo! Ich bin die Immofinanz AI. Wie kann ich Ihnen heute helfen?',
-          type: 'ai'
-        })
-        .select()
-        .single();
-
-      if (messageError) throw messageError;
-
       const newChat: Chat = {
         id: chat.id,
         title: chat.title,
-        lastMessage: message.content,
+        lastMessage: '',
         timestamp: new Date(chat.created_at),
         creator_display_name: userDisplayName,
         is_private: chat.is_private || false,
-        messages: [{
-          id: message.id,
-          type: 'ai',
-          content: message.content,
-          timestamp: new Date(message.created_at)
-        }]
+        messages: []
       };
 
       set((state) => ({
