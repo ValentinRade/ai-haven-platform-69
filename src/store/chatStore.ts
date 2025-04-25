@@ -1,8 +1,8 @@
-
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, ChatMessage } from '@/types/chat';
 import { toast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
 
 interface ChatStore {
   chats: Chat[];
@@ -26,67 +26,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         console.log('User not authenticated, skipping chat load');
         return;
       }
-      
-      try {
-        // First try to query with is_private field
-        const { data: chats, error } = await supabase
-          .from('chats')
-          .select(`
-            id,
-            title,
-            updated_at,
-            creator_display_name,
-            is_private,
-            messages:messages (
-              id,
-              content,
-              type,
-              created_at
-            )
-          `)
-          .order('updated_at', { ascending: false });
 
-        if (error) {
-          console.error('Error loading chats with is_private:', error);
-          throw error;
-        }
-
-        // Only run this code if we have valid data (no error)
-        if (chats) {
-          const formattedChats: Chat[] = chats.map(chat => ({
-            id: chat.id,
-            title: chat.title,
-            timestamp: new Date(chat.updated_at),
-            lastMessage: chat.messages?.[0]?.content || '',
-            creator_display_name: chat.creator_display_name,
-            is_private: chat.is_private || false,
-            messages: (chat.messages || []).map(msg => ({
-              id: msg.id,
-              type: msg.type as 'user' | 'ai',
-              content: msg.content,
-              timestamp: new Date(msg.created_at)
-            })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-          }));
-
-          set({ chats: formattedChats });
-          
-          if (!get().currentChatId && formattedChats.length > 0) {
-            set({ currentChatId: formattedChats[0].id });
-          }
-          return;
-        }
-      } catch (e) {
-        console.error('Error with is_private, falling back:', e);
-      }
-      
-      // Fallback query without is_private if the first query fails
-      const { data: fallbackChats, error: fallbackError } = await supabase
+      const { data: chats, error } = await supabase
         .from('chats')
         .select(`
           id,
           title,
           updated_at,
           creator_display_name,
+          is_private,
           messages:messages (
             id,
             content,
@@ -96,8 +44,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         `)
         .order('updated_at', { ascending: false });
 
-      if (fallbackError) {
-        console.error('Error loading chats (fallback):', fallbackError);
+      if (error) {
+        console.error('Error loading chats:', error);
         toast({
           title: "Fehler beim Laden der Chats",
           description: "Bitte versuchen Sie es später erneut.",
@@ -106,15 +54,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      // Only proceed if we have valid data
-      if (fallbackChats) {
-        const formattedChats: Chat[] = fallbackChats.map(chat => ({
+      if (chats) {
+        const formattedChats: Chat[] = chats.map(chat => ({
           id: chat.id,
           title: chat.title,
           timestamp: new Date(chat.updated_at),
           lastMessage: chat.messages?.[0]?.content || '',
           creator_display_name: chat.creator_display_name,
-          is_private: false, // Default to false when column doesn't exist
+          is_private: chat.is_private || false,
           messages: (chat.messages || []).map(msg => ({
             id: msg.id,
             type: msg.type as 'user' | 'ai',
