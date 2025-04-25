@@ -45,11 +45,11 @@ const ProfileSettingsPage = () => {
   if (!user) return null;
 
   return (
-    <div className="w-full px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Profileinstellungen</h1>
+    <div className="w-full min-h-[calc(100vh-64px)] bg-gray-50 p-6">
+      <div className="max-w-xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold">Profileinstellungen</h1>
         
-        <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
+        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
           {/* Profile Form Component */}
           <ProfileForm 
             user={user} 
@@ -75,3 +75,4 @@ const ProfileSettingsPage = () => {
 };
 
 export default ProfileSettingsPage;
+
