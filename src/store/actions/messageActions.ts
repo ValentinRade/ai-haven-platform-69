@@ -38,6 +38,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       
       // Send message to webhook and wait for response
       let aiResponse;
+      let chatName;
       try {
         const response = await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook-test/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
           method: 'POST',
@@ -50,6 +51,9 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         const responseData = await response.json();
         if (responseData.answer) {
           aiResponse = responseData.answer;
+        }
+        if (isFirstMessage && responseData.chatname) {
+          chatName = responseData.chatname;
         }
       } catch (error) {
         console.error('Error sending message to webhook:', error);
@@ -69,7 +73,19 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
 
       if (userError) throw userError;
 
-      // Update the chat state with user's message
+      // If we got a chatName from the webhook for the first message, update the chat title
+      if (chatName) {
+        const { error: updateError } = await supabase
+          .from('chats')
+          .update({ title: chatName })
+          .eq('id', currentChatId);
+          
+        if (updateError) {
+          console.error('Error updating chat title:', updateError);
+        }
+      }
+
+      // Update the chat state with user's message and potentially new title
       set((state: ChatStore) => {
         const updatedChats = state.chats.map((chat) => {
           if (chat.id === currentChatId) {
@@ -82,6 +98,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
             
             return {
               ...chat,
+              ...(chatName ? { title: chatName } : {}), // Update title if we got a new one
               lastMessage: message.content,
               timestamp: new Date(),
               messages: [...chat.messages, newMessage]
