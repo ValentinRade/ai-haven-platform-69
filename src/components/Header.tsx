@@ -19,6 +19,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin');
+  const isProfile = location.pathname.startsWith('/profile');
   const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
@@ -48,6 +49,13 @@ const Header: React.FC = () => {
         </Link>
         <div className="flex items-center gap-4">
           {isAdmin ? (
+            <Button variant="outline" size="sm" className="text-secondary" asChild>
+              <Link to="/" className="flex items-center gap-2">
+                <ArrowLeft size={18} />
+                <span>Back to Chat</span>
+              </Link>
+            </Button>
+          ) : isProfile ? (
             <Button variant="outline" size="sm" className="text-secondary" asChild>
               <Link to="/" className="flex items-center gap-2">
                 <ArrowLeft size={18} />
