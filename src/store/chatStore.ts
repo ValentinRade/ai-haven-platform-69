@@ -33,6 +33,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           title,
           updated_at,
           creator_display_name,
+          is_private,
           messages:messages (
             id,
             content,
@@ -50,6 +51,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         timestamp: new Date(chat.updated_at),
         lastMessage: chat.messages?.[0]?.content || '',
         creator_display_name: chat.creator_display_name,
+        is_private: chat.is_private,
         messages: (chat.messages || []).map(msg => ({
           id: msg.id,
           type: msg.type as 'user' | 'ai',
@@ -153,6 +155,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         lastMessage: message.content,
         timestamp: new Date(chat.created_at),
         creator_display_name: userDisplayName,
+        is_private: chat.is_private,
         messages: [{
           id: message.id,
           type: 'ai',

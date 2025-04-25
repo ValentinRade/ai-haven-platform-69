@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -6,6 +5,8 @@ import { ArrowLeft, LogIn, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Switch } from './ui/switch';
+import { useChatStore } from '@/store/chatStore';
+import { toast } from './ui/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ const Header: React.FC = () => {
   const isAdmin = location.pathname.startsWith('/admin');
   const isProfile = location.pathname.startsWith('/profile');
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const { currentChatId, getCurrentChat, loadChats } = useChatStore();
   const [isPrivate, setIsPrivate] = useState(false);
 
   useEffect(() => {
@@ -35,15 +37,46 @@ const Header: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const currentChat = getCurrentChat();
+    if (currentChat) {
+      setIsPrivate(currentChat.is_private || false);
+    }
+  }, [currentChatId, getCurrentChat]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/auth');
   };
 
-  const handlePrivacyToggle = (checked: boolean) => {
-    setIsPrivate(checked);
-    // Here you can implement the logic to update the chat privacy status
-    // For example, make an API call to update the chat's privacy setting
+  const handlePrivacyToggle = async (checked: boolean) => {
+    if (!currentChatId) return;
+
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ is_private: checked })
+        .eq('id', currentChatId);
+
+      if (error) throw error;
+
+      setIsPrivate(checked);
+      await loadChats();
+      
+      toast({
+        title: checked ? "Chat ist jetzt privat" : "Chat ist jetzt öffentlich",
+        description: checked 
+          ? "Dieser Chat ist nun nur für Sie sichtbar." 
+          : "Dieser Chat ist nun öffentlich sichtbar.",
+      });
+    } catch (error) {
+      console.error('Error updating chat privacy:', error);
+      toast({
+        title: "Fehler beim Aktualisieren der Privatsphäre-Einstellungen",
+        description: "Bitte versuchen Sie es später erneut.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -60,7 +93,7 @@ const Header: React.FC = () => {
                 <span>Back to Chat</span>
               </Link>
             </Button>
-          ) : (
+          ) : currentChatId ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Privat</span>
               <Switch
@@ -68,7 +101,7 @@ const Header: React.FC = () => {
                 onCheckedChange={handlePrivacyToggle}
               />
             </div>
-          )}
+          ) : null}
           {user ? (
             <div className="flex items-center gap-4">
               <DropdownMenu>
