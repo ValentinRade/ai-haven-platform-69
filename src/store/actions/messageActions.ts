@@ -40,7 +40,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       let aiResponse;
       let chatName;
       try {
-        const response = await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook-test/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
+        const response = await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
