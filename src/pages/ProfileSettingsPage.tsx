@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -44,28 +45,30 @@ const ProfileSettingsPage = () => {
   if (!user) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-md">
-      <h1 className="text-2xl font-bold mb-6">Profileinstellungen</h1>
-      
-      <div className="space-y-6">
-        {/* Profile Form Component */}
-        <ProfileForm 
-          user={user} 
-          displayName={displayName} 
-          onUpdate={setDisplayName} 
-        />
+    <div className="w-full px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Profileinstellungen</h1>
         
-        {/* Password Reset Component */}
-        <PasswordReset email={email} />
-        
-        {/* Office365 Auth Component */}
-        <Office365Auth 
-          isConnected={isConnected}
-          isLoading={isLoading}
-          onConnect={connectToOffice365}
-          onDisconnect={disconnectFromOffice365}
-          email={office365Email}
-        />
+        <div className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
+          {/* Profile Form Component */}
+          <ProfileForm 
+            user={user} 
+            displayName={displayName} 
+            onUpdate={setDisplayName} 
+          />
+          
+          {/* Password Reset Component */}
+          <PasswordReset email={email} />
+          
+          {/* Office365 Auth Component */}
+          <Office365Auth 
+            isConnected={isConnected}
+            isLoading={isLoading}
+            onConnect={connectToOffice365}
+            onDisconnect={disconnectFromOffice365}
+            email={office365Email}
+          />
+        </div>
       </div>
     </div>
   );
