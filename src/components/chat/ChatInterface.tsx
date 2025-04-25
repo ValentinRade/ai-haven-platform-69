@@ -40,9 +40,6 @@ const ChatInterface: React.FC = () => {
 
   const simulateAIResponse = async (userMessage: string) => {
     setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
     setIsLoading(false);
   };
   
