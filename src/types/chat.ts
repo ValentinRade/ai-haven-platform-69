@@ -13,5 +13,5 @@ export interface Chat {
   timestamp: Date;
   messages: ChatMessage[];
   creator_display_name?: string;
-  is_private?: boolean;
+  is_private: boolean;
 }

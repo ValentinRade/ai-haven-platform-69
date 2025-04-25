@@ -41,7 +41,8 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
         }
 
         if (data) {
-          const formattedChats = data.map(formatChat);
+          // Explicitly type the data to match what formatChat expects
+          const formattedChats = data.map((chat) => formatChat(chat));
           
           set({ chats: formattedChats });
           
