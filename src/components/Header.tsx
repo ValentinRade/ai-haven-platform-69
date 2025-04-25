@@ -2,11 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { BrainCircuit, Settings, ArrowLeft, LogIn, User } from 'lucide-react';
+import { BrainCircuit, Settings, ArrowLeft, LogIn, UserRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -56,28 +63,35 @@ const Header: React.FC = () => {
                 </Link>
               </Button>
               {user && (
-                <>
-                  <Button variant="outline" size="sm" className="text-secondary" asChild>
-                    <Link to="/admin" className="flex items-center gap-2">
-                      <Settings size={18} />
-                      <span>Admin</span>
-                    </Link>
-                  </Button>
-                </>
+                <Button variant="outline" size="sm" className="text-secondary" asChild>
+                  <Link to="/admin" className="flex items-center gap-2">
+                    <Settings size={18} />
+                    <span>Admin</span>
+                  </Link>
+                </Button>
               )}
             </>
           )}
           {user ? (
             <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                Abmelden
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/profile" className="flex items-center gap-2">
-                  <User size={18} />
-                  <span>Profil</span>
-                </Link>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <UserRound size={18} />
+                    <span>Profil</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => navigate('/profile')}>
+                    Profileinstellungen
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleLogout}>
+                    Abmelden
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Avatar className="h-9 w-9 border border-gray-200">
                 <AvatarImage src={user.user_metadata.avatar_url || ''} />
                 <AvatarFallback>
