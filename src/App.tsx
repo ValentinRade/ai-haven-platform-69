@@ -14,7 +14,7 @@ import WorkflowOverview from "./pages/admin/WorkflowOverview";
 import UserManagement from "./pages/admin/UserManagement";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage";
-import ProfileSettingsPage from "./pages/ProfileSettingsPage"; // New import
+import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -29,8 +29,8 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={<MainLayout />}>
               <Route index element={<ChatPage />} />
+              <Route path="profile" element={<ProfileSettingsPage />} />
             </Route>
-            <Route path="/profile" element={<ProfileSettingsPage />} /> {/* New route */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<WorkflowOverview />} />
               <Route path="workflow-builder" element={<WorkflowBuilder />} />
