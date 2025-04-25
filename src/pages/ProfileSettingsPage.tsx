@@ -45,29 +45,31 @@ const ProfileSettingsPage = () => {
   if (!user) return null;
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] bg-gray-50 p-6">
-      <div className="max-w-xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold">Profileinstellungen</h1>
-        
-        <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
-          {/* Profile Form Component */}
-          <ProfileForm 
-            user={user} 
-            displayName={displayName} 
-            onUpdate={setDisplayName} 
-          />
+    <div className="flex h-[calc(100vh-56px)] w-screen overflow-hidden">
+      <div className="flex-1 overflow-auto bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <h1 className="text-2xl font-bold">Profileinstellungen</h1>
           
-          {/* Password Reset Component */}
-          <PasswordReset email={email} />
-          
-          {/* Office365 Auth Component */}
-          <Office365Auth 
-            isConnected={isConnected}
-            isLoading={isLoading}
-            onConnect={connectToOffice365}
-            onDisconnect={disconnectFromOffice365}
-            email={office365Email}
-          />
+          <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
+            {/* Profile Form Component */}
+            <ProfileForm 
+              user={user} 
+              displayName={displayName} 
+              onUpdate={setDisplayName} 
+            />
+            
+            {/* Password Reset Component */}
+            <PasswordReset email={email} />
+            
+            {/* Office365 Auth Component */}
+            <Office365Auth 
+              isConnected={isConnected}
+              isLoading={isLoading}
+              onConnect={connectToOffice365}
+              onDisconnect={disconnectFromOffice365}
+              email={office365Email}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -75,4 +77,3 @@ const ProfileSettingsPage = () => {
 };
 
 export default ProfileSettingsPage;
-
