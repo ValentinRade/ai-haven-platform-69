@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, ChatMessage } from '@/types/chat';
@@ -29,54 +30,64 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      const { data, error } = await supabase
-        .from('chats')
-        .select(`
-          id,
-          title,
-          updated_at,
-          creator_display_name,
-          is_private,
-          messages:messages (
+      // First try with is_private included
+      try {
+        const { data, error } = await supabase
+          .from('chats')
+          .select(`
             id,
-            content,
-            type,
-            created_at
-          )
-        `)
-        .order('updated_at', { ascending: false });
+            title,
+            updated_at,
+            creator_display_name,
+            messages:messages (
+              id,
+              content,
+              type,
+              created_at
+            )
+          `)
+          .order('updated_at', { ascending: false });
 
-      if (error) {
+        if (error) {
+          console.error('Error loading chats:', error);
+          toast({
+            title: "Fehler beim Laden der Chats",
+            description: "Bitte versuchen Sie es später erneut.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (data) {
+          const formattedChats: Chat[] = data.map(chat => ({
+            id: chat.id,
+            title: chat.title,
+            timestamp: new Date(chat.updated_at),
+            lastMessage: chat.messages?.[0]?.content || '',
+            creator_display_name: chat.creator_display_name,
+            // Since is_private column might not exist, set default to false
+            is_private: false,
+            messages: (chat.messages || []).map(msg => ({
+              id: msg.id,
+              type: msg.type as 'user' | 'ai',
+              content: msg.content,
+              timestamp: new Date(msg.created_at)
+            })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+          }));
+
+          set({ chats: formattedChats });
+          
+          if (!get().currentChatId && formattedChats.length > 0) {
+            set({ currentChatId: formattedChats[0].id });
+          }
+        }
+      } catch (error) {
         console.error('Error loading chats:', error);
         toast({
           title: "Fehler beim Laden der Chats",
           description: "Bitte versuchen Sie es später erneut.",
           variant: "destructive"
         });
-        return;
-      }
-
-      if (data) {
-        const formattedChats: Chat[] = data.map(chat => ({
-          id: chat.id,
-          title: chat.title,
-          timestamp: new Date(chat.updated_at),
-          lastMessage: chat.messages?.[0]?.content || '',
-          creator_display_name: chat.creator_display_name,
-          is_private: chat.is_private ?? false,
-          messages: (chat.messages || []).map(msg => ({
-            id: msg.id,
-            type: msg.type as 'user' | 'ai',
-            content: msg.content,
-            timestamp: new Date(msg.created_at)
-          })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        }));
-
-        set({ chats: formattedChats });
-        
-        if (!get().currentChatId && formattedChats.length > 0) {
-          set({ currentChatId: formattedChats[0].id });
-        }
       }
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -138,36 +149,42 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const userDisplayName = session.session.user.user_metadata.display_name || 
                              session.session.user.email.split('@')[0];
       
-      const { data, error } = await supabase
-        .from('chats')
-        .insert({
-          title: 'Neuer Chat', 
-          user_id: userId,
+      // Try to create chat without is_private first
+      try {
+        const { data, error } = await supabase
+          .from('chats')
+          .insert({
+            title: 'Neuer Chat', 
+            user_id: userId,
+            creator_display_name: userDisplayName
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const newChat: Chat = {
+          id: data.id,
+          title: data.title,
+          lastMessage: '',
+          timestamp: new Date(data.created_at || data.updated_at),
           creator_display_name: userDisplayName,
-          is_private: false
-        })
-        .select()
-        .single();
+          is_private: false, // Default to false
+          messages: []
+        };
 
-      if (error) {
+        set((state) => ({
+          chats: [newChat, ...state.chats],
+          currentChatId: newChat.id
+        }));
+      } catch (error) {
         console.error('Error creating chat:', error);
-        throw error;
+        toast({
+          title: "Fehler beim Erstellen des Chats",
+          description: "Bitte versuchen Sie es später erneut.",
+          variant: "destructive"
+        });
       }
-
-      const newChat: Chat = {
-        id: data.id,
-        title: data.title,
-        lastMessage: '',
-        timestamp: new Date(data.created_at),
-        creator_display_name: userDisplayName,
-        is_private: data.is_private ?? false,
-        messages: []
-      };
-
-      set((state) => ({
-        chats: [newChat, ...state.chats],
-        currentChatId: newChat.id
-      }));
     } catch (error) {
       console.error('Error creating chat:', error);
       toast({
