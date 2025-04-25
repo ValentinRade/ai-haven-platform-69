@@ -43,24 +43,6 @@ const ChatInterface: React.FC = () => {
     
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    let response: string;
-    
-    if (userMessage.toLowerCase().includes('immobilien')) {
-      response = 'Die Immofinanz GmbH ist ein führendes Immobilienunternehmen mit Fokus auf Gewerbeimmobilien in Europa. Kann ich Ihnen weitere Informationen dazu geben?';
-    } else if (userMessage.toLowerCase().includes('workflow')) {
-      response = 'Sie können im Admin-Bereich einen neuen Workflow erstellen. Gehen Sie dazu auf "Admin" und dann "Workflow Builder".';
-    } else if (userMessage.toLowerCase().includes('benutzer') || userMessage.toLowerCase().includes('user')) {
-      response = 'Benutzerkonten können im Admin-Bereich unter "User Management" verwaltet werden.';
-    } else {
-      response = 'Danke für Ihre Anfrage. Als Immofinanz AI kann ich Ihnen bei Fragen zu Immobilien, Workflows und der Plattform helfen. Wie kann ich Ihnen weiterhelfen?';
-    }
-    
-    await addMessageToCurrentChat({
-      type: 'ai',
-      content: response,
-      timestamp: new Date()
-    });
-    
     setIsLoading(false);
   };
   
