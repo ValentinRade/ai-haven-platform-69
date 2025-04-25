@@ -19,6 +19,21 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       // Check if this is the first message in the chat
       const currentChat = chats.find(chat => chat.id === currentChatId);
       const isFirstMessage = currentChat?.messages.length === 0;
+
+      // Check if the message is an audio message by looking at the content format
+      const isAudioMessage = message.content.startsWith('/9j/') || 
+                           message.content.startsWith('GkXf') || 
+                           message.content.startsWith('T21v');
+      
+      // Prepare webhook payload based on message type
+      const webhookPayload = {
+        userId: session.session.user.id,
+        isFirstMessage: isFirstMessage,
+        ...(isAudioMessage 
+          ? { audio: message.content }  // Send as audio if it's a base64 audio message
+          : { message: message.content } // Send as text message otherwise
+        )
+      };
       
       // Send message to webhook
       try {
@@ -27,11 +42,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            userId: session.session.user.id,
-            message: message.content,
-            isFirstMessage: isFirstMessage
-          })
+          body: JSON.stringify(webhookPayload)
         });
       } catch (error) {
         console.error('Error sending message to webhook:', error);
