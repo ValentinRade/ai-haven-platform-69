@@ -28,6 +28,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       // Prepare webhook payload based on message type
       const webhookPayload = {
         userId: session.session.user.id,
+        chatId: currentChatId,
         isFirstMessage: isFirstMessage,
         ...(isAudioMessage 
           ? { audio: message.content }  // Send as audio if it's a base64 audio message
