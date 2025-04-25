@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, UserRound, Settings, BrainCircuit, Mic, Paperclip } from 'lucide-react';
+import { Send, UserRound, Settings, BrainCircuit, Mic, MicOff, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore } from '@/store/chatStore';
 import ChatMessage from './ChatMessage';
@@ -10,10 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { VoiceRecorder } from '@/utils/voiceRecorder';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const voiceRecorderRef = useRef<VoiceRecorder>(new VoiceRecorder());
   const { getCurrentChat, addMessageToCurrentChat, createNewChat, currentChatId } = useChatStore();
   const currentChat = getCurrentChat();
   const navigate = useNavigate();
@@ -88,7 +90,51 @@ const ChatInterface: React.FC = () => {
       handleSend();
     }
   };
-  
+
+  const handleStartRecording = async () => {
+    try {
+      await voiceRecorderRef.current.startRecording();
+      setIsRecording(true);
+      toast({
+        title: "Aufnahme gestartet",
+        description: "Sprechen Sie jetzt...",
+      });
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      toast({
+        title: "Fehler beim Starten der Aufnahme",
+        description: "Bitte überprüfen Sie die Mikrofonberechtigung.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleStopRecording = async () => {
+    try {
+      const base64Audio = await voiceRecorderRef.current.stopRecording();
+      setIsRecording(false);
+      
+      if (!currentChatId) {
+        await createNewChat();
+      }
+      
+      await addMessageToCurrentChat({
+        type: 'user',
+        content: base64Audio,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Failed to stop recording:', error);
+      setIsRecording(false);
+      toast({
+        title: "Fehler beim Beenden der Aufnahme",
+        description: "Bitte versuchen Sie es erneut.",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [currentChat?.messages]);
@@ -185,10 +231,16 @@ const ChatInterface: React.FC = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="rounded-full h-8 w-8 text-gray-500 hover:bg-gray-100 hover:text-gray-700 flex-shrink-0 mr-1"
-            aria-label="Sprachaufnahme"
+            className={cn(
+              "rounded-full h-8 w-8 flex-shrink-0",
+              isRecording 
+                ? "text-red-500 hover:text-red-700 hover:bg-red-50" 
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            )}
+            onClick={isRecording ? handleStopRecording : handleStartRecording}
+            aria-label={isRecording ? "Aufnahme beenden" : "Sprachaufnahme starten"}
           >
-            <Mic size={18} />
+            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
           </Button>
           <Button 
             onClick={handleSend} 
