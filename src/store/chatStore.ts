@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
 import { Chat, ChatMessage } from '@/types/chat';
@@ -46,6 +47,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
         if (error) throw error;
 
+        // Only run this code if we have valid data (no error)
         const formattedChats: Chat[] = chats.map(chat => ({
           id: chat.id,
           title: chat.title,
@@ -68,6 +70,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         }
       } catch (e) {
         console.error('Error with is_private, falling back:', e);
+        
+        // Fallback query without is_private
         const { data: chats, error } = await supabase
           .from('chats')
           .select(`
@@ -86,25 +90,28 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
         if (error) throw error;
 
-        const formattedChats: Chat[] = chats.map(chat => ({
-          id: chat.id,
-          title: chat.title,
-          timestamp: new Date(chat.updated_at),
-          lastMessage: chat.messages?.[0]?.content || '',
-          creator_display_name: chat.creator_display_name,
-          is_private: false,
-          messages: (chat.messages || []).map(msg => ({
-            id: msg.id,
-            type: msg.type as 'user' | 'ai',
-            content: msg.content,
-            timestamp: new Date(msg.created_at)
-          })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        }));
+        // Only proceed if we have valid data
+        if (chats) {
+          const formattedChats: Chat[] = chats.map(chat => ({
+            id: chat.id,
+            title: chat.title,
+            timestamp: new Date(chat.updated_at),
+            lastMessage: chat.messages?.[0]?.content || '',
+            creator_display_name: chat.creator_display_name,
+            is_private: false, // Default to false when column doesn't exist
+            messages: (chat.messages || []).map(msg => ({
+              id: msg.id,
+              type: msg.type as 'user' | 'ai',
+              content: msg.content,
+              timestamp: new Date(msg.created_at)
+            })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+          }));
 
-        set({ chats: formattedChats });
-        
-        if (!get().currentChatId && formattedChats.length > 0) {
-          set({ currentChatId: formattedChats[0].id });
+          set({ chats: formattedChats });
+          
+          if (!get().currentChatId && formattedChats.length > 0) {
+            set({ currentChatId: formattedChats[0].id });
+          }
         }
       }
     } catch (error) {

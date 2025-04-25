@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -64,37 +65,55 @@ const Header: React.FC = () => {
         throw columnError;
       }
 
-      const updateData = { 
-        title: (getCurrentChat()?.title || 'Chat'),
-        is_private: checked 
-      };
+      try {
+        // Try updating with is_private field
+        const updateData = { 
+          title: (getCurrentChat()?.title || 'Chat'),
+          is_private: checked 
+        };
 
-      const { error } = await supabase
-        .from('chats')
-        .update(updateData)
-        .eq('id', currentChatId);
+        const { error } = await supabase
+          .from('chats')
+          .update(updateData)
+          .eq('id', currentChatId);
 
-      if (error) {
-        if (error.message.includes('does not exist')) {
+        if (error) {
+          if (error.message.includes('does not exist')) {
+            toast({
+              title: "Feature nicht verfügbar",
+              description: "Die Privatsphäre-Funktion ist noch nicht verfügbar. Bitte versuchen Sie es später erneut.",
+              variant: "destructive"
+            });
+            return;
+          }
+          throw error;
+        }
+
+        setIsPrivate(checked);
+        await loadChats();
+        
+        toast({
+          title: checked ? "Chat ist jetzt privat" : "Chat ist jetzt öffentlich",
+          description: checked 
+            ? "Dieser Chat ist nun nur für Sie sichtbar." 
+            : "Dieser Chat ist nun öffentlich sichtbar.",
+        });
+      } catch (e) {
+        console.error('Error updating chat privacy:', e);
+        if (String(e).includes('does not exist')) {
           toast({
             title: "Feature nicht verfügbar",
             description: "Die Privatsphäre-Funktion ist noch nicht verfügbar. Bitte versuchen Sie es später erneut.",
             variant: "destructive"
           });
-          return;
+        } else {
+          toast({
+            title: "Fehler beim Aktualisieren der Privatsphäre-Einstellungen",
+            description: "Bitte versuchen Sie es später erneut.",
+            variant: "destructive"
+          });
         }
-        throw error;
       }
-
-      setIsPrivate(checked);
-      await loadChats();
-      
-      toast({
-        title: checked ? "Chat ist jetzt privat" : "Chat ist jetzt öffentlich",
-        description: checked 
-          ? "Dieser Chat ist nun nur für Sie sichtbar." 
-          : "Dieser Chat ist nun öffentlich sichtbar.",
-      });
     } catch (error) {
       console.error('Error updating chat privacy:', error);
       toast({
