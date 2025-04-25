@@ -6,7 +6,7 @@ import { ChatStore } from '../types/chatStore.types';
 
 export const createMessageActions = (set: Function, get: () => ChatStore) => ({
   addMessageToCurrentChat: async (message: Omit<ChatMessage, 'id'>) => {
-    const { currentChatId } = get();
+    const { currentChatId, chats } = get();
     if (!currentChatId) return;
 
     try {
@@ -14,6 +14,28 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       if (!session.session?.user) {
         console.error('User not authenticated');
         return;
+      }
+      
+      // Check if this is the first message in the chat
+      const currentChat = chats.find(chat => chat.id === currentChatId);
+      const isFirstMessage = currentChat?.messages.length === 0;
+      
+      // Send message to webhook
+      try {
+        await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook-test/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: session.session.user.id,
+            message: message.content,
+            isFirstMessage: isFirstMessage
+          })
+        });
+      } catch (error) {
+        console.error('Error sending message to webhook:', error);
+        // Continue with message creation even if webhook fails
       }
       
       const { data, error } = await supabase
