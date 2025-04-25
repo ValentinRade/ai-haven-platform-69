@@ -4,6 +4,8 @@ import { Chat, ChatMessage } from '@/types/chat';
 import { toast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
 
+type ChatRow = Database['public']['Tables']['chats']['Row'];
+
 interface ChatStore {
   chats: Chat[];
   currentChatId: string | null;
@@ -27,7 +29,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      const { data: chats, error } = await supabase
+      const { data, error } = await supabase
         .from('chats')
         .select(`
           id,
@@ -54,14 +56,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
 
-      if (chats) {
-        const formattedChats: Chat[] = chats.map(chat => ({
+      if (data) {
+        const formattedChats: Chat[] = data.map(chat => ({
           id: chat.id,
           title: chat.title,
           timestamp: new Date(chat.updated_at),
           lastMessage: chat.messages?.[0]?.content || '',
           creator_display_name: chat.creator_display_name,
-          is_private: chat.is_private || false,
+          is_private: chat.is_private ?? false,
           messages: (chat.messages || []).map(msg => ({
             id: msg.id,
             type: msg.type as 'user' | 'ai',
@@ -136,47 +138,29 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const userDisplayName = session.session.user.user_metadata.display_name || 
                              session.session.user.email.split('@')[0];
       
-      let chat;
-      try {
-        const { data, error } = await supabase
-          .from('chats')
-          .insert({
-            title: 'Neuer Chat', 
-            user_id: userId,
-            creator_display_name: userDisplayName,
-            is_private: false
-          })
-          .select()
-          .single();
+      const { data, error } = await supabase
+        .from('chats')
+        .insert({
+          title: 'Neuer Chat', 
+          user_id: userId,
+          creator_display_name: userDisplayName,
+          is_private: false
+        })
+        .select()
+        .single();
 
-        if (error) throw error;
-        chat = data;
-      } catch (e) {
-        if (String(e).includes('is_private does not exist')) {
-          const { data, error } = await supabase
-            .from('chats')
-            .insert({
-              title: 'Neuer Chat', 
-              user_id: userId,
-              creator_display_name: userDisplayName
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
-          chat = data;
-        } else {
-          throw e;
-        }
+      if (error) {
+        console.error('Error creating chat:', error);
+        throw error;
       }
 
       const newChat: Chat = {
-        id: chat.id,
-        title: chat.title,
+        id: data.id,
+        title: data.title,
         lastMessage: '',
-        timestamp: new Date(chat.created_at),
+        timestamp: new Date(data.created_at),
         creator_display_name: userDisplayName,
-        is_private: chat.is_private || false,
+        is_private: data.is_private ?? false,
         messages: []
       };
 

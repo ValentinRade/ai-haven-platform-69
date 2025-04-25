@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare, UserRound, Trash2 } from 'lucide-react';
+import { PlusCircle, MessageSquare, UserRound, Trash2, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -65,6 +65,12 @@ const ChatSidebar: React.FC = () => {
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-sm text-gray-600">{chat.creator_display_name || 'Unbenannt'}</span>
+                      {chat.is_private && (
+                        <span className="flex items-center text-xs text-gray-500">
+                          <EyeOff size={12} className="mr-1" />
+                          Privat
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 overflow-hidden mt-1">
                       <MessageSquare size={16} className="flex-shrink-0 text-gray-500" />
