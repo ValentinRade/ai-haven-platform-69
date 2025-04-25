@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { BrainCircuit, Settings, ArrowLeft, LogIn, UserRound } from 'lucide-react';
+import { BrainCircuit, ArrowLeft, LogIn, UserRound } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import {
@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -22,12 +21,10 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
 
   useEffect(() => {
-    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -62,22 +59,12 @@ const Header: React.FC = () => {
               </Link>
             </Button>
           ) : (
-            <>
-              <Button variant="ghost" size="sm" className="text-secondary" asChild>
-                <Link to="/" className="flex items-center gap-2">
-                  <BrainCircuit size={18} />
-                  <span>AI Chat</span>
-                </Link>
-              </Button>
-              {user && (
-                <Button variant="outline" size="sm" className="text-secondary" asChild>
-                  <Link to="/admin" className="flex items-center gap-2">
-                    <Settings size={18} />
-                    <span>Admin</span>
-                  </Link>
-                </Button>
-              )}
-            </>
+            <Button variant="ghost" size="sm" className="text-secondary" asChild>
+              <Link to="/" className="flex items-center gap-2">
+                <BrainCircuit size={18} />
+                <span>AI Chat</span>
+              </Link>
+            </Button>
           )}
           {user ? (
             <div className="flex items-center gap-4">
