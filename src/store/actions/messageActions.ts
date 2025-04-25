@@ -36,21 +36,28 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         )
       };
       
-      // Send message to webhook
+      // Send message to webhook and wait for response
+      let aiResponse;
       try {
-        await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook-test/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
+        const response = await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook-test/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(webhookPayload)
         });
+        
+        const responseData = await response.json();
+        if (responseData.answer) {
+          aiResponse = responseData.answer;
+        }
       } catch (error) {
         console.error('Error sending message to webhook:', error);
         // Continue with message creation even if webhook fails
       }
       
-      const { data, error } = await supabase
+      // Save user's message to database
+      const { data: userData, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: currentChatId,
@@ -60,16 +67,17 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (userError) throw userError;
 
+      // Update the chat state with user's message
       set((state: ChatStore) => {
         const updatedChats = state.chats.map((chat) => {
           if (chat.id === currentChatId) {
             const newMessage = {
-              id: data.id,
+              id: userData.id,
               type: message.type,
               content: message.content,
-              timestamp: new Date(data.created_at)
+              timestamp: new Date(userData.created_at)
             };
             
             return {
@@ -82,12 +90,53 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           return chat;
         });
 
-        const currentChat = updatedChats.find(c => c.id === currentChatId);
-        const otherChats = updatedChats.filter(c => c.id !== currentChatId);
         return { 
-          chats: currentChat ? [currentChat, ...otherChats] : updatedChats 
+          chats: updatedChats 
         };
       });
+
+      // If we got an AI response from the webhook, save and add it to the chat
+      if (aiResponse) {
+        const { data: aiData, error: aiError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: currentChatId,
+            content: aiResponse,
+            type: 'ai'
+          })
+          .select()
+          .single();
+
+        if (aiError) throw aiError;
+
+        // Update the chat state with AI's response
+        set((state: ChatStore) => {
+          const updatedChats = state.chats.map((chat) => {
+            if (chat.id === currentChatId) {
+              const newAiMessage = {
+                id: aiData.id,
+                type: 'ai',
+                content: aiResponse,
+                timestamp: new Date(aiData.created_at)
+              };
+              
+              return {
+                ...chat,
+                lastMessage: aiResponse,
+                timestamp: new Date(),
+                messages: [...chat.messages, newAiMessage]
+              };
+            }
+            return chat;
+          });
+
+          const currentChat = updatedChats.find(c => c.id === currentChatId);
+          const otherChats = updatedChats.filter(c => c.id !== currentChatId);
+          return { 
+            chats: currentChat ? [currentChat, ...otherChats] : updatedChats 
+          };
+        });
+      }
     } catch (error) {
       console.error('Error adding message:', error);
       toast({
