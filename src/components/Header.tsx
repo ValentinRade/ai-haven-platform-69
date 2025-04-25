@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -66,11 +65,22 @@ const Header: React.FC = () => {
       }
 
       try {
-        // Try updating with is_private field
         const updateData = { 
-          title: (getCurrentChat()?.title || 'Chat'),
-          is_private: checked 
+          title: (getCurrentChat()?.title || 'Chat')
         };
+
+        try {
+          const { data, error: testError } = await supabase
+            .from('chats')
+            .select('is_private')
+            .limit(1);
+          
+          if (!testError) {
+            (updateData as any).is_private = checked;
+          }
+        } catch (e) {
+          console.log('is_private column may not exist, skipping it in update');
+        }
 
         const { error } = await supabase
           .from('chats')

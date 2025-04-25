@@ -28,6 +28,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
       
       try {
+        // First try to query with is_private field
         const { data: chats, error } = await supabase
           .from('chats')
           .select(`
@@ -45,52 +46,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           `)
           .order('updated_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error loading chats with is_private:', error);
+          throw error;
+        }
 
         // Only run this code if we have valid data (no error)
-        const formattedChats: Chat[] = chats.map(chat => ({
-          id: chat.id,
-          title: chat.title,
-          timestamp: new Date(chat.updated_at),
-          lastMessage: chat.messages?.[0]?.content || '',
-          creator_display_name: chat.creator_display_name,
-          is_private: chat.is_private || false,
-          messages: (chat.messages || []).map(msg => ({
-            id: msg.id,
-            type: msg.type as 'user' | 'ai',
-            content: msg.content,
-            timestamp: new Date(msg.created_at)
-          })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        }));
-
-        set({ chats: formattedChats });
-        
-        if (!get().currentChatId && formattedChats.length > 0) {
-          set({ currentChatId: formattedChats[0].id });
-        }
-      } catch (e) {
-        console.error('Error with is_private, falling back:', e);
-        
-        // Fallback query without is_private
-        const { data: chats, error } = await supabase
-          .from('chats')
-          .select(`
-            id,
-            title,
-            updated_at,
-            creator_display_name,
-            messages:messages (
-              id,
-              content,
-              type,
-              created_at
-            )
-          `)
-          .order('updated_at', { ascending: false });
-
-        if (error) throw error;
-
-        // Only proceed if we have valid data
         if (chats) {
           const formattedChats: Chat[] = chats.map(chat => ({
             id: chat.id,
@@ -98,7 +59,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             timestamp: new Date(chat.updated_at),
             lastMessage: chat.messages?.[0]?.content || '',
             creator_display_name: chat.creator_display_name,
-            is_private: false, // Default to false when column doesn't exist
+            is_private: chat.is_private || false,
             messages: (chat.messages || []).map(msg => ({
               id: msg.id,
               type: msg.type as 'user' | 'ai',
@@ -112,6 +73,60 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           if (!get().currentChatId && formattedChats.length > 0) {
             set({ currentChatId: formattedChats[0].id });
           }
+          return;
+        }
+      } catch (e) {
+        console.error('Error with is_private, falling back:', e);
+      }
+      
+      // Fallback query without is_private if the first query fails
+      const { data: fallbackChats, error: fallbackError } = await supabase
+        .from('chats')
+        .select(`
+          id,
+          title,
+          updated_at,
+          creator_display_name,
+          messages:messages (
+            id,
+            content,
+            type,
+            created_at
+          )
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (fallbackError) {
+        console.error('Error loading chats (fallback):', fallbackError);
+        toast({
+          title: "Fehler beim Laden der Chats",
+          description: "Bitte versuchen Sie es später erneut.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Only proceed if we have valid data
+      if (fallbackChats) {
+        const formattedChats: Chat[] = fallbackChats.map(chat => ({
+          id: chat.id,
+          title: chat.title,
+          timestamp: new Date(chat.updated_at),
+          lastMessage: chat.messages?.[0]?.content || '',
+          creator_display_name: chat.creator_display_name,
+          is_private: false, // Default to false when column doesn't exist
+          messages: (chat.messages || []).map(msg => ({
+            id: msg.id,
+            type: msg.type as 'user' | 'ai',
+            content: msg.content,
+            timestamp: new Date(msg.created_at)
+          })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+        }));
+
+        set({ chats: formattedChats });
+        
+        if (!get().currentChatId && formattedChats.length > 0) {
+          set({ currentChatId: formattedChats[0].id });
         }
       }
     } catch (error) {
