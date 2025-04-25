@@ -1,9 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { BrainCircuit, Settings, ArrowLeft, LogIn, UserRound } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import {
@@ -14,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -100,12 +99,6 @@ const Header: React.FC = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Avatar className="h-9 w-9 border border-gray-200">
-                <AvatarImage src={user.user_metadata.avatar_url || ''} />
-                <AvatarFallback>
-                  <UserRound size={20} />
-                </AvatarFallback>
-              </Avatar>
             </div>
           ) : (
             <Button variant="outline" size="sm" asChild>
