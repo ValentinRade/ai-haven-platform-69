@@ -26,44 +26,86 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         return;
       }
       
-      const { data: chats, error } = await supabase
-        .from('chats')
-        .select(`
-          id,
-          title,
-          updated_at,
-          creator_display_name,
-          is_private,
-          messages:messages (
+      try {
+        const { data: chats, error } = await supabase
+          .from('chats')
+          .select(`
             id,
-            content,
-            type,
-            created_at
-          )
-        `)
-        .order('updated_at', { ascending: false });
+            title,
+            updated_at,
+            creator_display_name,
+            is_private,
+            messages:messages (
+              id,
+              content,
+              type,
+              created_at
+            )
+          `)
+          .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const formattedChats: Chat[] = chats.map(chat => ({
-        id: chat.id,
-        title: chat.title,
-        timestamp: new Date(chat.updated_at),
-        lastMessage: chat.messages?.[0]?.content || '',
-        creator_display_name: chat.creator_display_name,
-        is_private: chat.is_private,
-        messages: (chat.messages || []).map(msg => ({
-          id: msg.id,
-          type: msg.type as 'user' | 'ai',
-          content: msg.content,
-          timestamp: new Date(msg.created_at)
-        })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      }));
+        const formattedChats: Chat[] = chats.map(chat => ({
+          id: chat.id,
+          title: chat.title,
+          timestamp: new Date(chat.updated_at),
+          lastMessage: chat.messages?.[0]?.content || '',
+          creator_display_name: chat.creator_display_name,
+          is_private: chat.is_private || false,
+          messages: (chat.messages || []).map(msg => ({
+            id: msg.id,
+            type: msg.type as 'user' | 'ai',
+            content: msg.content,
+            timestamp: new Date(msg.created_at)
+          })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+        }));
 
-      set({ chats: formattedChats });
-      
-      if (!get().currentChatId && formattedChats.length > 0) {
-        set({ currentChatId: formattedChats[0].id });
+        set({ chats: formattedChats });
+        
+        if (!get().currentChatId && formattedChats.length > 0) {
+          set({ currentChatId: formattedChats[0].id });
+        }
+      } catch (e) {
+        console.error('Error with is_private, falling back:', e);
+        const { data: chats, error } = await supabase
+          .from('chats')
+          .select(`
+            id,
+            title,
+            updated_at,
+            creator_display_name,
+            messages:messages (
+              id,
+              content,
+              type,
+              created_at
+            )
+          `)
+          .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+
+        const formattedChats: Chat[] = chats.map(chat => ({
+          id: chat.id,
+          title: chat.title,
+          timestamp: new Date(chat.updated_at),
+          lastMessage: chat.messages?.[0]?.content || '',
+          creator_display_name: chat.creator_display_name,
+          is_private: false,
+          messages: (chat.messages || []).map(msg => ({
+            id: msg.id,
+            type: msg.type as 'user' | 'ai',
+            content: msg.content,
+            timestamp: new Date(msg.created_at)
+          })).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+        }));
+
+        set({ chats: formattedChats });
+        
+        if (!get().currentChatId && formattedChats.length > 0) {
+          set({ currentChatId: formattedChats[0].id });
+        }
       }
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -125,17 +167,39 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const userDisplayName = session.session.user.user_metadata.display_name || 
                                session.session.user.email.split('@')[0];
       
-      const { data: chat, error: chatError } = await supabase
-        .from('chats')
-        .insert({
-          title: 'Neuer Chat', 
-          user_id: userId,
-          creator_display_name: userDisplayName
-        })
-        .select()
-        .single();
+      let chat;
+      try {
+        const { data, error } = await supabase
+          .from('chats')
+          .insert({
+            title: 'Neuer Chat', 
+            user_id: userId,
+            creator_display_name: userDisplayName,
+            is_private: false
+          })
+          .select()
+          .single();
 
-      if (chatError) throw chatError;
+        if (error) throw error;
+        chat = data;
+      } catch (e) {
+        if (String(e).includes('does not exist')) {
+          const { data, error } = await supabase
+            .from('chats')
+            .insert({
+              title: 'Neuer Chat', 
+              user_id: userId,
+              creator_display_name: userDisplayName
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          chat = data;
+        } else {
+          throw e;
+        }
+      }
 
       const { data: message, error: messageError } = await supabase
         .from('messages')
@@ -155,7 +219,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         lastMessage: message.content,
         timestamp: new Date(chat.created_at),
         creator_display_name: userDisplayName,
-        is_private: chat.is_private,
+        is_private: chat.is_private || false,
         messages: [{
           id: message.id,
           type: 'ai',

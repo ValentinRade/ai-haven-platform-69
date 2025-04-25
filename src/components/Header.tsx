@@ -53,12 +53,38 @@ const Header: React.FC = () => {
     if (!currentChatId) return;
 
     try {
+      const { data: columnCheck, error: columnError } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('id', currentChatId)
+        .single();
+      
+      if (columnError) {
+        console.error('Error checking chat:', columnError);
+        throw columnError;
+      }
+
+      const updateData = { 
+        title: (getCurrentChat()?.title || 'Chat'),
+        is_private: checked 
+      };
+
       const { error } = await supabase
         .from('chats')
-        .update({ is_private: checked })
+        .update(updateData)
         .eq('id', currentChatId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('does not exist')) {
+          toast({
+            title: "Feature nicht verfügbar",
+            description: "Die Privatsphäre-Funktion ist noch nicht verfügbar. Bitte versuchen Sie es später erneut.",
+            variant: "destructive"
+          });
+          return;
+        }
+        throw error;
+      }
 
       setIsPrivate(checked);
       await loadChats();
