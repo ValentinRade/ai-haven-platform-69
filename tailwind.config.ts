@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -108,8 +107,8 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out'
 			},
 			fontFamily: {
-				sans: ['Nunito Sans', 'Inter', 'system-ui', 'sans-serif'],
-				nunito: ['Nunito Sans', 'system-ui', 'sans-serif']
+				sans: ['Avenir', 'system-ui', 'sans-serif'],
+				avenir: ['Avenir', 'system-ui', 'sans-serif']
 			}
 		}
 	},
