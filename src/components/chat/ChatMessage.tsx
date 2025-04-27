@@ -23,6 +23,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const audioInitialized = useRef(false);
   const audioDataReady = useRef(false);
+  const audioLoading = useRef(false);
 
   useEffect(() => {
     if (!message.content) {
@@ -44,6 +45,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           setDuration(newAudio.duration);
           setProgress(0);
           audioDataReady.current = true;
+          audioLoading.current = false;
+          console.log('Audio metadata loaded, duration:', newAudio.duration);
         });
         
         newAudio.addEventListener('timeupdate', () => {
@@ -57,6 +60,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         newAudio.preload = 'metadata';
         
         // Ensure audio data is loaded
+        audioLoading.current = true;
         newAudio.load();
         
         setAudio(newAudio);
@@ -102,7 +106,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         setProgress((audio.currentTime / audio.duration) * 100);
       };
       
-      const handleLoadedMetadata = () => setDuration(audio.duration);
+      const handleLoadedMetadata = () => {
+        setDuration(audio.duration);
+        audioDataReady.current = true;
+        audioLoading.current = false;
+      };
+      
       const handleEnded = () => setIsPlaying(false);
 
       audio.addEventListener('timeupdate', updateTime);
@@ -136,6 +145,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const playAudio = () => {
     if (!audio) return;
 
+    // If audio data isn't ready yet, force load it
+    ensureAudioDataLoaded();
+
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
@@ -145,31 +157,60 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }
   };
 
+  const ensureAudioDataLoaded = () => {
+    if (!audio) return;
+    
+    if (!audioDataReady.current && !audioLoading.current) {
+      audioLoading.current = true;
+      audio.load();
+    }
+  };
+
   const handleSliderChange = (value: number[]) => {
     if (!audio) {
       console.log('Audio not initialized yet');
       return;
     }
     
-    // Load audio data if needed
-    if (!audioDataReady.current) {
-      audio.load();
-      audioDataReady.current = true;
-    }
+    // Make sure audio data is loaded first
+    ensureAudioDataLoaded();
+    
+    // Even if duration isn't available yet, update the progress value anyway
+    // so the slider movement is responsive to user interaction
+    setProgress(value[0]);
     
     try {
-      if (!isFinite(audio.duration) || audio.duration <= 0) {
-        // If duration is not available yet, update the progress value anyway
-        // so the slider movement is responsive to user interaction
-        setProgress(value[0]);
-        return;
-      }
-      
-      const newTime = (value[0] / 100) * audio.duration;
-      if (isFinite(newTime) && newTime >= 0) {
-        audio.currentTime = newTime;
-        setCurrentTime(newTime);
-        setProgress(value[0]);
+      // Wait for audio metadata to be loaded
+      if (audioDataReady.current && isFinite(audio.duration) && audio.duration > 0) {
+        const newTime = (value[0] / 100) * audio.duration;
+        if (isFinite(newTime) && newTime >= 0) {
+          audio.currentTime = newTime;
+          setCurrentTime(newTime);
+          
+          // If the user is scrubbing but not playing yet, update the display time
+          if (!isPlaying) {
+            setCurrentTime(newTime);
+          }
+        }
+      } else if (!audioLoading.current) {
+        // If we haven't tried loading data yet, do it now
+        audioLoading.current = true;
+        console.log('Forcing audio metadata load');
+        audio.load();
+        
+        // Listen for the metadata to load, then set the time
+        const onceLoaded = () => {
+          if (isFinite(audio.duration) && audio.duration > 0) {
+            const newTime = (value[0] / 100) * audio.duration;
+            if (isFinite(newTime) && newTime >= 0) {
+              audio.currentTime = newTime;
+              setCurrentTime(newTime);
+            }
+          }
+          audio.removeEventListener('loadedmetadata', onceLoaded);
+        };
+        
+        audio.addEventListener('loadedmetadata', onceLoaded);
       }
     } catch (error) {
       console.error('Error setting audio current time:', error);
