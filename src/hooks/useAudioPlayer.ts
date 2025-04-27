@@ -21,7 +21,6 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
       newAudio.addEventListener('loadedmetadata', () => {
         // Use the actual audio duration if available and valid
         if (newAudio.duration && isFinite(newAudio.duration)) {
-          console.log('Actual audio duration:', newAudio.duration);
           setActualDuration(newAudio.duration);
         }
       });
@@ -58,10 +57,12 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
     };
   }, [audioContent]);
 
-  // Update actual duration when duration changes
+  // Update actual duration on first load
   useEffect(() => {
-    setActualDuration(duration);
-  }, [duration]);
+    if (audio && audio.duration && isFinite(audio.duration)) {
+      setActualDuration(audio.duration);
+    }
+  }, [audio]);
 
   const handlePlay = () => {
     if (!audio) return;
