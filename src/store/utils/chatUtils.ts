@@ -17,7 +17,7 @@ export const formatChat = (chat: Partial<ChatRow> & {
   timestamp: new Date(chat.updated_at),
   lastMessage: chat.messages?.[0]?.content || '',
   creator_display_name: chat.creator_display_name || '',
-  is_private: chat.is_private || false,
+  is_private: false, // Default to false since the column doesn't exist
   messages: (chat.messages || []).map(formatMessage)
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 });
