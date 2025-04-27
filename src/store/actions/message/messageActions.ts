@@ -27,19 +27,23 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         isLoading: true
       }));
 
-      // Determine audio duration for voice messages
-      let audioDuration: number | null = null;
-      if (typeof message.content === 'string' && 
-          (message.content.startsWith('/9j/') || 
-           message.content.startsWith('GkXf') || 
-           message.content.startsWith('T21v'))) {
-        // Create audio element to get duration
+      // Check if this is an audio message (base64 encoded)
+      const isAudioMessage = typeof message.content === 'string' && (
+        message.content.startsWith('/9j/') || 
+        message.content.startsWith('GkXf') || 
+        message.content.startsWith('T21v')
+      );
+      
+      // For audio messages, determine duration before saving to database
+      if (isAudioMessage) {
         return new Promise<void>((resolve, reject) => {
           const audio = new Audio(`data:audio/webm;base64,${message.content}`);
+          
           audio.onloadedmetadata = async () => {
-            audioDuration = audio.duration;
-
-            // Save user's message to database
+            const audioDuration = audio.duration;
+            console.log('Audio duration:', audioDuration);
+            
+            // Save user's message to database with duration
             const { data: userData, error: userError } = await supabase
               .from('messages')
               .insert({
@@ -61,14 +65,13 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
                     id: userData.id,
                     type: message.type,
                     content: message.content,
-                    timestamp: new Date(userData.created_at)
+                    timestamp: new Date(userData.created_at),
+                    duration: audioDuration
                   };
                   
                   return {
                     ...chat,
-                    lastMessage: typeof message.content === 'string' 
-                      ? message.content 
-                      : 'User message',
+                    lastMessage: "Voice message",
                     timestamp: new Date(),
                     messages: [...chat.messages, newMessage]
                   };
@@ -88,7 +91,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
                 currentChatId,
                 message.content as string,
                 isFirstMessage,
-                true
+                true // isAudio
               );
 
               const aiResponse = response.answer || response.output;
@@ -175,7 +178,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           currentChatId,
           message.content as string,
           isFirstMessage,
-          false
+          false // not audio
         );
 
         const aiResponse = response.answer || response.output;
