@@ -94,7 +94,6 @@ const ChatInputArea: React.FC = () => {
         timestamp: new Date(),
         duration: duration
       });
-
     } catch (error) {
       console.error('Failed to stop recording:', error);
       setIsRecording(false);
