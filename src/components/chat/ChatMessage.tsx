@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -15,6 +15,42 @@ interface ChatMessageProps {
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [parsedContent, setParsedContent] = useState<{ __html: string }>({ __html: '' });
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Parse content in a useEffect to avoid blocking the main thread
+  useEffect(() => {
+    if (!isAudioMessage) {
+      try {
+        let content = message.content;
+        
+        // Check if the content is a JSON string containing an array with output property
+        if (content.startsWith('[{')) {
+          try {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed) && parsed[0]?.output) {
+              content = parsed[0].output;
+            }
+          } catch (e) {
+            console.log('Failed to parse JSON content:', e);
+            // Continue with original content if JSON parsing fails
+          }
+        }
+        
+        // Convert markdown to HTML with a small delay to prevent UI freezing
+        setTimeout(() => {
+          const html = marked(content, { 
+            breaks: true,
+            gfm: true
+          });
+          setParsedContent({ __html: html });
+        }, 10);
+      } catch (error) {
+        console.error('Error parsing message content:', error);
+        setParsedContent({ __html: message.content });
+      }
+    }
+  }, [message.content]);
 
   const playAudio = () => {
     if (!audio) {
@@ -38,24 +74,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isAudioMessage = message.content.startsWith('/9j/') || 
                         message.content.startsWith('GkXf') || 
                         message.content.startsWith('T21v');
-
-  const parseContent = (content: string) => {
-    try {
-      // Check if the content is a JSON string containing an array with output property
-      if (content.startsWith('[{')) {
-        const parsed = JSON.parse(content);
-        if (Array.isArray(parsed) && parsed[0]?.output) {
-          content = parsed[0].output;
-        }
-      }
-      // Convert markdown to HTML
-      const html = marked(content, { breaks: true });
-      return { __html: html };
-    } catch (error) {
-      // If parsing fails, return the original content
-      return { __html: content };
-    }
-  };
 
   return (
     <div 
@@ -91,8 +109,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             </div>
           ) : (
             <div 
-              dangerouslySetInnerHTML={parseContent(message.content)}
-              className="text-sm sm:text-base"
+              ref={contentRef}
+              dangerouslySetInnerHTML={parsedContent}
+              className="text-sm sm:text-base overflow-auto"
             />
           )}
         </div>
@@ -105,4 +124,3 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 };
 
 export default ChatMessage;
-
