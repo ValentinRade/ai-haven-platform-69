@@ -7,7 +7,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [actualDuration, setActualDuration] = useState(duration);
+  const [actualDuration, setActualDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioInitialized = useRef(false);
 
@@ -22,13 +22,17 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
         // Use the actual audio duration if available and valid
         if (newAudio.duration && isFinite(newAudio.duration)) {
           setActualDuration(newAudio.duration);
+        } else {
+          // Fallback to provided duration only if needed
+          setActualDuration(duration);
         }
       });
       
       newAudio.addEventListener('timeupdate', () => {
         setCurrentTime(newAudio.currentTime);
-        // Calculate progress based on the actual duration
-        const calculatedProgress = (newAudio.currentTime / actualDuration) * 100;
+        // Always calculate progress based on the actual duration
+        const currentDuration = actualDuration || duration;
+        const calculatedProgress = (newAudio.currentTime / currentDuration) * 100;
         setProgress(Math.min(calculatedProgress, 100));
       });
       
@@ -55,9 +59,9 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
         audioRef.current = null;
       }
     };
-  }, [audioContent]);
+  }, [audioContent, duration]);
 
-  // Update actual duration on first load
+  // Update actual duration whenever audio metadata loads
   useEffect(() => {
     if (audio && audio.duration && isFinite(audio.duration)) {
       setActualDuration(audio.duration);
@@ -80,7 +84,9 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
     if (!audio) return;
     
     setProgress(value[0]);
-    const newTime = (value[0] / 100) * actualDuration;
+    // Use actual duration for calculating the time position
+    const currentDuration = actualDuration || duration;
+    const newTime = (value[0] / 100) * currentDuration;
     setCurrentTime(newTime);
     
     try {
