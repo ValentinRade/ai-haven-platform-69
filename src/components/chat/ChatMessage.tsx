@@ -15,40 +15,33 @@ interface ChatMessageProps {
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [parsedContent, setParsedContent] = useState<{ __html: string }>({ __html: '' });
+  const [parsedContent, setParsedContent] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Parse content in a useEffect to avoid blocking the main thread
+  // Parse content when message changes
   useEffect(() => {
-    if (!isAudioMessage) {
-      try {
-        let content = message.content;
-        
-        // Check if the content is a JSON string containing an array with output property
-        if (content.startsWith('[{')) {
-          try {
-            const parsed = JSON.parse(content);
-            if (Array.isArray(parsed) && parsed[0]?.output) {
-              content = parsed[0].output;
-            }
-          } catch (e) {
-            console.log('Failed to parse JSON content:', e);
-            // Continue with original content if JSON parsing fails
+    if (isAudioMessage) return;
+    
+    try {
+      let content = message.content;
+      
+      // Check if content is JSON format
+      if (content.startsWith('[{')) {
+        try {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed) && parsed[0]?.output) {
+            content = parsed[0].output;
           }
+        } catch (e) {
+          console.log('Failed to parse JSON content:', e);
         }
-        
-        // Convert markdown to HTML with a small delay to prevent UI freezing
-        setTimeout(() => {
-          const html = marked(content, { 
-            breaks: true,
-            gfm: true
-          });
-          setParsedContent({ __html: html });
-        }, 10);
-      } catch (error) {
-        console.error('Error parsing message content:', error);
-        setParsedContent({ __html: message.content });
       }
+      
+      // Use marked to parse markdown without creating memory leaks
+      setParsedContent(marked.parse(content));
+    } catch (error) {
+      console.error('Error parsing message content:', error);
+      setParsedContent(message.content);
     }
   }, [message.content]);
 
@@ -110,7 +103,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           ) : (
             <div 
               ref={contentRef}
-              dangerouslySetInnerHTML={parsedContent}
+              dangerouslySetInnerHTML={{ __html: parsedContent }}
               className="text-sm sm:text-base overflow-auto"
             />
           )}
