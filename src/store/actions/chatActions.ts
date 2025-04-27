@@ -12,28 +12,21 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
 
   createNewChat: async () => {
     try {
-      set({ isLoading: true });
-      
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user) {
-        console.error('No active session found when creating chat');
         toast({
           title: "Nicht angemeldet",
           description: "Bitte melden Sie sich an, um einen Chat zu erstellen.",
           variant: "destructive"
         });
-        set({ isLoading: false });
         return;
       }
       
       const userId = session.session.user.id;
-      console.log('Creating new chat for user:', userId);
-      
       const userDisplayName = session.session.user.user_metadata.display_name || 
                            session.session.user.email.split('@')[0];
       
       try {
-        console.log('Attempting to insert new chat into database');
         const { data, error } = await supabase
           .from('chats')
           .insert({
@@ -44,20 +37,7 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
           .select()
           .single();
 
-        // Log the raw response for debugging
-        console.log('Chat creation response:', { data, error });
-
-        if (error) {
-          console.error('Error creating chat in database:', error);
-          throw error;
-        }
-
-        if (!data) {
-          console.error('No data returned after creating chat');
-          throw new Error('No data returned from database');
-        }
-
-        console.log('Successfully created new chat:', data.id);
+        if (error) throw error;
 
         const newChat: Chat = {
           id: data.id,
@@ -71,42 +51,23 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
 
         set((state: ChatStore) => ({
           chats: [newChat, ...state.chats],
-          currentChatId: newChat.id,
-          isLoading: false
+          currentChatId: newChat.id
         }));
-        
-        toast({
-          title: "Chat erstellt",
-          description: "Neuer Chat wurde erfolgreich erstellt.",
-        });
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error creating chat:', error);
-        
-        // Provide specific error messages based on error codes
-        if (error.code === 'PGRST116') {
-          toast({
-            title: "Keine Berechtigung",
-            description: "Sie haben keine Berechtigung, einen Chat zu erstellen. Bitte melden Sie sich erneut an.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Fehler beim Erstellen des Chats",
-            description: error.message || "Bitte versuchen Sie es später erneut.",
-            variant: "destructive"
-          });
-        }
-        
-        set({ isLoading: false });
+        toast({
+          title: "Fehler beim Erstellen des Chats",
+          description: "Bitte versuchen Sie es später erneut.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Error in createNewChat:', error);
+      console.error('Error creating chat:', error);
       toast({
         title: "Fehler beim Erstellen des Chats",
         description: "Bitte versuchen Sie es später erneut.",
         variant: "destructive"
         });
-      set({ isLoading: false });
     }
   },
 
@@ -117,10 +78,7 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
         .delete()
         .eq('id', chatId);
 
-      if (error) {
-        console.error('Error deleting chat:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       set((state: ChatStore) => ({
         chats: state.chats.filter((chat) => chat.id !== chatId),

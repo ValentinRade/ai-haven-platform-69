@@ -13,10 +13,7 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
         return;
       }
 
-      console.log('Starting to load chats for user:', session.session.user.id);
-      
       try {
-        // Direct approach without retries first
         const { data, error } = await supabase
           .from('chats')
           .select(`
@@ -31,63 +28,41 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
               created_at
             )
           `)
-          .eq('user_id', session.session.user.id)
           .order('updated_at', { ascending: false });
 
-        // Log the raw response for debugging
-        console.log('Raw Supabase response:', { data, error });
-        
         if (error) {
           console.error('Error loading chats:', error);
-          
-          // Show specific error information to the user
-          if (error.code === 'PGRST116') {
-            toast({
-              title: "Keine Berechtigung",
-              description: "Sie haben keine Berechtigung, diese Daten zu sehen. Bitte melden Sie sich erneut an.",
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "Fehler beim Laden der Chats",
-              description: `${error.message || "Bitte versuchen Sie es später erneut."}`,
-              variant: "destructive"
-            });
-          }
+          toast({
+            title: "Fehler beim Laden der Chats",
+            description: "Bitte versuchen Sie es später erneut.",
+            variant: "destructive"
+          });
           return;
         }
-        
-        console.log('Successfully loaded chats:', data ? data.length : 'No data returned');
-        
-        if (data && data.length > 0) {
-          // Format the chats
+
+        if (data) {
+          // Explicitly type the data to match what formatChat expects
           const formattedChats = data.map((chat) => formatChat(chat));
-          
-          console.log('Formatted chats:', formattedChats.length);
           
           set({ chats: formattedChats });
           
           if (!get().currentChatId && formattedChats.length > 0) {
-            console.log('Setting current chat ID to:', formattedChats[0].id);
             set({ currentChatId: formattedChats[0].id });
           }
-        } else {
-          console.log('No chats found for user, empty array returned');
-          set({ chats: [] });
         }
       } catch (error) {
-        console.error('Network error loading chats:', error);
+        console.error('Error loading chats:', error);
         toast({
-          title: "Netzwerkfehler",
-          description: "Verbindungsprobleme mit der Datenbank. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es später erneut.",
+          title: "Fehler beim Laden der Chats",
+          description: "Bitte versuchen Sie es später erneut.",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('Error in loadChats function:', error);
+      console.error('Error loading chats:', error);
       toast({
         title: "Fehler beim Laden der Chats",
-        description: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+        description: "Bitte versuchen Sie es später erneut.",
         variant: "destructive"
       });
     }
