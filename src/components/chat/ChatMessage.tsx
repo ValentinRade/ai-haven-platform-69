@@ -128,19 +128,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const isContentAudio = typeof message.content === 'string' && isAudioMessage(message.content);
 
   return (
-    <div 
-      className={cn(
-        "flex w-full mb-6",
-        message.type === 'user' ? "justify-end" : "justify-start"
-      )}
-    >
-      <div 
-        className={cn(
-          "px-4 py-3",
-          message.type === 'user' ? "chat-message-user ml-auto" : "chat-message-ai mr-auto",
-          "w-full max-w-[80%] md:max-w-[70%] lg:max-w-[60%]"
-        )}
-      >
+    <div className={cn("flex w-full mb-6", message.type === 'user' ? "justify-end" : "justify-start")}>
+      <div className={cn(
+        "px-4 py-3",
+        message.type === 'user' ? "chat-message-user ml-auto" : "chat-message-ai mr-auto",
+        "w-full max-w-[80%] md:max-w-[70%] lg:max-w-[60%]"
+      )}>
         <div className="prose prose-sm max-w-none dark:prose-invert">
           {isContentAudio ? (
             <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-3">
@@ -164,11 +157,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 </div>
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-500">
-                    {formatTime(currentTime)}
+                    {isPlaying ? formatTime(currentTime) : formatTime(duration)}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {formatTime(duration)}
-                  </span>
+                  {isPlaying && (
+                    <span className="text-xs text-gray-500">
+                      {formatTime(duration - currentTime)}
+                    </span>
+                  )}
                 </div>
               </div>
               <Volume2 size={20} className="text-gray-400" />
