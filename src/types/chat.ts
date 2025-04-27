@@ -1,9 +1,9 @@
-
 export interface ChatMessage {
   id: string;
   type: 'user' | 'ai';
-  content: string | any;  // Allow for object content
+  content: string | any;
   timestamp: Date;
+  duration?: number;
 }
 
 export interface Chat {
