@@ -3,9 +3,11 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useChatStore } from '@/store/chatStore';
 
 export const useAuthCheck = () => {
   const navigate = useNavigate();
+  const { loadChats } = useChatStore();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -17,8 +19,11 @@ export const useAuthCheck = () => {
           variant: "default"
         });
         navigate('/auth');
+      } else {
+        // If authentication is successful, try to load chats
+        loadChats();
       }
     };
     checkAuth();
-  }, [navigate]);
+  }, [navigate, loadChats]);
 };
