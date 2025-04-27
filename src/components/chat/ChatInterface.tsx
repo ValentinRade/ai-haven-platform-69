@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
@@ -9,9 +9,8 @@ import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
 import { useChatInput } from '@/hooks/useChatInput';
 
 const ChatInterface: React.FC = () => {
-  useAuthCheck();
+  // Custom hooks (must be called in the same order on every render)
   const { getCurrentChat, isLoading } = useChatStore();
-  const currentChat = getCurrentChat();
   const { input, setInput, handleSend } = useChatInput();
   const { 
     isRecording, 
@@ -19,6 +18,11 @@ const ChatInterface: React.FC = () => {
     handleStopRecording, 
     handleCancelRecording 
   } = useVoiceRecorder();
+  
+  // This hook needs to come after all other hooks to avoid ordering issues
+  useAuthCheck();
+
+  const currentChat = getCurrentChat();
 
   return (
     <div className="flex flex-col h-screen w-full">

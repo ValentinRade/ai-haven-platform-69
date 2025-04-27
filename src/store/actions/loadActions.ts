@@ -13,13 +13,15 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
         return;
       }
 
-      // Add retry logic
-      const maxRetries = 3;
+      // Add retry logic with exponential backoff
+      const maxRetries = 5;
       let retries = 0;
       let success = false;
 
       while (retries < maxRetries && !success) {
         try {
+          console.log(`Attempting to load chats (attempt ${retries + 1}/${maxRetries})...`);
+          
           const { data, error } = await supabase
             .from('chats')
             .select(`
@@ -42,17 +44,19 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             if (retries >= maxRetries) {
               toast({
                 title: "Fehler beim Laden der Chats",
-                description: "Bitte versuchen Sie es später erneut.",
+                description: "Verbindungsprobleme mit der Datenbank. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es später erneut.",
                 variant: "destructive"
               });
               return;
             }
-            // Wait before retrying
-            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+            // Wait before retrying with exponential backoff
+            const delay = Math.min(1000 * Math.pow(2, retries), 10000);
+            await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
 
           if (data) {
+            console.log('Successfully loaded chats:', data.length);
             // Explicitly type the data to match what formatChat expects
             const formattedChats = data.map((chat) => formatChat(chat));
             
@@ -64,25 +68,26 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
           }
           success = true;
         } catch (error) {
-          console.error(`Error loading chats (attempt ${retries + 1}/${maxRetries}):`, error);
+          console.error(`Network error loading chats (attempt ${retries + 1}/${maxRetries}):`, error);
           retries++;
           if (retries >= maxRetries) {
             toast({
-              title: "Fehler beim Laden der Chats",
-              description: "Bitte versuchen Sie es später erneut.",
+              title: "Netzwerkfehler",
+              description: "Verbindungsprobleme mit der Datenbank. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es später erneut.",
               variant: "destructive"
             });
             return;
           }
-          // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          // Wait before retrying with exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retries), 10000);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     } catch (error) {
-      console.error('Error loading chats:', error);
+      console.error('Error in loadChats function:', error);
       toast({
         title: "Fehler beim Laden der Chats",
-        description: "Bitte versuchen Sie es später erneut.",
+        description: "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
         variant: "destructive"
       });
     }
