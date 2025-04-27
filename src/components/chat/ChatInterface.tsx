@@ -1,119 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React from 'react';
 import { useChatStore } from '@/store/chatStore';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { VoiceRecorder } from '@/utils/voiceRecorder';
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
 import ChatMessageList from './ChatMessageList';
+import { useAuthCheck } from '@/hooks/useAuthCheck';
+import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
+import { useChatInput } from '@/hooks/useChatInput';
 
 const ChatInterface: React.FC = () => {
-  const [input, setInput] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const voiceRecorderRef = React.useRef<VoiceRecorder>(new VoiceRecorder());
-  const { 
-    getCurrentChat, 
-    addMessageToCurrentChat, 
-    createNewChat, 
-    currentChatId, 
-    isLoading 
-  } = useChatStore();
+  useAuthCheck();
+  const { getCurrentChat, isLoading } = useChatStore();
   const currentChat = getCurrentChat();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Nicht angemeldet",
-          description: "Bitte melden Sie sich an, um den Chat zu nutzen.",
-          variant: "default"
-        });
-        navigate('/auth');
-      }
-    };
-    checkAuth();
-  }, [navigate]);
-  
-  const handleSend = async () => {
-    if (input.trim() === '' || isLoading) return;
-    
-    const userMessage = input.trim();
-    setInput('');
-
-    if (!currentChatId) {
-      await createNewChat();
-    }
-    
-    await addMessageToCurrentChat({
-      type: 'user',
-      content: userMessage,
-      timestamp: new Date()
-    });
-  };
-
-  const handleStartRecording = async () => {
-    try {
-      await voiceRecorderRef.current.startRecording();
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Failed to start recording:', error);
-      toast({
-        title: "Fehler beim Starten der Aufnahme",
-        description: "Bitte überprüfen Sie die Mikrofonberechtigung.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleStopRecording = async () => {
-    if (!isRecording) return;
-    
-    try {
-      const base64Audio = await voiceRecorderRef.current.stopRecording();
-      setIsRecording(false);
-      
-      if (!currentChatId) {
-        await createNewChat();
-      }
-      
-      await addMessageToCurrentChat({
-        type: 'user',
-        content: base64Audio,
-        timestamp: new Date()
-      });
-
-    } catch (error) {
-      console.error('Failed to stop recording:', error);
-      setIsRecording(false);
-      toast({
-        title: "Fehler beim Beenden der Aufnahme",
-        description: "Bitte versuchen Sie es erneut.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCancelRecording = async () => {
-    try {
-      await voiceRecorderRef.current.stopRecording();
-      setIsRecording(false);
-      toast({
-        title: "Aufnahme abgebrochen",
-        description: "Die Sprachnachricht wurde gelöscht.",
-      });
-    } catch (error) {
-      console.error('Failed to cancel recording:', error);
-      setIsRecording(false);
-      toast({
-        title: "Fehler beim Abbrechen der Aufnahme",
-        description: "Bitte versuchen Sie es erneut.",
-        variant: "destructive"
-      });
-    }
-  };
+  const { input, setInput, handleSend } = useChatInput();
+  const { 
+    isRecording, 
+    handleStartRecording, 
+    handleStopRecording, 
+    handleCancelRecording 
+  } = useVoiceRecorder();
 
   return (
     <div className="flex flex-col h-screen w-full">
