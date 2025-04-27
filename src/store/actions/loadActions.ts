@@ -25,7 +25,6 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             title,
             updated_at,
             creator_display_name,
-            is_private,
             messages (
               id,
               content,

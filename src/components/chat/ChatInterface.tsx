@@ -124,7 +124,7 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full">
-      <ChatHeader />
+      <ChatHeader title={currentChat?.title || 'Neuer Chat'} />
       <ChatMessageList currentChat={currentChat} isLoading={isLoading} />
       <ChatInput
         input={input}
