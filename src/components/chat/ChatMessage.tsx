@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { Play, Pause, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { marked } from 'marked';
 
 interface ChatMessageProps {
@@ -119,6 +120,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }
   };
 
+  const handleSliderChange = (value: number[]) => {
+    if (audio) {
+      const newTime = (value[0] / 100) * duration;
+      audio.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
   const isAudioMessage = (content: string): boolean => {
     return content.startsWith('/9j/') || 
            content.startsWith('GkXf') || 
@@ -149,12 +158,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 {isPlaying ? <Pause size={20} /> : <Play size={20} />}
               </Button>
               <div className="flex-1">
-                <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-primary h-full transition-all duration-100"
-                    style={{ width: `${((currentTime || 0) / (duration || 1)) * 100}%` }}
-                  />
-                </div>
+                <Slider
+                  value={[((currentTime || 0) / (duration || 1)) * 100]}
+                  onValueChange={handleSliderChange}
+                  max={100}
+                  step={1}
+                  className="my-2"
+                />
                 <div className="flex justify-start mt-1">
                   <span className="text-xs text-gray-500">
                     {isPlaying ? formatTime(currentTime) : formatTime(duration)}
