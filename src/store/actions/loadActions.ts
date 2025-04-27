@@ -13,6 +13,8 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
         return;
       }
 
+      console.log('Starting to load chats for user:', session.session.user.id);
+      
       // Add retry logic with exponential backoff
       const maxRetries = 5;
       let retries = 0;
@@ -36,6 +38,7 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
                 created_at
               )
             `)
+            .eq('user_id', session.session.user.id) // Explicitly filter by user_id
             .order('updated_at', { ascending: false });
 
           if (error) {
@@ -55,16 +58,23 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             continue;
           }
 
+          console.log('Successfully loaded chats:', data ? data.length : 'No data returned');
+          
           if (data) {
-            console.log('Successfully loaded chats:', data.length);
             // Explicitly type the data to match what formatChat expects
             const formattedChats = data.map((chat) => formatChat(chat));
+            
+            console.log('Formatted chats:', formattedChats.length);
             
             set({ chats: formattedChats });
             
             if (!get().currentChatId && formattedChats.length > 0) {
+              console.log('Setting current chat ID to:', formattedChats[0].id);
               set({ currentChatId: formattedChats[0].id });
             }
+          } else {
+            console.log('No chats found for user');
+            set({ chats: [] });
           }
           success = true;
         } catch (error) {

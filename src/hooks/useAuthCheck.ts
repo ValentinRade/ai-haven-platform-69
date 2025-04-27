@@ -38,7 +38,7 @@ export const useAuthCheck = () => {
           setIsAuthenticated(false);
           navigate('/auth');
         } else {
-          console.log('User authenticated, loading chats...');
+          console.log('User authenticated:', session.user.id);
           setIsAuthenticated(true);
           // If authentication is successful, try to load chats
           await loadChats();
