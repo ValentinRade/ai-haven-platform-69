@@ -155,15 +155,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     style={{ width: `${((currentTime || 0) / (duration || 1)) * 100}%` }}
                   />
                 </div>
-                <div className="flex justify-between mt-1">
+                <div className="flex justify-start mt-1">
                   <span className="text-xs text-gray-500">
                     {isPlaying ? formatTime(currentTime) : formatTime(duration)}
                   </span>
-                  {isPlaying && (
-                    <span className="text-xs text-gray-500">
-                      {formatTime(duration - currentTime)}
-                    </span>
-                  )}
                 </div>
               </div>
               <Volume2 size={20} className="text-gray-400" />
