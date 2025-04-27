@@ -31,6 +31,9 @@ export const sendMessageToWebhook = async (
 
   if (responseData.answer) {
     result.answer = responseData.answer;
+  } else if (responseData.output) {
+    // Handle direct output property
+    result.output = responseData.output;
   } else if (Array.isArray(responseData) && responseData[0]?.output) {
     result.output = responseData[0].output;
   }

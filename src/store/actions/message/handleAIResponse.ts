@@ -7,15 +7,19 @@ export const handleAIResponse = async (
   set: Function,
   get: () => ChatStore,
   currentChatId: string,
-  aiResponse: string,
+  aiResponse: string | object,
   chatName?: string
 ) => {
   try {
+    // Convert object response to string if needed
+    const responseContent = typeof aiResponse === 'object' ? 
+      JSON.stringify(aiResponse) : aiResponse;
+
     const { data: aiData, error: aiError } = await supabase
       .from('messages')
       .insert({
         chat_id: currentChatId,
-        content: aiResponse,
+        content: responseContent,
         type: 'ai'
       })
       .select()
@@ -30,13 +34,13 @@ export const handleAIResponse = async (
           const newAiMessage = {
             id: aiData.id,
             type: 'ai',
-            content: aiResponse,
+            content: responseContent,
             timestamp: new Date(aiData.created_at)
           };
           
           return {
             ...chat,
-            lastMessage: aiResponse,
+            lastMessage: typeof responseContent === 'string' ? responseContent : 'AI response',
             timestamp: new Date(),
             messages: [...chat.messages, newAiMessage]
           };

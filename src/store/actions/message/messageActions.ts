@@ -53,7 +53,9 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
             
             return {
               ...chat,
-              lastMessage: message.content,
+              lastMessage: typeof message.content === 'string' 
+                ? message.content 
+                : 'User message',
               timestamp: new Date(),
               messages: [...chat.messages, newMessage]
             };
@@ -63,20 +65,22 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
 
         return { 
           chats: updatedChats,
-          isLoading: true // Make sure loading state is maintained
+          isLoading: true // Keep loading state while waiting for response
         };
       });
 
       // Check if it's an audio message
-      const isAudioMessage = message.content.startsWith('/9j/') || 
-                           message.content.startsWith('GkXf') || 
-                           message.content.startsWith('T21v');
+      const isAudioMessage = typeof message.content === 'string' && (
+        message.content.startsWith('/9j/') || 
+        message.content.startsWith('GkXf') || 
+        message.content.startsWith('T21v')
+      );
       
       try {
         const response = await sendMessageToWebhook(
           session.session.user.id,
           currentChatId,
-          message.content,
+          message.content as string,
           isFirstMessage,
           isAudioMessage
         );
@@ -84,6 +88,12 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         const aiResponse = response.answer || response.output;
         if (aiResponse) {
           await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
+        } else {
+          // If no response, still set loading to false
+          set((state: ChatStore) => ({
+            ...state,
+            isLoading: false
+          }));
         }
       } catch (error) {
         console.error('Error sending message to webhook:', error);
@@ -92,7 +102,6 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           description: "Die Nachricht konnte nicht verarbeitet werden.",
           variant: "destructive"
         });
-      } finally {
         // Always set loading to false when done
         set((state: ChatStore) => ({
           ...state,

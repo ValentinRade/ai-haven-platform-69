@@ -20,15 +20,26 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   // Parse content when message changes
   useEffect(() => {
-    if (isAudioMessage) return;
+    if (!message.content) {
+      setParsedContent('');
+      return;
+    }
+
+    // Check if content is already an object
+    const contentStr = typeof message.content === 'object' 
+      ? JSON.stringify(message.content)
+      : message.content;
+    
+    // Check if it's an audio message
+    if (isAudioMessage(contentStr)) return;
     
     try {
-      let content = message.content;
+      let content = contentStr;
       
       // Check if content is JSON format
-      if (content.startsWith('[{')) {
+      if (contentStr.startsWith('[{')) {
         try {
-          const parsed = JSON.parse(content);
+          const parsed = JSON.parse(contentStr);
           if (Array.isArray(parsed) && parsed[0]?.output) {
             content = parsed[0].output;
           }
@@ -51,13 +62,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       }
     } catch (error) {
       console.error('Error parsing message content:', error);
-      setParsedContent(message.content);
+      setParsedContent(typeof message.content === 'string' ? message.content : JSON.stringify(message.content));
     }
   }, [message.content]);
 
   const playAudio = () => {
     if (!audio) {
-      const newAudio = new Audio(`data:audio/webm;base64,${message.content}`);
+      const contentStr = typeof message.content === 'string' ? message.content : '';
+      const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
       setAudio(newAudio);
       newAudio.onended = () => setIsPlaying(false);
       newAudio.play();
@@ -74,9 +86,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }
   };
 
-  const isAudioMessage = message.content.startsWith('/9j/') || 
-                        message.content.startsWith('GkXf') || 
-                        message.content.startsWith('T21v');
+  // Helper function to check if it's an audio message
+  const isAudioMessage = (content: string): boolean => {
+    return content.startsWith('/9j/') || 
+           content.startsWith('GkXf') || 
+           content.startsWith('T21v');
+  };
+
+  // Determine if the message is an audio message
+  const isContentAudio = typeof message.content === 'string' && isAudioMessage(message.content);
 
   return (
     <div 
@@ -93,7 +111,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         )}
       >
         <div className="prose prose-sm max-w-none dark:prose-invert">
-          {isAudioMessage ? (
+          {isContentAudio ? (
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
