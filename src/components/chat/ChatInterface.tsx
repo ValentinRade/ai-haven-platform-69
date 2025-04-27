@@ -74,6 +74,8 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleStopRecording = async () => {
+    if (!isRecording) return;
+    
     try {
       const base64Audio = await voiceRecorderRef.current.stopRecording();
       setIsRecording(false);
