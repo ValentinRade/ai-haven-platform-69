@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useChatStore } from '@/store/chatStore';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MessageSquare, UserRound, Trash2, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, MessageSquare, UserRound, Trash2, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -32,7 +32,7 @@ const ChatSidebar: React.FC = () => {
       <div className="p-4 border-b border-gray-200">
         <Button 
           onClick={createNewChat}
-          className="w-full gap-2 bg-immo-green hover:bg-immo-green/90"
+          className="w-full gap-2 bg-primary hover:bg-primary/90"
         >
           <PlusCircle size={16} />
           <span>Neuer Chat</span>

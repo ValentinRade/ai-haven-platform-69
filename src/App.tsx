@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 import MainLayout from "./layouts/MainLayout";
-import ChatPage from "./pages/ChatPage";
+import ChatContainer from "./components/chat/ChatContainer";
 import AdminLayout from "./layouts/AdminLayout";
 import WorkflowBuilder from "./pages/admin/WorkflowBuilder";
 import WorkflowOverview from "./pages/admin/WorkflowOverview";
@@ -28,7 +28,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/" element={<MainLayout />}>
-              <Route index element={<ChatPage />} />
+              <Route index element={<ChatContainer />} />
               <Route path="profile" element={<ProfileSettingsPage />} />
             </Route>
             <Route path="/admin" element={<AdminLayout />}>

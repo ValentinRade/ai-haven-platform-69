@@ -1,6 +1,7 @@
+
 import React, { useRef, useEffect } from 'react';
-import ChatMessage from './ChatMessage';
 import { Chat } from '@/types/chat';
+import ChatMessage from './ChatMessage';
 
 interface ChatMessageListProps {
   currentChat?: Chat;
@@ -17,11 +18,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({ currentChat, isLoadin
   };
 
   // Scroll on initial load and when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, []);
-
-  // Keep existing scroll behavior for message updates
   useEffect(() => {
     scrollToBottom();
   }, [currentChat?.messages]);

@@ -7,11 +7,15 @@ import { formatChat } from '../utils/chatUtils';
 export const createLoadActions = (set: Function, get: () => ChatStore) => ({
   loadChats: async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session?.user) {
+      // Check if user is authenticated
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.user) {
         console.log('User not authenticated, skipping chat load');
         return;
       }
+
+      // Set loading state
+      set({ isLoading: true });
 
       try {
         const { data, error } = await supabase
@@ -21,10 +25,12 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             title,
             updated_at,
             creator_display_name,
+            is_private,
             messages (
               id,
               content,
               type,
+              duration,
               created_at
             )
           `)
@@ -37,18 +43,25 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             description: "Bitte versuchen Sie es später erneut.",
             variant: "destructive"
           });
+          set({ isLoading: false });
           return;
         }
 
         if (data) {
-          // Explicitly type the data to match what formatChat expects
+          // Format the chats and update state
           const formattedChats = data.map((chat) => formatChat(chat));
           
-          set({ chats: formattedChats });
+          set({ 
+            chats: formattedChats,
+            isLoading: false 
+          });
           
+          // If no current chat is selected and we have chats, select the first one
           if (!get().currentChatId && formattedChats.length > 0) {
             set({ currentChatId: formattedChats[0].id });
           }
+        } else {
+          set({ isLoading: false });
         }
       } catch (error) {
         console.error('Error loading chats:', error);
@@ -57,6 +70,7 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
           description: "Bitte versuchen Sie es später erneut.",
           variant: "destructive"
         });
+        set({ isLoading: false });
       }
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -65,6 +79,7 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
         description: "Bitte versuchen Sie es später erneut.",
         variant: "destructive"
       });
+      set({ isLoading: false });
     }
   }
 });

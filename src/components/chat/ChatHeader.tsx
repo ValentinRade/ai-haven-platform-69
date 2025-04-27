@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { BrainCircuit, Settings, UserRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-const ChatHeader: React.FC = () => {
+interface ChatHeaderProps {
+  title: string;
+}
+
+const ChatHeader: React.FC<ChatHeaderProps> = ({ title }) => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 p-3 h-14 flex items-center justify-between w-full">
       <div className="flex-1">
         <h1 className="text-xl font-medium truncate max-w-[80%]">
-          {/* Will be passed via props in next iteration */}
-          Neuer Chat
+          {title}
         </h1>
       </div>
       <div className="flex items-center gap-4">

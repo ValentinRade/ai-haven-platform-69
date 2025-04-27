@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ChatMessage as ChatMessageType } from '@/types/chat';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { marked } from 'marked';
-import { AudioPlayer } from './AudioPlayer';
+import { cn } from '@/lib/utils';
+import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { isAudioMessage } from '@/utils/messageUtils';
+import { AudioPlayer } from './AudioPlayer';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -14,8 +14,7 @@ interface ChatMessageProps {
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [parsedContent, setParsedContent] = useState('');
-  const contentRef = useRef<HTMLDivElement>(null);
-
+  
   useEffect(() => {
     if (!message.content) {
       setParsedContent('');
@@ -33,6 +32,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     try {
       let content = contentStr;
       
+      // Handle JSON content
       if (contentStr.startsWith('[{')) {
         try {
           const parsed = JSON.parse(contentStr);
@@ -44,6 +44,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         }
       }
       
+      // Parse markdown content
       const result = marked.parse(content);
       if (result instanceof Promise) {
         result.then(html => {
@@ -78,7 +79,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             />
           ) : (
             <div 
-              ref={contentRef}
               dangerouslySetInnerHTML={{ __html: parsedContent }}
               className="text-sm sm:text-base overflow-auto"
             />

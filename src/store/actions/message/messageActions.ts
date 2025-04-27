@@ -21,41 +21,40 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       const currentChat = chats.find(chat => chat.id === currentChatId);
       const isFirstMessage = currentChat?.messages.length === 0;
 
-      // Set loading state to true before sending message
+      // Set loading state
       set((state: ChatStore) => ({
         ...state,
         isLoading: true
       }));
 
-      // Check if this is an audio message (base64 encoded)
+      // Check if this is an audio message
       const isAudioMessage = typeof message.content === 'string' && (
         message.content.startsWith('/9j/') || 
         message.content.startsWith('GkXf') || 
         message.content.startsWith('T21v')
       );
       
-      // For audio messages, determine duration before saving to database
+      // For audio messages, determine duration before saving
       if (isAudioMessage) {
         try {
-          // First, create an audio element to determine the duration
+          // Create an audio element to determine duration
           const audioElement = new Audio(`data:audio/webm;base64,${message.content}`);
           
           return new Promise<void>((resolve, reject) => {
             audioElement.onloadedmetadata = async () => {
-              // Get the duration once metadata is loaded
+              // Get duration once metadata is loaded
               const audioDuration = audioElement.duration;
-              console.log('Audio duration determined:', audioDuration);
               
               if (audioDuration && isFinite(audioDuration)) {
                 try {
-                  // Save user's message to database with duration
+                  // Save user's audio message with duration
                   const { data: userData, error: userError } = await supabase
                     .from('messages')
                     .insert({
                       chat_id: currentChatId,
                       content: message.content,
                       type: message.type,
-                      duration: audioDuration // Store the duration in the database
+                      duration: audioDuration
                     })
                     .select()
                     .single();
@@ -71,7 +70,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
                           type: message.type,
                           content: message.content,
                           timestamp: new Date(userData.created_at),
-                          duration: audioDuration // Include duration in the state
+                          duration: audioDuration
                         };
                         
                         return {
@@ -86,11 +85,12 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
 
                     return { 
                       chats: updatedChats,
-                      isLoading: true // Keep loading state while waiting for response
+                      isLoading: true
                     };
                   });
 
                   try {
+                    // Send to webhook and process response
                     const response = await sendMessageToWebhook(
                       session.session.user.id,
                       currentChatId,
@@ -103,7 +103,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
                     if (aiResponse) {
                       await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
                     } else {
-                      // If no response, still set loading to false
+                      // Reset loading state if no response
                       set((state: ChatStore) => ({
                         ...state,
                         isLoading: false
@@ -116,7 +116,6 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
                       description: "Die Nachricht konnte nicht verarbeitet werden.",
                       variant: "destructive"
                     });
-                    // Always set loading to false when done
                     set((state: ChatStore) => ({
                       ...state,
                       isLoading: false
@@ -125,10 +124,18 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
                 } catch (dbError) {
                   console.error('Error saving audio message to database:', dbError);
                   reject(dbError);
+                  set((state: ChatStore) => ({
+                    ...state,
+                    isLoading: false
+                  }));
                 }
               } else {
                 console.error('Invalid audio duration:', audioDuration);
                 reject(new Error('Could not determine audio duration'));
+                set((state: ChatStore) => ({
+                  ...state,
+                  isLoading: false
+                }));
               }
               resolve();
             };
@@ -136,94 +143,23 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
             audioElement.onerror = (error) => {
               console.error('Error loading audio metadata:', error);
               reject(error);
-              
-              // Still try to save the message without duration
-              handleAudioWithoutDuration();
+              set((state: ChatStore) => ({
+                ...state,
+                isLoading: false
+              }));
             };
 
-            // Set a timeout in case metadata loading takes too long
-            const timeoutId = setTimeout(() => {
-              console.warn('Audio metadata loading timeout, proceeding without duration');
-              audioElement.onerror = null; // Remove the error handler
-              handleAudioWithoutDuration();
-            }, 3000); // 3 second timeout
+            // Set timeout in case metadata loading takes too long
+            setTimeout(() => {
+              console.warn('Audio metadata loading timed out');
+              audioElement.onerror = null;
+              set((state: ChatStore) => ({
+                ...state,
+                isLoading: false
+              }));
+            }, 5000);
 
-            // Function to handle cases where we can't get the duration
-            const handleAudioWithoutDuration = async () => {
-              clearTimeout(timeoutId);
-              
-              try {
-                // Save user's message to database without duration
-                const { data: userData, error: userError } = await supabase
-                  .from('messages')
-                  .insert({
-                    chat_id: currentChatId,
-                    content: message.content,
-                    type: message.type
-                    // No duration specified
-                  })
-                  .select()
-                  .single();
-
-                if (userError) throw userError;
-
-                // Continue with processing as normal
-                set((state: ChatStore) => {
-                  const updatedChats = state.chats.map((chat) => {
-                    if (chat.id === currentChatId) {
-                      const newMessage = {
-                        id: userData.id,
-                        type: message.type,
-                        content: message.content,
-                        timestamp: new Date(userData.created_at)
-                      };
-                      
-                      return {
-                        ...chat,
-                        lastMessage: "Voice message",
-                        timestamp: new Date(),
-                        messages: [...chat.messages, newMessage]
-                      };
-                    }
-                    return chat;
-                  });
-
-                  return { 
-                    chats: updatedChats,
-                    isLoading: true
-                  };
-                });
-
-                // Process with webhook
-                try {
-                  const response = await sendMessageToWebhook(
-                    session.session.user.id,
-                    currentChatId,
-                    message.content as string,
-                    isFirstMessage,
-                    true
-                  );
-
-                  const aiResponse = response.answer || response.output;
-                  if (aiResponse) {
-                    await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
-                  }
-                } catch (error) {
-                  console.error('Error sending message to webhook:', error);
-                  set((state: ChatStore) => ({
-                    ...state,
-                    isLoading: false
-                  }));
-                }
-                
-                resolve();
-              } catch (error) {
-                console.error('Error saving audio without duration:', error);
-                reject(error);
-              }
-            };
-
-            // Start loading the audio to get metadata
+            // Start loading audio
             audioElement.load();
           });
         } catch (audioError) {
@@ -234,7 +170,6 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
             variant: "destructive"
           });
           
-          // Set loading to false on error
           set((state: ChatStore) => ({
             ...state,
             isLoading: false
@@ -242,7 +177,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         }
       }
 
-      // For non-audio messages, proceed as before
+      // For text messages
       const { data: userData, error: userError } = await supabase
         .from('messages')
         .insert({
@@ -269,7 +204,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
             return {
               ...chat,
               lastMessage: typeof message.content === 'string' 
-                ? message.content 
+                ? message.content.substring(0, 30) + (message.content.length > 30 ? '...' : '')
                 : 'User message',
               timestamp: new Date(),
               messages: [...chat.messages, newMessage]
@@ -280,24 +215,24 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
 
         return { 
           chats: updatedChats,
-          isLoading: true // Keep loading state while waiting for response
+          isLoading: true
         };
       });
 
       try {
+        // Send message to webhook and process response
         const response = await sendMessageToWebhook(
           session.session.user.id,
           currentChatId,
           message.content as string,
           isFirstMessage,
-          false // not audio
+          false
         );
 
         const aiResponse = response.answer || response.output;
         if (aiResponse) {
           await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
         } else {
-          // If no response, still set loading to false
           set((state: ChatStore) => ({
             ...state,
             isLoading: false
@@ -310,7 +245,6 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           description: "Die Nachricht konnte nicht verarbeitet werden.",
           variant: "destructive"
         });
-        // Always set loading to false when done
         set((state: ChatStore) => ({
           ...state,
           isLoading: false
@@ -323,7 +257,6 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         description: "Bitte versuchen Sie es später erneut.",
         variant: "destructive"
       });
-      // Set loading to false on error as well
       set((state: ChatStore) => ({
         ...state,
         isLoading: false
