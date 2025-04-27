@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -127,7 +128,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         console.log('Audio metadata loaded with fixed duration:', audioDuration);
       };
       
-      const handleEnded = () => setIsPlaying(false);
+      const handleEnded = () => {
+        // Reset everything when audio playback ends
+        setIsPlaying(false);
+        setCurrentTime(0);
+        setProgress(0);
+        
+        // Optionally reset the audio to the beginning
+        if (audio) {
+          try {
+            audio.currentTime = 0;
+          } catch (error) {
+            console.error('Error resetting audio time:', error);
+          }
+        }
+      };
 
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', handleLoadedMetadata);
