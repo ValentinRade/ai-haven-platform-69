@@ -8,23 +8,27 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [progress, setProgress] = useState(0);
   const [actualDuration, setActualDuration] = useState(duration);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioInitialized = useRef(false);
 
+  // Create audio element only once
   useEffect(() => {
-    if (!audioInitialized.current) {
+    if (!audioInitialized.current && audioContent) {
       audioInitialized.current = true;
       const newAudio = new Audio(`data:audio/webm;base64,${audioContent}`);
+      audioRef.current = newAudio;
       
       newAudio.addEventListener('loadedmetadata', () => {
-        // Use the actual audio duration instead of the passed duration if available
+        // Use the actual audio duration if available and valid
         if (newAudio.duration && isFinite(newAudio.duration)) {
+          console.log('Actual audio duration:', newAudio.duration);
           setActualDuration(newAudio.duration);
         }
       });
       
       newAudio.addEventListener('timeupdate', () => {
         setCurrentTime(newAudio.currentTime);
-        // Use actualDuration for progress calculation
+        // Calculate progress based on the actual duration
         const calculatedProgress = (newAudio.currentTime / actualDuration) * 100;
         setProgress(Math.min(calculatedProgress, 100));
       });
@@ -46,14 +50,15 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
     }
     
     return () => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
       }
     };
-  }, [audioContent, duration]);
+  }, [audioContent]);
 
-  // Update actual duration when the prop changes
+  // Update actual duration when duration changes
   useEffect(() => {
     setActualDuration(duration);
   }, [duration]);
@@ -71,7 +76,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (!audio || !actualDuration) return;
+    if (!audio) return;
     
     setProgress(value[0]);
     const newTime = (value[0] / 100) * actualDuration;
@@ -86,7 +91,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
 
   const getDisplayTime = () => {
     if (progress === 0) {
-      return formatTime(actualDuration);
+      return '0:00';
     }
     return formatTime(currentTime);
   };

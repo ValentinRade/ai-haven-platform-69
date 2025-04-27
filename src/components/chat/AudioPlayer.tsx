@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { formatTime } from '@/utils/timeUtils';
 
 interface AudioPlayerProps {
   audioContent: string;
@@ -16,6 +17,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioContent, duration
     isPlaying,
     progress,
     currentTime,
+    actualDuration,
     handlePlay,
     handleSliderChange,
     getDisplayTime
@@ -47,7 +49,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioContent, duration
             {getDisplayTime()}
           </span>
           <span className="text-xs text-gray-500">
-            {formatTime(duration)}
+            {formatTime(actualDuration)}
           </span>
         </div>
       </div>
@@ -55,7 +57,3 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioContent, duration
     </div>
   );
 };
-
-function formatTime(time: number): string {
-  return `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}`;
-}
