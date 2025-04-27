@@ -52,7 +52,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         
         newAudio.addEventListener('timeupdate', () => {
           setCurrentTime(newAudio.currentTime);
-          if (realDuration.current) {
+          if (realDuration.current && realDuration.current > 0) {
             setProgress((newAudio.currentTime / realDuration.current) * 100);
           }
           if (!showPlaybackTime.current && newAudio.currentTime > 0) {
@@ -150,7 +150,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, [audio, duration]);
+  }, [audio]);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || !isFinite(time) || time < 0) {
@@ -187,25 +187,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (!audio) {
-      console.log('Audio not initialized yet');
+    if (!audio || !realDuration.current) {
+      console.log('Audio not initialized yet or duration unknown');
       return;
     }
     
-    setProgress(value[0]);
+    const newValue = value[0];
+    setProgress(newValue);
     
-    if (realDuration.current && realDuration.current > 0) {
-      const newTime = (value[0] / 100) * realDuration.current;
-      
-      setCurrentTime(newTime);
-      
-      if (isFinite(newTime) && newTime >= 0) {
-        try {
-          audio.currentTime = newTime;
-          showPlaybackTime.current = true;
-        } catch (error) {
-          console.error('Error setting audio current time:', error);
-        }
+    const newTime = (newValue / 100) * realDuration.current;
+    
+    setCurrentTime(newTime);
+    
+    if (isFinite(newTime) && newTime >= 0) {
+      try {
+        audio.currentTime = newTime;
+        showPlaybackTime.current = true;
+      } catch (error) {
+        console.error('Error setting audio current time:', error);
       }
     }
   };
