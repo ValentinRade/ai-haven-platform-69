@@ -1,3 +1,4 @@
+
 import { Chat, ChatMessage } from '@/types/chat';
 import { Database } from '@/integrations/supabase/types';
 
