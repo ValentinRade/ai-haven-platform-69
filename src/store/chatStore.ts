@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { ChatStore } from './types/chatStore.types';
 import { createChatActions } from './actions/chatActions';
-import { createMessageActions } from './actions/messageActions';
+import { createMessageActions } from './actions/message/messageActions';
 import { createLoadActions } from './actions/loadActions';
 
 export const useChatStore = create<ChatStore>((set, get) => ({
