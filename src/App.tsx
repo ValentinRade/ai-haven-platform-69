@@ -8,7 +8,6 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 
 import MainLayout from "./layouts/MainLayout";
 import ChatPage from "./pages/ChatPage";
-import Index from "./pages/Index";
 import AdminLayout from "./layouts/AdminLayout";
 import WorkflowBuilder from "./pages/admin/WorkflowBuilder";
 import WorkflowOverview from "./pages/admin/WorkflowOverview";
@@ -28,9 +27,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
-            <Route path="/" element={<Index />} />
             <Route path="/" element={<MainLayout />}>
-              <Route path="/chat" element={<ChatPage />} />
+              <Route index element={<ChatPage />} />
               <Route path="profile" element={<ProfileSettingsPage />} />
             </Route>
             <Route path="/admin" element={<AdminLayout />}>

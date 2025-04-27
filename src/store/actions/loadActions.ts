@@ -14,24 +14,20 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
       }
 
       try {
-        console.log('Loading chats for user:', session.session.user.id);
         const { data, error } = await supabase
           .from('chats')
           .select(`
             id,
             title,
             updated_at,
-            user_id,
             creator_display_name,
             messages (
               id,
               content,
               type,
-              created_at,
-              duration
+              created_at
             )
           `)
-          .eq('user_id', session.session.user.id)
           .order('updated_at', { ascending: false });
 
         if (error) {
@@ -44,11 +40,9 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
           return;
         }
 
-        console.log('Loaded chats:', data);
-        
         if (data) {
+          // Explicitly type the data to match what formatChat expects
           const formattedChats = data.map((chat) => formatChat(chat));
-          console.log('Formatted chats:', formattedChats);
           
           set({ chats: formattedChats });
           
@@ -65,7 +59,7 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
         });
       }
     } catch (error) {
-      console.error('Error in session check:', error);
+      console.error('Error loading chats:', error);
       toast({
         title: "Fehler beim Laden der Chats",
         description: "Bitte versuchen Sie es später erneut.",
