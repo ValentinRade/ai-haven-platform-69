@@ -36,98 +36,210 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       
       // For audio messages, determine duration before saving to database
       if (isAudioMessage) {
-        return new Promise<void>((resolve, reject) => {
-          const audio = new Audio(`data:audio/webm;base64,${message.content}`);
+        try {
+          // First, create an audio element to determine the duration
+          const audioElement = new Audio(`data:audio/webm;base64,${message.content}`);
           
-          audio.onloadedmetadata = async () => {
-            const audioDuration = audio.duration;
-            console.log('Audio duration:', audioDuration);
-            
-            // Save user's message to database with duration
-            const { data: userData, error: userError } = await supabase
-              .from('messages')
-              .insert({
-                chat_id: currentChatId,
-                content: message.content,
-                type: message.type,
-                duration: audioDuration
-              })
-              .select()
-              .single();
+          return new Promise<void>((resolve, reject) => {
+            audioElement.onloadedmetadata = async () => {
+              // Get the duration once metadata is loaded
+              const audioDuration = audioElement.duration;
+              console.log('Audio duration determined:', audioDuration);
+              
+              if (audioDuration && isFinite(audioDuration)) {
+                try {
+                  // Save user's message to database with duration
+                  const { data: userData, error: userError } = await supabase
+                    .from('messages')
+                    .insert({
+                      chat_id: currentChatId,
+                      content: message.content,
+                      type: message.type,
+                      duration: audioDuration // Store the duration in the database
+                    })
+                    .select()
+                    .single();
 
-            if (userError) throw userError;
+                  if (userError) throw userError;
 
-            // Update chat state with user's message
-            set((state: ChatStore) => {
-              const updatedChats = state.chats.map((chat) => {
-                if (chat.id === currentChatId) {
-                  const newMessage = {
-                    id: userData.id,
-                    type: message.type,
-                    content: message.content,
-                    timestamp: new Date(userData.created_at),
-                    duration: audioDuration
-                  };
-                  
-                  return {
-                    ...chat,
-                    lastMessage: "Voice message",
-                    timestamp: new Date(),
-                    messages: [...chat.messages, newMessage]
-                  };
+                  // Update chat state with user's message
+                  set((state: ChatStore) => {
+                    const updatedChats = state.chats.map((chat) => {
+                      if (chat.id === currentChatId) {
+                        const newMessage = {
+                          id: userData.id,
+                          type: message.type,
+                          content: message.content,
+                          timestamp: new Date(userData.created_at),
+                          duration: audioDuration // Include duration in the state
+                        };
+                        
+                        return {
+                          ...chat,
+                          lastMessage: "Voice message",
+                          timestamp: new Date(),
+                          messages: [...chat.messages, newMessage]
+                        };
+                      }
+                      return chat;
+                    });
+
+                    return { 
+                      chats: updatedChats,
+                      isLoading: true // Keep loading state while waiting for response
+                    };
+                  });
+
+                  try {
+                    const response = await sendMessageToWebhook(
+                      session.session.user.id,
+                      currentChatId,
+                      message.content as string,
+                      isFirstMessage,
+                      true // isAudio
+                    );
+
+                    const aiResponse = response.answer || response.output;
+                    if (aiResponse) {
+                      await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
+                    } else {
+                      // If no response, still set loading to false
+                      set((state: ChatStore) => ({
+                        ...state,
+                        isLoading: false
+                      }));
+                    }
+                  } catch (error) {
+                    console.error('Error sending message to webhook:', error);
+                    toast({
+                      title: "Fehler bei der Verarbeitung",
+                      description: "Die Nachricht konnte nicht verarbeitet werden.",
+                      variant: "destructive"
+                    });
+                    // Always set loading to false when done
+                    set((state: ChatStore) => ({
+                      ...state,
+                      isLoading: false
+                    }));
+                  }
+                } catch (dbError) {
+                  console.error('Error saving audio message to database:', dbError);
+                  reject(dbError);
                 }
-                return chat;
-              });
-
-              return { 
-                chats: updatedChats,
-                isLoading: true // Keep loading state while waiting for response
-              };
-            });
-
-            try {
-              const response = await sendMessageToWebhook(
-                session.session.user.id,
-                currentChatId,
-                message.content as string,
-                isFirstMessage,
-                true // isAudio
-              );
-
-              const aiResponse = response.answer || response.output;
-              if (aiResponse) {
-                await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
               } else {
-                // If no response, still set loading to false
-                set((state: ChatStore) => ({
-                  ...state,
-                  isLoading: false
-                }));
+                console.error('Invalid audio duration:', audioDuration);
+                reject(new Error('Could not determine audio duration'));
               }
-            } catch (error) {
-              console.error('Error sending message to webhook:', error);
-              toast({
-                title: "Fehler bei der Verarbeitung",
-                description: "Die Nachricht konnte nicht verarbeitet werden.",
-                variant: "destructive"
-              });
-              // Always set loading to false when done
-              set((state: ChatStore) => ({
-                ...state,
-                isLoading: false
-              }));
-            }
+              resolve();
+            };
 
-            resolve();
-          };
+            audioElement.onerror = (error) => {
+              console.error('Error loading audio metadata:', error);
+              reject(error);
+              
+              // Still try to save the message without duration
+              handleAudioWithoutDuration();
+            };
 
-          audio.onerror = (error) => {
-            console.error('Error loading audio:', error);
-            reject(error);
-          };
+            // Set a timeout in case metadata loading takes too long
+            const timeoutId = setTimeout(() => {
+              console.warn('Audio metadata loading timeout, proceeding without duration');
+              audioElement.onerror = null; // Remove the error handler
+              handleAudioWithoutDuration();
+            }, 3000); // 3 second timeout
 
-          audio.load();
-        });
+            // Function to handle cases where we can't get the duration
+            const handleAudioWithoutDuration = async () => {
+              clearTimeout(timeoutId);
+              
+              try {
+                // Save user's message to database without duration
+                const { data: userData, error: userError } = await supabase
+                  .from('messages')
+                  .insert({
+                    chat_id: currentChatId,
+                    content: message.content,
+                    type: message.type
+                    // No duration specified
+                  })
+                  .select()
+                  .single();
+
+                if (userError) throw userError;
+
+                // Continue with processing as normal
+                set((state: ChatStore) => {
+                  const updatedChats = state.chats.map((chat) => {
+                    if (chat.id === currentChatId) {
+                      const newMessage = {
+                        id: userData.id,
+                        type: message.type,
+                        content: message.content,
+                        timestamp: new Date(userData.created_at)
+                      };
+                      
+                      return {
+                        ...chat,
+                        lastMessage: "Voice message",
+                        timestamp: new Date(),
+                        messages: [...chat.messages, newMessage]
+                      };
+                    }
+                    return chat;
+                  });
+
+                  return { 
+                    chats: updatedChats,
+                    isLoading: true
+                  };
+                });
+
+                // Process with webhook
+                try {
+                  const response = await sendMessageToWebhook(
+                    session.session.user.id,
+                    currentChatId,
+                    message.content as string,
+                    isFirstMessage,
+                    true
+                  );
+
+                  const aiResponse = response.answer || response.output;
+                  if (aiResponse) {
+                    await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
+                  }
+                } catch (error) {
+                  console.error('Error sending message to webhook:', error);
+                  set((state: ChatStore) => ({
+                    ...state,
+                    isLoading: false
+                  }));
+                }
+                
+                resolve();
+              } catch (error) {
+                console.error('Error saving audio without duration:', error);
+                reject(error);
+              }
+            };
+
+            // Start loading the audio to get metadata
+            audioElement.load();
+          });
+        } catch (audioError) {
+          console.error('Error processing audio:', audioError);
+          toast({
+            title: "Fehler bei der Audioverarbeitung",
+            description: "Die Sprachnachricht konnte nicht korrekt verarbeitet werden.",
+            variant: "destructive"
+          });
+          
+          // Set loading to false on error
+          set((state: ChatStore) => ({
+            ...state,
+            isLoading: false
+          }));
+        }
       }
 
       // For non-audio messages, proceed as before
