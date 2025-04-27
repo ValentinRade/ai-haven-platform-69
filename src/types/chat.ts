@@ -1,12 +1,4 @@
 
-export type Message = {
-  id: string;
-  type: string;
-  content: string;
-  duration?: number;
-  timestamp: Date;
-};
-
 export type Chat = {
   id: string;
   title: string;
@@ -14,13 +6,5 @@ export type Chat = {
   timestamp: Date;
   messages: Message[];
   creator_display_name?: string;
-  is_private?: boolean;
-};
-
-export type ChatMessage = {
-  id: string;
-  type: string;
-  content: string;
-  timestamp: Date;
-  duration?: number;
+  is_private: boolean; // Update to make this required
 };
