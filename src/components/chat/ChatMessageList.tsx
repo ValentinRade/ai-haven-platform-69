@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
 import { Chat } from '@/types/chat';
@@ -11,11 +10,20 @@ interface ChatMessageListProps {
 const ChatMessageList: React.FC<ChatMessageListProps> = ({ currentChat, isLoading }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  // Scroll on initial load and when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+
+  // Keep existing scroll behavior for message updates
+  useEffect(() => {
+    scrollToBottom();
   }, [currentChat?.messages]);
 
   return (
