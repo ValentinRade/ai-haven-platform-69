@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -20,7 +19,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [parsedContent, setParsedContent] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Parse content when message changes
   useEffect(() => {
     if (!message.content) {
       setParsedContent('');
@@ -31,7 +29,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       ? JSON.stringify(message.content)
       : message.content;
     
-    // Check if it's an audio message
     if (isAudioMessage(contentStr)) return;
     
     try {
@@ -83,7 +80,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   }, [audio]);
 
   const formatTime = (time: number) => {
-    if (isNaN(time) || !isFinite(time)) {
+    if (isNaN(time) || !isFinite(time) || time < 0) {
       return '0:00';
     }
     const minutes = Math.floor(time / 60);
@@ -95,13 +92,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     if (!audio) {
       const contentStr = typeof message.content === 'string' ? message.content : '';
       const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
+      
       newAudio.onloadedmetadata = () => {
         setDuration(newAudio.duration);
       };
+      
+      newAudio.addEventListener('timeupdate', () => {
+        setCurrentTime(newAudio.currentTime);
+      });
+      
       newAudio.onended = () => setIsPlaying(false);
       setAudio(newAudio);
       
-      // Make sure to start playing only after metadata is loaded
       newAudio.addEventListener('loadedmetadata', () => {
         newAudio.play().catch(err => console.error('Error playing audio:', err));
         setIsPlaying(true);
@@ -117,14 +119,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }
   };
 
-  // Helper function to check if it's an audio message
   const isAudioMessage = (content: string): boolean => {
     return content.startsWith('/9j/') || 
            content.startsWith('GkXf') || 
            content.startsWith('T21v');
   };
 
-  // Determine if the message is an audio message
   const isContentAudio = typeof message.content === 'string' && isAudioMessage(message.content);
 
   return (
