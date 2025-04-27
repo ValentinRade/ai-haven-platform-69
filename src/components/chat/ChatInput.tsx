@@ -13,6 +13,7 @@ interface ChatInputProps {
   onSend: () => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
+  onCancelRecording: () => void;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -22,7 +23,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isRecording,
   onSend,
   onStartRecording,
-  onStopRecording
+  onStopRecording,
+  onCancelRecording
 }) => {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingTimer = useRef<NodeJS.Timeout | null>(null);
@@ -66,14 +68,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [input]);
-
-  const cancelRecording = () => {
-    if (recordingTimer.current) {
-      clearInterval(recordingTimer.current);
-    }
-    setRecordingDuration(0);
-    onStopRecording();
-  };
 
   return (
     <div className="bg-gray-50 pt-2 pb-2 px-4 border-t border-gray-200 h-24 w-full">
@@ -129,7 +123,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 variant="ghost"
                 size="icon"
                 className="rounded-full h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                onClick={cancelRecording}
+                onClick={onCancelRecording}
+                aria-label="Aufnahme abbrechen"
               >
                 <Trash2 size={18} />
               </Button>
@@ -138,6 +133,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 size="icon"
                 className="rounded-full h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
                 onClick={onStopRecording}
+                aria-label="Aufnahme beenden und senden"
               >
                 <MicOff size={18} />
               </Button>

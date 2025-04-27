@@ -101,6 +101,27 @@ const ChatInterface: React.FC = () => {
     }
   };
 
+  const handleCancelRecording = async () => {
+    try {
+      // Stop the recording but don't send the audio
+      await voiceRecorderRef.current.stopRecording();
+      // Reset the recording state
+      setIsRecording(false);
+      toast({
+        title: "Aufnahme abgebrochen",
+        description: "Die Sprachnachricht wurde gelöscht.",
+      });
+    } catch (error) {
+      console.error('Failed to cancel recording:', error);
+      setIsRecording(false);
+      toast({
+        title: "Fehler beim Abbrechen der Aufnahme",
+        description: "Bitte versuchen Sie es erneut.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen w-full">
       <ChatHeader />
@@ -113,6 +134,7 @@ const ChatInterface: React.FC = () => {
         onSend={handleSend}
         onStartRecording={handleStartRecording}
         onStopRecording={handleStopRecording}
+        onCancelRecording={handleCancelRecording}
       />
     </div>
   );
