@@ -83,6 +83,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   }, [audio]);
 
   const formatTime = (time: number) => {
+    if (isNaN(time) || !isFinite(time)) {
+      return '0:00';
+    }
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -92,16 +95,23 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     if (!audio) {
       const contentStr = typeof message.content === 'string' ? message.content : '';
       const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
-      setAudio(newAudio);
+      newAudio.onloadedmetadata = () => {
+        setDuration(newAudio.duration);
+      };
       newAudio.onended = () => setIsPlaying(false);
-      newAudio.play();
-      setIsPlaying(true);
+      setAudio(newAudio);
+      
+      // Make sure to start playing only after metadata is loaded
+      newAudio.addEventListener('loadedmetadata', () => {
+        newAudio.play().catch(err => console.error('Error playing audio:', err));
+        setIsPlaying(true);
+      });
     } else {
       if (isPlaying) {
         audio.pause();
         setIsPlaying(false);
       } else {
-        audio.play();
+        audio.play().catch(err => console.error('Error playing audio:', err));
         setIsPlaying(true);
       }
     }
@@ -149,15 +159,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden">
                   <div 
                     className="bg-primary h-full transition-all duration-100"
-                    style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                    style={{ width: `${((currentTime || 0) / (duration || 1)) * 100}%` }}
                   />
                 </div>
                 <div className="flex justify-between mt-1">
                   <span className="text-xs text-gray-500">
-                    {audio ? formatTime(currentTime) : '0:00'}
+                    {formatTime(currentTime)}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {audio ? formatTime(duration) : '0:00'}
+                    {formatTime(duration)}
                   </span>
                 </div>
               </div>
