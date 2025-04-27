@@ -1,30 +1,63 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useChatStore } from '@/store/chatStore';
+import { toast } from '@/hooks/use-toast';
 import ChatSidebar from './ChatSidebar';
 import ChatMainView from './ChatMainView';
 
 const ChatContainer: React.FC = () => {
   const navigate = useNavigate();
-  const { loadChats } = useChatStore();
+  const { loadChats, isLoading } = useChatStore();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      
-      if (!data.session) {
-        navigate('/auth');
-        return;
+      try {
+        console.log('Checking authentication in ChatContainer');
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Session error in ChatContainer:', error);
+          toast({
+            title: "Fehler bei der Authentifizierung",
+            description: "Bitte melden Sie sich erneut an.",
+            variant: "destructive"
+          });
+          navigate('/auth');
+          return;
+        }
+        
+        if (!data.session) {
+          console.log('No active session, redirecting to auth');
+          navigate('/auth');
+          return;
+        }
+        
+        console.log('User authenticated in ChatContainer, loading chats');
+        setAuthChecked(true);
+        loadChats();
+      } catch (err) {
+        console.error('Error checking auth in ChatContainer:', err);
+        toast({
+          title: "Fehler",
+          description: "Es ist ein Fehler bei der Authentifizierung aufgetreten.",
+          variant: "destructive"
+        });
       }
-      
-      // Load chats only if authenticated
-      loadChats();
     };
 
     checkAuth();
   }, [navigate, loadChats]);
+
+  if (!authChecked) {
+    return (
+      <div className="flex h-[calc(100vh-56px)] w-screen items-center justify-center">
+        <p className="text-gray-500">Authentifizierung wird überprüft...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-56px)] w-screen overflow-hidden">

@@ -7,6 +7,7 @@ import { formatChat } from '../utils/chatUtils';
 export const createLoadActions = (set: Function, get: () => ChatStore) => ({
   loadChats: async () => {
     try {
+      console.log('Starting loadChats function');
       // Check if user is authenticated
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
@@ -27,14 +28,21 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
       }
 
       console.log('User authenticated, proceeding to load chats');
+      console.log('Auth user ID:', sessionData.session?.user.id);
       
       // Set loading state
       set({ isLoading: true });
 
       try {
         console.log('Sending request to Supabase to fetch chats...');
+        console.log('Supabase URL:', supabase.getUrl());
         
-        const { data, error, status } = await supabase
+        // Add timeout to detect hanging requests
+        const timeout = setTimeout(() => {
+          console.warn('Supabase request taking longer than 10 seconds');
+        }, 10000);
+        
+        const { data, error, status, statusText } = await supabase
           .from('chats')
           .select(`
             id,
@@ -51,8 +59,10 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             )
           `)
           .order('updated_at', { ascending: false });
+        
+        clearTimeout(timeout);
 
-        console.log('Response status:', status);
+        console.log('Response status:', status, statusText);
         
         if (error) {
           console.error('Error loading chats:', error);
@@ -68,7 +78,10 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
 
         console.log('Chats fetched successfully, count:', data?.length);
         
-        if (data) {
+        if (data && data.length > 0) {
+          // Logging first chat to diagnose structure
+          console.log('Sample chat structure:', JSON.stringify(data[0], null, 2));
+          
           // Format the chats and update state
           const formattedChats = data.map((chat) => formatChat(chat));
           console.log('Formatted chats:', formattedChats.length);
