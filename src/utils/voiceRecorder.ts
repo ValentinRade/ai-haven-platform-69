@@ -22,7 +22,7 @@ export class VoiceRecorder {
     }
   }
 
-  stopRecording(): Promise<{ base64Audio: string, duration: number }> {
+  stopRecording(): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
         reject(new Error('No active recording'));
@@ -33,18 +33,11 @@ export class VoiceRecorder {
         try {
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
           const base64Audio = await this.blobToBase64(audioBlob);
-
-          // Calculate duration using a fixed estimate based on blob size
-          // This is a fallback method since we can't reliably get duration from audio metadata
-          const estimatedDuration = this.estimateDuration(audioBlob.size);
           
           this.audioChunks = [];
           this.mediaRecorder?.stream.getTracks().forEach(track => track.stop());
           
-          resolve({
-            base64Audio,
-            duration: estimatedDuration
-          });
+          resolve(base64Audio);
         } catch (error) {
           reject(error);
         }
@@ -72,10 +65,16 @@ export class VoiceRecorder {
   }
 
   // Estimate duration based on audio size (rough estimate)
-  private estimateDuration(blobSize: number): number {
+  estimateDuration(base64Audio: string): number {
+    // Convert base64 to bytes to estimate duration
+    const bytes = this.base64ToBytes(base64Audio);
     // Rough estimate: ~128 kbps webm audio = ~16KB per second
     // Using a conservative estimate of 12KB per second to avoid underestimating
     const bytesPerSecond = 12 * 1024;
-    return Math.max(1, Math.round(blobSize / bytesPerSecond));
+    return Math.max(1, Math.round(bytes / bytesPerSecond));
+  }
+
+  private base64ToBytes(base64: string): number {
+    return Math.floor((base64.length * 3) / 4);
   }
 }

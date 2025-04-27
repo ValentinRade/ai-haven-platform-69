@@ -34,18 +34,21 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         message.content.startsWith('T21v')
       );
       
-      let messageData = {
+      // Prepare message data for database
+      const messageData: {
+        chat_id: string;
+        content: any;
+        type: string;
+        duration?: number;
+      } = {
         chat_id: currentChatId,
         content: message.content,
         type: message.type
       };
 
-      // Add duration for audio messages
-      if (isAudioMessage && message.duration) {
-        messageData = {
-          ...messageData,
-          duration: message.duration
-        };
+      // Add duration for audio messages if provided
+      if (message.duration) {
+        messageData.duration = message.duration;
       }
       
       // Save user's message to database

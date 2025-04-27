@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -87,10 +86,13 @@ const ChatInputArea: React.FC = () => {
         await createNewChat();
       }
       
+      const duration = voiceRecorderRef.current.estimateDuration(base64Audio);
+      
       await addMessageToCurrentChat({
         type: 'user',
         content: base64Audio,
-        timestamp: new Date()
+        timestamp: new Date(),
+        duration: duration
       });
 
     } catch (error) {

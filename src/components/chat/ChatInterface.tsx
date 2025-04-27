@@ -78,11 +78,13 @@ const ChatInterface: React.FC = () => {
     
     try {
       setIsRecording(false);
-      const { base64Audio, duration } = await voiceRecorderRef.current.stopRecording();
+      const base64Audio = await voiceRecorderRef.current.stopRecording();
       
       if (!currentChatId) {
         await createNewChat();
       }
+      
+      const duration = voiceRecorderRef.current.estimateDuration(base64Audio);
       
       await addMessageToCurrentChat({
         type: 'user',
