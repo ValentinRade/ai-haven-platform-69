@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -128,19 +127,25 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     if (audio) {
       const updateTime = () => {
         setCurrentTime(audio.currentTime);
-        const audioDuration = duration || 0;
-        setProgress((audio.currentTime / audioDuration) * 100);
+        
+        // Only update progress if we have a valid duration
+        if (hasValidDuration.current && duration > 0) {
+          const calculatedProgress = (audio.currentTime / duration) * 100;
+          setProgress(calculatedProgress);
+        }
       };
       
       const handleLoadedMetadata = () => {
         // Use the stored duration if available
-        const audioDuration = message.duration || 
-          (isFinite(audio.duration) && audio.duration > 0 
-            ? audio.duration 
-            : 0);
-        setDuration(audioDuration);
+        if (message.duration && message.duration > 0) {
+          setDuration(message.duration);
+          hasValidDuration.current = true;
+        } else if (isFinite(audio.duration) && audio.duration > 0) {
+          setDuration(audio.duration);
+          hasValidDuration.current = true;
+        }
         audioLoading.current = false;
-        console.log('Audio metadata loaded with fixed duration:', audioDuration);
+        console.log('Audio metadata loaded with fixed duration:', duration);
       };
       
       const handleEnded = () => {
@@ -169,7 +174,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, [audio, duration]);
+  }, [audio, duration, message.duration]);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || !isFinite(time) || time < 0) {
@@ -224,34 +229,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     return content.startsWith('/9j/') || 
            content.startsWith('GkXf') || 
            content.startsWith('T21v');
-  };
-
-  const formatTime = (time: number) => {
-    if (isNaN(time) || !isFinite(time) || time < 0) {
-      return '0:00';
-    }
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const getDisplayTime = () => {
-    if (progress === 0) {
-      return formatTime(duration || 0);
-    }
-    return formatTime(currentTime);
-  };
-
-  const playAudio = () => {
-    if (!audio) return;
-    
-    if (isPlaying) {
-      audio.pause();
-      setIsPlaying(false);
-    } else {
-      audio.play().catch(err => console.error('Error playing audio:', err));
-      setIsPlaying(true);
-    }
   };
 
   const isContentAudio = typeof message.content === 'string' && isAudioMessage(message.content);
