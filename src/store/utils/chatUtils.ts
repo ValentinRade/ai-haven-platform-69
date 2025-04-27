@@ -5,7 +5,7 @@ import { Database } from '@/integrations/supabase/types';
 type ChatRow = Database['public']['Tables']['chats']['Row'];
 
 // Update the formatChat function to be more flexible with the input type
-export const formatChat = (chat: Partial<ChatRow> & { messages?: any[], updated_at: string, id: string, title: string }): Chat => ({
+export const formatChat = (chat: Partial<ChatRow> & { messages?: any[], updated_at: string, id: string, title: string, is_private?: boolean }): Chat => ({
   id: chat.id,
   title: chat.title,
   timestamp: new Date(chat.updated_at),
