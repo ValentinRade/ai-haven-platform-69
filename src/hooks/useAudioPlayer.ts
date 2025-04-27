@@ -7,7 +7,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [actualDuration, setActualDuration] = useState(0);
+  const [actualDuration, setActualDuration] = useState(duration);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioInitialized = useRef(false);
 
@@ -19,19 +19,19 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
       audioRef.current = newAudio;
       
       newAudio.addEventListener('loadedmetadata', () => {
-        // Use the actual audio duration if available and valid
-        if (newAudio.duration && isFinite(newAudio.duration)) {
-          setActualDuration(newAudio.duration);
-        } else {
-          // Fallback to provided duration only if needed
+        // Prefer the duration from Supabase if it exists
+        if (duration) {
           setActualDuration(duration);
+        } else if (newAudio.duration && isFinite(newAudio.duration)) {
+          // Fallback to calculated duration if no Supabase duration
+          setActualDuration(newAudio.duration);
         }
       });
       
       newAudio.addEventListener('timeupdate', () => {
         setCurrentTime(newAudio.currentTime);
-        // Always calculate progress based on the actual duration
-        const currentDuration = actualDuration || duration;
+        // Use Supabase duration or calculated duration
+        const currentDuration = actualDuration;
         const calculatedProgress = (newAudio.currentTime / currentDuration) * 100;
         setProgress(Math.min(calculatedProgress, 100));
       });
