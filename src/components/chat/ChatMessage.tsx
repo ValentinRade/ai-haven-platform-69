@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { AudioLines } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { marked } from 'marked';
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -38,6 +39,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                         message.content.startsWith('GkXf') || 
                         message.content.startsWith('T21v');
 
+  const parseContent = (content: string) => {
+    try {
+      // Check if the content is a JSON string containing an array with output property
+      if (content.startsWith('[{')) {
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed) && parsed[0]?.output) {
+          content = parsed[0].output;
+        }
+      }
+      // Convert markdown to HTML
+      const html = marked(content, { breaks: true });
+      return { __html: html };
+    } catch (error) {
+      // If parsing fails, return the original content
+      return { __html: content };
+    }
+  };
+
   return (
     <div 
       className={cn(
@@ -52,7 +71,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           "w-full max-w-[80%] md:max-w-[70%] lg:max-w-[60%]"
         )}
       >
-        <div className="prose">
+        <div className="prose prose-sm max-w-none dark:prose-invert">
           {isAudioMessage ? (
             <div className="flex items-center gap-2">
               <Button
@@ -71,9 +90,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </span>
             </div>
           ) : (
-            <p className="m-0 text-sm sm:text-base whitespace-pre-wrap">
-              {message.content}
-            </p>
+            <div 
+              dangerouslySetInnerHTML={parseContent(message.content)}
+              className="text-sm sm:text-base"
+            />
           )}
         </div>
         <div className="text-xs text-gray-500 mt-1 text-right">
@@ -85,3 +105,4 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 };
 
 export default ChatMessage;
+

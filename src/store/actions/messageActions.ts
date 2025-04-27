@@ -90,6 +90,9 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         const responseData = await response.json();
         if (responseData.answer) {
           aiResponse = responseData.answer;
+        } else if (Array.isArray(responseData) && responseData[0]?.output) {
+          // Handle complex response format
+          aiResponse = responseData[0].output;
         }
         if (isFirstMessage && responseData.chatname) {
           chatName = responseData.chatname;
