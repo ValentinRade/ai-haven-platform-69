@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const audioInitialized = useRef(false);
   const audioLoading = useRef(false);
+  const actualDurationLoaded = useRef(false);
   const DEFAULT_DURATION = 30;
 
   useEffect(() => {
@@ -47,6 +49,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           setDuration(audioDuration);
           setProgress(0);
           audioLoading.current = false;
+          actualDurationLoaded.current = true;
           console.log('Audio metadata loaded with duration:', audioDuration);
         });
         
@@ -116,6 +119,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
           ? audio.duration 
           : DEFAULT_DURATION;
         setDuration(audioDuration);
+        actualDurationLoaded.current = true;
         audioLoading.current = false;
         console.log('Audio metadata loaded with fixed duration:', audioDuration);
       };
@@ -156,12 +160,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const getDisplayTime = () => {
-    if (!audio || duration <= 0) {
-      return '0:00';
-    }
-    
+    // Always show actual duration when available, even at the start
     if (progress === 0) {
-      return formatTime(duration);
+      // If actual duration is loaded, use it, otherwise show a placeholder
+      if (actualDurationLoaded.current && isFinite(duration) && duration > 0) {
+        return formatTime(duration);
+      }
+      // Show correct time as soon as we load it, instead of waiting for play
+      if (audio && isFinite(audio.duration) && audio.duration > 0) {
+        return formatTime(audio.duration);
+      }
+      // Fallback
+      return '0:00';
     }
     
     return formatTime(currentTime);
