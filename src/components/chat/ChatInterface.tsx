@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store/chatStore';
@@ -59,10 +58,6 @@ const ChatInterface: React.FC = () => {
     try {
       await voiceRecorderRef.current.startRecording();
       setIsRecording(true);
-      toast({
-        title: "Aufnahme gestartet",
-        description: "Sprechen Sie jetzt...",
-      });
     } catch (error) {
       console.error('Failed to start recording:', error);
       toast({
@@ -103,9 +98,7 @@ const ChatInterface: React.FC = () => {
 
   const handleCancelRecording = async () => {
     try {
-      // Stop the recording but don't send the audio
       await voiceRecorderRef.current.stopRecording();
-      // Reset the recording state
       setIsRecording(false);
       toast({
         title: "Aufnahme abgebrochen",
