@@ -21,6 +21,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [progress, setProgress] = useState(0);
   const [parsedContent, setParsedContent] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
+  const audioInitialized = useRef(false);
 
   useEffect(() => {
     if (!message.content) {
@@ -32,7 +33,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       ? JSON.stringify(message.content)
       : message.content;
     
-    if (isAudioMessage(contentStr)) return;
+    if (isAudioMessage(contentStr)) {
+      // Initialize audio immediately for audio messages
+      if (!audio && !audioInitialized.current) {
+        audioInitialized.current = true;
+        const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
+        
+        newAudio.addEventListener('loadedmetadata', () => {
+          setDuration(newAudio.duration);
+          setProgress(0);
+        });
+        
+        newAudio.addEventListener('timeupdate', () => {
+          setCurrentTime(newAudio.currentTime);
+          setProgress((newAudio.currentTime / newAudio.duration) * 100);
+        });
+        
+        newAudio.addEventListener('ended', () => setIsPlaying(false));
+        setAudio(newAudio);
+      }
+      return;
+    }
     
     try {
       let content = contentStr;
@@ -63,7 +84,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       console.error('Error parsing message content:', error);
       setParsedContent(typeof message.content === 'string' ? message.content : JSON.stringify(message.content));
     }
-  }, [message.content]);
+  }, [message.content, audio]);
 
   useEffect(() => {
     if (audio) {
@@ -97,44 +118,32 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const playAudio = () => {
-    if (!audio) {
-      const contentStr = typeof message.content === 'string' ? message.content : '';
-      const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
-      
-      newAudio.onloadedmetadata = () => {
-        setDuration(newAudio.duration);
-        setProgress(0);
-      };
-      
-      newAudio.addEventListener('timeupdate', () => {
-        setCurrentTime(newAudio.currentTime);
-        setProgress((newAudio.currentTime / newAudio.duration) * 100);
-      });
-      
-      newAudio.onended = () => setIsPlaying(false);
-      setAudio(newAudio);
-      
-      newAudio.addEventListener('loadedmetadata', () => {
-        newAudio.play().catch(err => console.error('Error playing audio:', err));
-        setIsPlaying(true);
-      });
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
     } else {
-      if (isPlaying) {
-        audio.pause();
-        setIsPlaying(false);
-      } else {
-        audio.play().catch(err => console.error('Error playing audio:', err));
-        setIsPlaying(true);
-      }
+      audio.play().catch(err => console.error('Error playing audio:', err));
+      setIsPlaying(true);
     }
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (audio && audio.duration) {
+    if (!audio || !isFinite(audio.duration) || audio.duration <= 0) {
+      console.log('Audio not ready or duration invalid:', audio?.duration);
+      return;
+    }
+    
+    try {
       const newTime = (value[0] / 100) * audio.duration;
-      audio.currentTime = newTime;
-      setCurrentTime(newTime);
-      setProgress(value[0]);
+      if (isFinite(newTime) && newTime >= 0) {
+        audio.currentTime = newTime;
+        setCurrentTime(newTime);
+        setProgress(value[0]);
+      }
+    } catch (error) {
+      console.error('Error setting audio current time:', error);
     }
   };
 
