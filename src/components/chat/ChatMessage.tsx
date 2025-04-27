@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -22,8 +21,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [parsedContent, setParsedContent] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
   const audioInitialized = useRef(false);
-  const audioDataReady = useRef(false);
   const audioLoading = useRef(false);
+  const DEFAULT_DURATION = 30; // Default duration in seconds if actual cannot be determined
 
   useEffect(() => {
     if (!message.content) {
@@ -42,16 +41,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
         
         newAudio.addEventListener('loadedmetadata', () => {
-          setDuration(newAudio.duration);
+          // Use a default duration if the actual duration is invalid
+          const audioDuration = isFinite(newAudio.duration) && newAudio.duration > 0 
+            ? newAudio.duration 
+            : DEFAULT_DURATION;
+            
+          setDuration(audioDuration);
           setProgress(0);
-          audioDataReady.current = true;
           audioLoading.current = false;
-          console.log('Audio metadata loaded, duration:', newAudio.duration);
+          console.log('Audio metadata loaded with duration:', audioDuration);
         });
         
         newAudio.addEventListener('timeupdate', () => {
           setCurrentTime(newAudio.currentTime);
-          setProgress((newAudio.currentTime / newAudio.duration) * 100);
+          // Use the stored duration value for calculating progress
+          const audioDuration = isFinite(newAudio.duration) && newAudio.duration > 0 
+            ? newAudio.duration 
+            : duration || DEFAULT_DURATION;
+          setProgress((newAudio.currentTime / audioDuration) * 100);
         });
         
         newAudio.addEventListener('ended', () => setIsPlaying(false));
@@ -97,19 +104,27 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       console.error('Error parsing message content:', error);
       setParsedContent(typeof message.content === 'string' ? message.content : JSON.stringify(message.content));
     }
-  }, [message.content, audio]);
+  }, [message.content, audio, duration]);
 
   useEffect(() => {
     if (audio) {
       const updateTime = () => {
         setCurrentTime(audio.currentTime);
-        setProgress((audio.currentTime / audio.duration) * 100);
+        // Use the stored duration value for calculating progress
+        const audioDuration = isFinite(audio.duration) && audio.duration > 0 
+          ? audio.duration 
+          : duration || DEFAULT_DURATION;
+        setProgress((audio.currentTime / audioDuration) * 100);
       };
       
       const handleLoadedMetadata = () => {
-        setDuration(audio.duration);
-        audioDataReady.current = true;
+        // Use a default duration if the actual duration is invalid
+        const audioDuration = isFinite(audio.duration) && audio.duration > 0 
+          ? audio.duration 
+          : DEFAULT_DURATION;
+        setDuration(audioDuration);
         audioLoading.current = false;
+        console.log('Audio metadata loaded with fixed duration:', audioDuration);
       };
       
       const handleEnded = () => setIsPlaying(false);
@@ -124,7 +139,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, [audio]);
+  }, [audio, duration]);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || !isFinite(time) || time < 0) {
@@ -136,18 +151,17 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const getDisplayTime = () => {
-    if (!audio || progress === 0) {
-      return formatTime(duration);
+    // If the progress is at the beginning (0), show the total duration
+    if (progress === 0) {
+      return formatTime(duration || DEFAULT_DURATION);
     }
+    // Otherwise show the current time
     return formatTime(currentTime);
   };
 
   const playAudio = () => {
     if (!audio) return;
-
-    // If audio data isn't ready yet, force load it
-    ensureAudioDataLoaded();
-
+    
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
@@ -157,63 +171,32 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     }
   };
 
-  const ensureAudioDataLoaded = () => {
-    if (!audio) return;
-    
-    if (!audioDataReady.current && !audioLoading.current) {
-      audioLoading.current = true;
-      audio.load();
-    }
-  };
-
   const handleSliderChange = (value: number[]) => {
     if (!audio) {
       console.log('Audio not initialized yet');
       return;
     }
     
-    // Make sure audio data is loaded first
-    ensureAudioDataLoaded();
-    
-    // Even if duration isn't available yet, update the progress value anyway
-    // so the slider movement is responsive to user interaction
+    // Update progress state immediately for responsive UI
     setProgress(value[0]);
     
-    try {
-      // Wait for audio metadata to be loaded
-      if (audioDataReady.current && isFinite(audio.duration) && audio.duration > 0) {
-        const newTime = (value[0] / 100) * audio.duration;
-        if (isFinite(newTime) && newTime >= 0) {
-          audio.currentTime = newTime;
-          setCurrentTime(newTime);
-          
-          // If the user is scrubbing but not playing yet, update the display time
-          if (!isPlaying) {
-            setCurrentTime(newTime);
-          }
-        }
-      } else if (!audioLoading.current) {
-        // If we haven't tried loading data yet, do it now
-        audioLoading.current = true;
-        console.log('Forcing audio metadata load');
-        audio.load();
-        
-        // Listen for the metadata to load, then set the time
-        const onceLoaded = () => {
-          if (isFinite(audio.duration) && audio.duration > 0) {
-            const newTime = (value[0] / 100) * audio.duration;
-            if (isFinite(newTime) && newTime >= 0) {
-              audio.currentTime = newTime;
-              setCurrentTime(newTime);
-            }
-          }
-          audio.removeEventListener('loadedmetadata', onceLoaded);
-        };
-        
-        audio.addEventListener('loadedmetadata', onceLoaded);
+    // Calculate new time position based on slider value
+    const audioDuration = isFinite(audio.duration) && audio.duration > 0 
+      ? audio.duration 
+      : duration || DEFAULT_DURATION;
+      
+    const newTime = (value[0] / 100) * audioDuration;
+    
+    // Update the current time display
+    setCurrentTime(newTime);
+    
+    // Set the audio playback position
+    if (isFinite(newTime) && newTime >= 0) {
+      try {
+        audio.currentTime = newTime;
+      } catch (error) {
+        console.error('Error setting audio current time:', error);
       }
-    } catch (error) {
-      console.error('Error setting audio current time:', error);
     }
   };
 
