@@ -8,6 +8,7 @@ import { createLoadActions } from './actions/loadActions';
 export const useChatStore = create<ChatStore>((set, get) => ({
   chats: [],
   currentChatId: null,
+  isLoading: false,
   getCurrentChat: () => {
     const { chats, currentChatId } = get();
     return chats.find(chat => chat.id === currentChatId);

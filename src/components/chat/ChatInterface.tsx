@@ -11,10 +11,15 @@ import ChatMessageList from './ChatMessageList';
 
 const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const voiceRecorderRef = React.useRef<VoiceRecorder>(new VoiceRecorder());
-  const { getCurrentChat, addMessageToCurrentChat, createNewChat, currentChatId } = useChatStore();
+  const { 
+    getCurrentChat, 
+    addMessageToCurrentChat, 
+    createNewChat, 
+    currentChatId, 
+    isLoading 
+  } = useChatStore();
   const currentChat = getCurrentChat();
   const navigate = useNavigate();
 
@@ -32,11 +37,6 @@ const ChatInterface: React.FC = () => {
     };
     checkAuth();
   }, [navigate]);
-
-  const simulateAIResponse = async (userMessage: string) => {
-    setIsLoading(true);
-    setIsLoading(false);
-  };
   
   const handleSend = async () => {
     if (input.trim() === '' || isLoading) return;
@@ -53,8 +53,6 @@ const ChatInterface: React.FC = () => {
       content: userMessage,
       timestamp: new Date()
     });
-    
-    await simulateAIResponse(userMessage);
   };
 
   const handleStartRecording = async () => {

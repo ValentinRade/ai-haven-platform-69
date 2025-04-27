@@ -21,6 +21,12 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       const currentChat = chats.find(chat => chat.id === currentChatId);
       const isFirstMessage = currentChat?.messages.length === 0;
 
+      // Set loading state to true before sending message
+      set((state: ChatStore) => ({
+        ...state,
+        isLoading: true
+      }));
+
       // Save user's message to database
       const { data: userData, error: userError } = await supabase
         .from('messages')
@@ -55,7 +61,10 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           return chat;
         });
 
-        return { chats: updatedChats };
+        return { 
+          chats: updatedChats,
+          isLoading: true // Make sure loading state is maintained
+        };
       });
 
       // Check if it's an audio message
@@ -83,6 +92,12 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           description: "Die Nachricht konnte nicht verarbeitet werden.",
           variant: "destructive"
         });
+      } finally {
+        // Always set loading to false when done
+        set((state: ChatStore) => ({
+          ...state,
+          isLoading: false
+        }));
       }
     } catch (error) {
       console.error('Error adding message:', error);
@@ -91,6 +106,11 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         description: "Bitte versuchen Sie es später erneut.",
         variant: "destructive"
       });
+      // Set loading to false on error as well
+      set((state: ChatStore) => ({
+        ...state,
+        isLoading: false
+      }));
     }
   }
 });
