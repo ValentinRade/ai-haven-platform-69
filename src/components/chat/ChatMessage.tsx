@@ -58,6 +58,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             console.log('Using message duration as fallback:', message.duration);
           } else {
             console.warn('Could not determine audio duration');
+            setDuration(30);
+            hasValidDuration.current = true;
           }
           
           setProgress(0);
@@ -67,11 +69,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         newAudio.addEventListener('timeupdate', () => {
           setCurrentTime(newAudio.currentTime);
           
-          // Only update progress if we have a valid duration
-          if (hasValidDuration.current && duration > 0) {
-            const calculatedProgress = (newAudio.currentTime / duration) * 100;
-            setProgress(calculatedProgress);
-          }
+          // Always update progress with a safe calculation
+          const currentDuration = duration > 0 ? duration : 30;
+          const calculatedProgress = (newAudio.currentTime / currentDuration) * 100;
+          setProgress(Math.min(calculatedProgress, 100));
         });
         
         newAudio.addEventListener('ended', () => {
@@ -128,11 +129,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       const updateTime = () => {
         setCurrentTime(audio.currentTime);
         
-        // Only update progress if we have a valid duration
-        if (hasValidDuration.current && duration > 0) {
-          const calculatedProgress = (audio.currentTime / duration) * 100;
-          setProgress(calculatedProgress);
-        }
+        // Always update progress with a safe calculation
+        const currentDuration = duration > 0 ? duration : 30;
+        const calculatedProgress = (audio.currentTime / currentDuration) * 100;
+        setProgress(Math.min(calculatedProgress, 100));
       };
       
       const handleLoadedMetadata = () => {
@@ -143,18 +143,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         } else if (isFinite(audio.duration) && audio.duration > 0) {
           setDuration(audio.duration);
           hasValidDuration.current = true;
+        } else {
+          setDuration(30);
+          hasValidDuration.current = true;
         }
         audioLoading.current = false;
-        console.log('Audio metadata loaded with fixed duration:', duration);
+        console.log('Audio metadata loaded with duration:', duration);
       };
       
       const handleEnded = () => {
-        // Reset everything when audio playback ends
         setIsPlaying(false);
         setCurrentTime(0);
         setProgress(0);
         
-        // Optionally reset the audio to the beginning
+        // Reset the audio to the beginning
         if (audio) {
           try {
             audio.currentTime = 0;
@@ -171,7 +173,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       return () => {
         audio.removeEventListener('timeupdate', updateTime);
         audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('ended', () => {});
       };
     }
   }, [audio, duration, message.duration]);
@@ -205,23 +207,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (!audio || !hasValidDuration.current || duration <= 0) {
-      console.log('Cannot adjust slider: audio not ready or invalid duration');
+    if (!audio) {
+      console.log('Cannot adjust slider: audio not available');
       return;
     }
     
+    const currentDuration = duration > 0 ? duration : 30;
     setProgress(value[0]);
     
-    const newTime = (value[0] / 100) * duration;
-    
+    const newTime = (value[0] / 100) * currentDuration;
     setCurrentTime(newTime);
     
-    if (isFinite(newTime) && newTime >= 0) {
-      try {
-        audio.currentTime = newTime;
-      } catch (error) {
-        console.error('Error setting audio current time:', error);
-      }
+    try {
+      audio.currentTime = newTime;
+    } catch (error) {
+      console.error('Error setting audio current time:', error);
     }
   };
 
