@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -23,9 +22,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const audioInitialized = useRef(false);
   const audioLoading = useRef(false);
-  const actualDurationLoaded = useRef(false);
-  const actualDuration = useRef<number | null>(null);
-  const shouldShowCurrentTime = useRef(false);
+  const DEFAULT_DURATION = 30;
 
   useEffect(() => {
     if (!message.content) {
@@ -43,36 +40,25 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         const newAudio = new Audio(`data:audio/webm;base64,${contentStr}`);
         
         newAudio.addEventListener('loadedmetadata', () => {
-          if (isFinite(newAudio.duration) && newAudio.duration > 0) {
-            const realDuration = newAudio.duration;
-            actualDuration.current = realDuration;
-            setDuration(realDuration);
-            actualDurationLoaded.current = true;
-            console.log('Actual audio duration loaded:', realDuration);
-          }
-          
+          const audioDuration = isFinite(newAudio.duration) && newAudio.duration > 0 
+            ? newAudio.duration 
+            : DEFAULT_DURATION;
+            
+          setDuration(audioDuration);
           setProgress(0);
           audioLoading.current = false;
+          console.log('Audio metadata loaded with duration:', audioDuration);
         });
         
         newAudio.addEventListener('timeupdate', () => {
-          if (!shouldShowCurrentTime.current) {
-            shouldShowCurrentTime.current = true;
-          }
-          
           setCurrentTime(newAudio.currentTime);
-          const audioDuration = actualDuration.current || 
-            (isFinite(newAudio.duration) && newAudio.duration > 0 ? newAudio.duration : 0);
-            
-          if (audioDuration > 0) {
-            setProgress((newAudio.currentTime / audioDuration) * 100);
-          }
+          const audioDuration = isFinite(newAudio.duration) && newAudio.duration > 0 
+            ? newAudio.duration 
+            : duration || DEFAULT_DURATION;
+          setProgress((newAudio.currentTime / audioDuration) * 100);
         });
         
-        newAudio.addEventListener('ended', () => {
-          setIsPlaying(false);
-          shouldShowCurrentTime.current = false;
-        });
+        newAudio.addEventListener('ended', () => setIsPlaying(false));
         
         newAudio.preload = 'metadata';
         
@@ -113,37 +99,31 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       console.error('Error parsing message content:', error);
       setParsedContent(typeof message.content === 'string' ? message.content : JSON.stringify(message.content));
     }
-  }, [message.content, audio]);
+  }, [message.content, audio, duration]);
 
   useEffect(() => {
     if (audio) {
       const updateTime = () => {
         setCurrentTime(audio.currentTime);
-        const audioDuration = actualDuration.current || 
-          (isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0);
-          
-        if (audioDuration > 0) {
-          setProgress((audio.currentTime / audioDuration) * 100);
-        }
+        const audioDuration = isFinite(audio.duration) && audio.duration > 0 
+          ? audio.duration 
+          : duration || DEFAULT_DURATION;
+        setProgress((audio.currentTime / audioDuration) * 100);
       };
       
       const handleLoadedMetadata = () => {
-        if (isFinite(audio.duration) && audio.duration > 0) {
-          const realDuration = audio.duration;
-          actualDuration.current = realDuration;
-          setDuration(realDuration);
-          actualDurationLoaded.current = true;
-          console.log('Actual audio duration loaded from metadata event:', realDuration);
-        }
-        
+        const audioDuration = isFinite(audio.duration) && audio.duration > 0 
+          ? audio.duration 
+          : DEFAULT_DURATION;
+        setDuration(audioDuration);
         audioLoading.current = false;
+        console.log('Audio metadata loaded with fixed duration:', audioDuration);
       };
       
       const handleEnded = () => {
         setIsPlaying(false);
         setCurrentTime(0);
         setProgress(0);
-        shouldShowCurrentTime.current = false;
         
         if (audio) {
           try {
@@ -157,11 +137,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', handleLoadedMetadata);
       audio.addEventListener('ended', handleEnded);
-      
-      // Force load duration
-      if (audio.readyState >= 1 && !actualDurationLoaded.current) {
-        handleLoadedMetadata();
-      }
 
       return () => {
         audio.removeEventListener('timeupdate', updateTime);
@@ -169,7 +144,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         audio.removeEventListener('ended', handleEnded);
       };
     }
-  }, [audio]);
+  }, [audio, duration]);
 
   const formatTime = (time: number) => {
     if (isNaN(time) || !isFinite(time) || time < 0) {
@@ -181,29 +156,15 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const getDisplayTime = () => {
-    // When playing, show the current time
-    if (shouldShowCurrentTime.current) {
-      return formatTime(currentTime);
+    if (!audio || duration <= 0) {
+      return '0:00';
     }
     
-    // When not playing, show the total duration
-    // First priority: use the actual loaded duration if available
-    if (actualDuration.current && actualDuration.current > 0) {
-      return formatTime(actualDuration.current);
-    }
-    
-    // Second priority: use the audio element's duration if valid
-    if (audio && isFinite(audio.duration) && audio.duration > 0) {
-      return formatTime(audio.duration);
-    }
-    
-    // Third priority: use the state duration if valid
-    if (isFinite(duration) && duration > 0) {
+    if (progress === 0) {
       return formatTime(duration);
     }
     
-    // Fallback
-    return '0:00';
+    return formatTime(currentTime);
   };
 
   const playAudio = () => {
@@ -212,11 +173,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-      shouldShowCurrentTime.current = false;
     } else {
       audio.play().catch(err => console.error('Error playing audio:', err));
       setIsPlaying(true);
-      shouldShowCurrentTime.current = true;
     }
   };
 
@@ -228,13 +187,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     
     setProgress(value[0]);
     
-    const audioDuration = actualDuration.current || 
-      (isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 0);
+    const audioDuration = isFinite(audio.duration) && audio.duration > 0 
+      ? audio.duration 
+      : duration || DEFAULT_DURATION;
       
     const newTime = (value[0] / 100) * audioDuration;
     
     setCurrentTime(newTime);
-    shouldShowCurrentTime.current = true;
     
     if (isFinite(newTime) && newTime >= 0) {
       try {
