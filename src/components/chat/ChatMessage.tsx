@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [parsedContent, setParsedContent] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
   const audioInitialized = useRef(false);
+  const audioDataReady = useRef(false);
 
   useEffect(() => {
     if (!message.content) {
@@ -41,6 +43,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         newAudio.addEventListener('loadedmetadata', () => {
           setDuration(newAudio.duration);
           setProgress(0);
+          audioDataReady.current = true;
         });
         
         newAudio.addEventListener('timeupdate', () => {
@@ -49,6 +52,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         });
         
         newAudio.addEventListener('ended', () => setIsPlaying(false));
+        
+        // Force load audio data without playing
+        newAudio.preload = 'metadata';
+        
+        // Ensure audio data is loaded
+        newAudio.load();
+        
         setAudio(newAudio);
       }
       return;
@@ -136,12 +146,25 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (!audio || !isFinite(audio.duration) || audio.duration <= 0) {
-      console.log('Audio not ready or duration invalid:', audio?.duration);
+    if (!audio) {
+      console.log('Audio not initialized yet');
       return;
     }
     
+    // Load audio data if needed
+    if (!audioDataReady.current) {
+      audio.load();
+      audioDataReady.current = true;
+    }
+    
     try {
+      if (!isFinite(audio.duration) || audio.duration <= 0) {
+        // If duration is not available yet, update the progress value anyway
+        // so the slider movement is responsive to user interaction
+        setProgress(value[0]);
+        return;
+      }
+      
       const newTime = (value[0] / 100) * audio.duration;
       if (isFinite(newTime) && newTime >= 0) {
         audio.currentTime = newTime;
