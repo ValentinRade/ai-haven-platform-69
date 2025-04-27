@@ -2,7 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { ChatStore } from '../../types/chatStore.types';
-import { WebhookResponse } from './types';
 
 export const handleAIResponse = async (
   set: Function,
@@ -48,7 +47,8 @@ export const handleAIResponse = async (
       const currentChat = updatedChats.find(c => c.id === currentChatId);
       const otherChats = updatedChats.filter(c => c.id !== currentChatId);
       return { 
-        chats: currentChat ? [currentChat, ...otherChats] : updatedChats 
+        chats: currentChat ? [currentChat, ...otherChats] : updatedChats,
+        isLoading: false // Make sure to set isLoading to false after processing the AI response
       };
     });
 
@@ -65,6 +65,11 @@ export const handleAIResponse = async (
     }
   } catch (error) {
     console.error('Error handling AI response:', error);
+    // Make sure to set isLoading to false even if there's an error
+    set((state: ChatStore) => ({
+      ...state,
+      isLoading: false
+    }));
     throw error;
   }
 };

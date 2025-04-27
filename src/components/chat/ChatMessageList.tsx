@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import ChatMessage from './ChatMessage';
 import { Chat } from '@/types/chat';
 
@@ -10,6 +10,13 @@ interface ChatMessageListProps {
 
 const ChatMessageList: React.FC<ChatMessageListProps> = ({ currentChat, isLoading }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentChat?.messages]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-128px)] w-full">
