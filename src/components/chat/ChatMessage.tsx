@@ -37,8 +37,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         }
       }
       
-      // Use marked to parse markdown without creating memory leaks
-      setParsedContent(marked.parse(content));
+      // Handle the result from marked.parse which can return string or Promise<string>
+      const result = marked.parse(content);
+      if (result instanceof Promise) {
+        result.then(html => {
+          setParsedContent(html);
+        }).catch(error => {
+          console.error('Error parsing markdown content:', error);
+          setParsedContent(content);
+        });
+      } else {
+        setParsedContent(result);
+      }
     } catch (error) {
       console.error('Error parsing message content:', error);
       setParsedContent(message.content);
