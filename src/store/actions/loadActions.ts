@@ -35,7 +35,8 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
 
       try {
         console.log('Sending request to Supabase to fetch chats...');
-        console.log('Supabase URL:', supabase.getUrl());
+        // Remove the getUrl call that doesn't exist
+        console.log('Supabase URL:', 'Using configured Supabase client');
         
         // Add timeout to detect hanging requests
         const timeout = setTimeout(() => {
