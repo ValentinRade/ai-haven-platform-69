@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Play, Pause, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -42,9 +42,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioContent, duration
           step={1}
           className="my-2"
         />
-        <div className="flex justify-start mt-1">
+        <div className="flex justify-between mt-1">
           <span className="text-xs text-gray-500">
             {getDisplayTime()}
+          </span>
+          <span className="text-xs text-gray-500">
+            {formatTime(duration)}
           </span>
         </div>
       </div>
@@ -52,3 +55,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioContent, duration
     </div>
   );
 };
+
+function formatTime(time: number): string {
+  return `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}`;
+}

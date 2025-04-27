@@ -7,6 +7,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [actualDuration, setActualDuration] = useState(duration);
   const audioInitialized = useRef(false);
 
   useEffect(() => {
@@ -14,9 +15,17 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
       audioInitialized.current = true;
       const newAudio = new Audio(`data:audio/webm;base64,${audioContent}`);
       
+      newAudio.addEventListener('loadedmetadata', () => {
+        // Use the actual audio duration instead of the passed duration if available
+        if (newAudio.duration && isFinite(newAudio.duration)) {
+          setActualDuration(newAudio.duration);
+        }
+      });
+      
       newAudio.addEventListener('timeupdate', () => {
         setCurrentTime(newAudio.currentTime);
-        const calculatedProgress = (newAudio.currentTime / duration) * 100;
+        // Use actualDuration for progress calculation
+        const calculatedProgress = (newAudio.currentTime / actualDuration) * 100;
         setProgress(Math.min(calculatedProgress, 100));
       });
       
@@ -44,6 +53,11 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
     };
   }, [audioContent, duration]);
 
+  // Update actual duration when the prop changes
+  useEffect(() => {
+    setActualDuration(duration);
+  }, [duration]);
+
   const handlePlay = () => {
     if (!audio) return;
     
@@ -57,10 +71,10 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (!audio || !duration) return;
+    if (!audio || !actualDuration) return;
     
     setProgress(value[0]);
-    const newTime = (value[0] / 100) * duration;
+    const newTime = (value[0] / 100) * actualDuration;
     setCurrentTime(newTime);
     
     try {
@@ -72,7 +86,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
 
   const getDisplayTime = () => {
     if (progress === 0) {
-      return formatTime(duration);
+      return formatTime(actualDuration);
     }
     return formatTime(currentTime);
   };
@@ -81,6 +95,7 @@ export const useAudioPlayer = (audioContent: string, duration: number) => {
     isPlaying,
     progress,
     currentTime,
+    actualDuration,
     handlePlay,
     handleSliderChange,
     getDisplayTime
