@@ -9,15 +9,14 @@ export const formatChat = (chat: Partial<ChatRow> & {
   updated_at: string, 
   id: string, 
   title: string, 
-  user_id: string,
-  is_private?: boolean 
+  user_id: string
 }): Chat => ({
   id: chat.id,
   title: chat.title,
   timestamp: new Date(chat.updated_at),
   lastMessage: chat.messages?.[0]?.content || '',
   creator_display_name: chat.creator_display_name || '',
-  is_private: false, // Default to false since the column doesn't exist
+  is_private: false, // Default to false as this column doesn't exist yet
   messages: (chat.messages || []).map(formatMessage)
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 });
