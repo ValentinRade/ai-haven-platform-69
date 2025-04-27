@@ -11,14 +11,15 @@ export const formatChat = (chat: Partial<ChatRow> & { messages?: any[], updated_
   timestamp: new Date(chat.updated_at),
   lastMessage: chat.messages?.[0]?.content || '',
   creator_display_name: chat.creator_display_name || '',
-  is_private: chat.is_private || false, // Provide default value for is_private if it doesn't exist
+  is_private: chat.is_private || false,
   messages: (chat.messages || []).map(formatMessage)
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
 });
 
 export const formatMessage = (msg: any): ChatMessage => ({
   id: msg.id,
-  type: msg.type as 'user' | 'ai',
+  type: msg.type as string,
   content: msg.content,
-  timestamp: new Date(msg.created_at)
+  timestamp: new Date(msg.created_at),
+  duration: msg.duration
 });

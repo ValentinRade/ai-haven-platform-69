@@ -13,6 +13,8 @@ export type Chat = {
   lastMessage?: string;
   timestamp: Date;
   messages: Message[];
+  creator_display_name?: string;
+  is_private?: boolean;
 };
 
 export type ChatMessage = {

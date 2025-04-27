@@ -67,7 +67,7 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
         title: "Fehler beim Erstellen des Chats",
         description: "Bitte versuchen Sie es später erneut.",
         variant: "destructive"
-      });
+        });
     }
   },
 
