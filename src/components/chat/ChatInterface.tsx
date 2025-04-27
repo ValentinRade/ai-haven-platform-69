@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store/chatStore';
@@ -17,7 +18,8 @@ const ChatInterface: React.FC = () => {
     addMessageToCurrentChat, 
     createNewChat, 
     currentChatId, 
-    isLoading 
+    isLoading,
+    loadChats
   } = useChatStore();
   const currentChat = getCurrentChat();
   const navigate = useNavigate();
@@ -32,10 +34,30 @@ const ChatInterface: React.FC = () => {
           variant: "default"
         });
         navigate('/auth');
+        return;
       }
+      
+      console.log('User authenticated, loading chats');
+      loadChats();
     };
+    
     checkAuth();
-  }, [navigate]);
+    
+    // Setup auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_OUT') {
+        navigate('/auth');
+      } else if (event === 'SIGNED_IN' && session) {
+        console.log('User signed in, loading chats');
+        loadChats();
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, loadChats]);
   
   const handleSend = async () => {
     if (input.trim() === '' || isLoading) return;
@@ -44,6 +66,7 @@ const ChatInterface: React.FC = () => {
     setInput('');
 
     if (!currentChatId) {
+      console.log('No current chat ID, creating new chat');
       await createNewChat();
     }
     

@@ -23,11 +23,13 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
             updated_at,
             user_id,
             creator_display_name,
+            is_private,
             messages (
               id,
               content,
               type,
-              created_at
+              created_at,
+              duration
             )
           `)
           .eq('user_id', session.session.user.id)
