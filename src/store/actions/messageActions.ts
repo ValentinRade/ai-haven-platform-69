@@ -20,6 +20,45 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       const currentChat = chats.find(chat => chat.id === currentChatId);
       const isFirstMessage = currentChat?.messages.length === 0;
 
+      // Save user's message to database first
+      const { data: userData, error: userError } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: currentChatId,
+          content: message.content,
+          type: message.type
+        })
+        .select()
+        .single();
+
+      if (userError) throw userError;
+
+      // Update the chat state with user's message immediately
+      set((state: ChatStore) => {
+        const updatedChats = state.chats.map((chat) => {
+          if (chat.id === currentChatId) {
+            const newMessage = {
+              id: userData.id,
+              type: message.type,
+              content: message.content,
+              timestamp: new Date(userData.created_at)
+            };
+            
+            return {
+              ...chat,
+              lastMessage: message.content,
+              timestamp: new Date(),
+              messages: [...chat.messages, newMessage]
+            };
+          }
+          return chat;
+        });
+
+        return { 
+          chats: updatedChats 
+        };
+      });
+
       // Check if the message is an audio message by looking at the content format
       const isAudioMessage = message.content.startsWith('/9j/') || 
                            message.content.startsWith('GkXf') || 
@@ -57,21 +96,13 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         }
       } catch (error) {
         console.error('Error sending message to webhook:', error);
-        // Continue with message creation even if webhook fails
+        toast({
+          title: "Fehler bei der Verarbeitung",
+          description: "Die Nachricht konnte nicht verarbeitet werden.",
+          variant: "destructive"
+        });
+        return;
       }
-      
-      // Save user's message to database
-      const { data: userData, error: userError } = await supabase
-        .from('messages')
-        .insert({
-          chat_id: currentChatId,
-          content: message.content,
-          type: message.type
-        })
-        .select()
-        .single();
-
-      if (userError) throw userError;
 
       // If we got a chatName from the webhook for the first message, update the chat title
       if (chatName) {
@@ -84,33 +115,6 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           console.error('Error updating chat title:', updateError);
         }
       }
-
-      // Update the chat state with user's message and potentially new title
-      set((state: ChatStore) => {
-        const updatedChats = state.chats.map((chat) => {
-          if (chat.id === currentChatId) {
-            const newMessage = {
-              id: userData.id,
-              type: message.type,
-              content: message.content,
-              timestamp: new Date(userData.created_at)
-            };
-            
-            return {
-              ...chat,
-              ...(chatName ? { title: chatName } : {}), // Update title if we got a new one
-              lastMessage: message.content,
-              timestamp: new Date(),
-              messages: [...chat.messages, newMessage]
-            };
-          }
-          return chat;
-        });
-
-        return { 
-          chats: updatedChats 
-        };
-      });
 
       // If we got an AI response from the webhook, save and add it to the chat
       if (aiResponse) {
