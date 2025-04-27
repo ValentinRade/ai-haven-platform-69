@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [parsedContent, setParsedContent] = useState('');
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -65,17 +67,22 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   useEffect(() => {
     if (audio) {
-      const updateTime = () => setCurrentTime(audio.currentTime);
+      const updateTime = () => {
+        setCurrentTime(audio.currentTime);
+        setProgress((audio.currentTime / audio.duration) * 100);
+      };
+      
       const handleLoadedMetadata = () => setDuration(audio.duration);
+      const handleEnded = () => setIsPlaying(false);
 
       audio.addEventListener('timeupdate', updateTime);
       audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.addEventListener('ended', handleEnded);
 
       return () => {
         audio.removeEventListener('timeupdate', updateTime);
         audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        audio.removeEventListener('ended', () => setIsPlaying(false));
+        audio.removeEventListener('ended', handleEnded);
       };
     }
   }, [audio]);
@@ -96,10 +103,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       
       newAudio.onloadedmetadata = () => {
         setDuration(newAudio.duration);
+        setProgress(0);
       };
       
       newAudio.addEventListener('timeupdate', () => {
         setCurrentTime(newAudio.currentTime);
+        setProgress((newAudio.currentTime / newAudio.duration) * 100);
       });
       
       newAudio.onended = () => setIsPlaying(false);
@@ -121,10 +130,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   const handleSliderChange = (value: number[]) => {
-    if (audio) {
-      const newTime = (value[0] / 100) * duration;
+    if (audio && audio.duration) {
+      const newTime = (value[0] / 100) * audio.duration;
       audio.currentTime = newTime;
       setCurrentTime(newTime);
+      setProgress(value[0]);
     }
   };
 
@@ -159,7 +169,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               </Button>
               <div className="flex-1">
                 <Slider
-                  value={[((currentTime || 0) / (duration || 1)) * 100]}
+                  value={[progress]}
                   onValueChange={handleSliderChange}
                   max={100}
                   step={1}
