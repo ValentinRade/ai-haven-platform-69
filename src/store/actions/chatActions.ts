@@ -33,6 +33,7 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
                            session.session.user.email.split('@')[0];
       
       try {
+        console.log('Attempting to insert new chat into database');
         const { data, error } = await supabase
           .from('chats')
           .insert({
@@ -42,6 +43,9 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
           })
           .select()
           .single();
+
+        // Log the raw response for debugging
+        console.log('Chat creation response:', { data, error });
 
         if (error) {
           console.error('Error creating chat in database:', error);
@@ -70,13 +74,29 @@ export const createChatActions = (set: Function, get: () => ChatStore) => ({
           currentChatId: newChat.id,
           isLoading: false
         }));
-      } catch (error) {
-        console.error('Error creating chat:', error);
+        
         toast({
-          title: "Fehler beim Erstellen des Chats",
-          description: "Bitte versuchen Sie es später erneut.",
-          variant: "destructive"
+          title: "Chat erstellt",
+          description: "Neuer Chat wurde erfolgreich erstellt.",
         });
+      } catch (error: any) {
+        console.error('Error creating chat:', error);
+        
+        // Provide specific error messages based on error codes
+        if (error.code === 'PGRST116') {
+          toast({
+            title: "Keine Berechtigung",
+            description: "Sie haben keine Berechtigung, einen Chat zu erstellen. Bitte melden Sie sich erneut an.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Fehler beim Erstellen des Chats",
+            description: error.message || "Bitte versuchen Sie es später erneut.",
+            variant: "destructive"
+          });
+        }
+        
         set({ isLoading: false });
       }
     } catch (error) {

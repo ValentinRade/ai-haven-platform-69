@@ -28,6 +28,8 @@ export const useAuthCheck = () => {
           return;
         }
         
+        console.log('Auth session check result:', session ? 'Session found' : 'No session');
+        
         if (!session) {
           console.log('No active session found, redirecting to auth page');
           toast({
@@ -40,8 +42,12 @@ export const useAuthCheck = () => {
         } else {
           console.log('User authenticated:', session.user.id);
           setIsAuthenticated(true);
+          
           // If authentication is successful, try to load chats
-          await loadChats();
+          // Adding a small delay to ensure auth state is fully processed
+          setTimeout(() => {
+            loadChats();
+          }, 100);
         }
       } catch (err) {
         console.error('Unexpected error during auth check:', err);
@@ -62,7 +68,10 @@ export const useAuthCheck = () => {
         console.log('Auth state changed:', event);
         if (event === 'SIGNED_IN' && session) {
           setIsAuthenticated(true);
-          await loadChats();
+          // Delay slightly to ensure auth state is properly updated
+          setTimeout(() => {
+            loadChats();
+          }, 100);
         } else if (event === 'SIGNED_OUT') {
           setIsAuthenticated(false);
           navigate('/auth');

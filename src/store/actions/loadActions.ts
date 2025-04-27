@@ -15,83 +15,73 @@ export const createLoadActions = (set: Function, get: () => ChatStore) => ({
 
       console.log('Starting to load chats for user:', session.session.user.id);
       
-      // Add retry logic with exponential backoff
-      const maxRetries = 5;
-      let retries = 0;
-      let success = false;
-
-      while (retries < maxRetries && !success) {
-        try {
-          console.log(`Attempting to load chats (attempt ${retries + 1}/${maxRetries})...`);
-          
-          const { data, error } = await supabase
-            .from('chats')
-            .select(`
+      try {
+        // Direct approach without retries first
+        const { data, error } = await supabase
+          .from('chats')
+          .select(`
+            id,
+            title,
+            updated_at,
+            creator_display_name,
+            messages (
               id,
-              title,
-              updated_at,
-              creator_display_name,
-              messages (
-                id,
-                content,
-                type,
-                created_at
-              )
-            `)
-            .eq('user_id', session.session.user.id) // Explicitly filter by user_id
-            .order('updated_at', { ascending: false });
+              content,
+              type,
+              created_at
+            )
+          `)
+          .eq('user_id', session.session.user.id)
+          .order('updated_at', { ascending: false });
 
-          if (error) {
-            console.error(`Error loading chats (attempt ${retries + 1}/${maxRetries}):`, error);
-            retries++;
-            if (retries >= maxRetries) {
-              toast({
-                title: "Fehler beim Laden der Chats",
-                description: "Verbindungsprobleme mit der Datenbank. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es später erneut.",
-                variant: "destructive"
-              });
-              return;
-            }
-            // Wait before retrying with exponential backoff
-            const delay = Math.min(1000 * Math.pow(2, retries), 10000);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-
-          console.log('Successfully loaded chats:', data ? data.length : 'No data returned');
+        // Log the raw response for debugging
+        console.log('Raw Supabase response:', { data, error });
+        
+        if (error) {
+          console.error('Error loading chats:', error);
           
-          if (data) {
-            // Explicitly type the data to match what formatChat expects
-            const formattedChats = data.map((chat) => formatChat(chat));
-            
-            console.log('Formatted chats:', formattedChats.length);
-            
-            set({ chats: formattedChats });
-            
-            if (!get().currentChatId && formattedChats.length > 0) {
-              console.log('Setting current chat ID to:', formattedChats[0].id);
-              set({ currentChatId: formattedChats[0].id });
-            }
-          } else {
-            console.log('No chats found for user');
-            set({ chats: [] });
-          }
-          success = true;
-        } catch (error) {
-          console.error(`Network error loading chats (attempt ${retries + 1}/${maxRetries}):`, error);
-          retries++;
-          if (retries >= maxRetries) {
+          // Show specific error information to the user
+          if (error.code === 'PGRST116') {
             toast({
-              title: "Netzwerkfehler",
-              description: "Verbindungsprobleme mit der Datenbank. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es später erneut.",
+              title: "Keine Berechtigung",
+              description: "Sie haben keine Berechtigung, diese Daten zu sehen. Bitte melden Sie sich erneut an.",
               variant: "destructive"
             });
-            return;
+          } else {
+            toast({
+              title: "Fehler beim Laden der Chats",
+              description: `${error.message || "Bitte versuchen Sie es später erneut."}`,
+              variant: "destructive"
+            });
           }
-          // Wait before retrying with exponential backoff
-          const delay = Math.min(1000 * Math.pow(2, retries), 10000);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          return;
         }
+        
+        console.log('Successfully loaded chats:', data ? data.length : 'No data returned');
+        
+        if (data && data.length > 0) {
+          // Format the chats
+          const formattedChats = data.map((chat) => formatChat(chat));
+          
+          console.log('Formatted chats:', formattedChats.length);
+          
+          set({ chats: formattedChats });
+          
+          if (!get().currentChatId && formattedChats.length > 0) {
+            console.log('Setting current chat ID to:', formattedChats[0].id);
+            set({ currentChatId: formattedChats[0].id });
+          }
+        } else {
+          console.log('No chats found for user, empty array returned');
+          set({ chats: [] });
+        }
+      } catch (error) {
+        console.error('Network error loading chats:', error);
+        toast({
+          title: "Netzwerkfehler",
+          description: "Verbindungsprobleme mit der Datenbank. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es später erneut.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error in loadChats function:', error);
