@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatMessage as ChatMessageType } from '@/types/chat';
 import { cn } from '@/lib/utils';
@@ -117,6 +116,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const getDisplayTime = () => {
+    if (!audio || progress === 0) {
+      return formatTime(duration);
+    }
+    return formatTime(currentTime);
+  };
+
   const playAudio = () => {
     if (!audio) return;
 
@@ -186,7 +192,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 />
                 <div className="flex justify-start mt-1">
                   <span className="text-xs text-gray-500">
-                    {isPlaying ? formatTime(currentTime) : formatTime(duration)}
+                    {getDisplayTime()}
                   </span>
                 </div>
               </div>
