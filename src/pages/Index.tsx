@@ -7,7 +7,7 @@ const Index = () => {
   
   useEffect(() => {
     // Redirect to chat page on load
-    navigate('/');
+    navigate('/chat');
   }, [navigate]);
 
   return (

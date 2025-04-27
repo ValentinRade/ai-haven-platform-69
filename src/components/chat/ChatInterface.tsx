@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store/chatStore';
@@ -26,19 +25,28 @@ const ChatInterface: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({
+            title: "Nicht angemeldet",
+            description: "Bitte melden Sie sich an, um den Chat zu nutzen.",
+            variant: "default"
+          });
+          navigate('/auth');
+          return;
+        }
+        
+        console.log('User authenticated, loading chats');
+        loadChats();
+      } catch (error) {
+        console.error('Error checking authentication:', error);
         toast({
-          title: "Nicht angemeldet",
-          description: "Bitte melden Sie sich an, um den Chat zu nutzen.",
-          variant: "default"
+          title: "Fehler bei der Authentifizierung",
+          description: "Bitte versuchen Sie es später erneut.",
+          variant: "destructive"
         });
-        navigate('/auth');
-        return;
       }
-      
-      console.log('User authenticated, loading chats');
-      loadChats();
     };
     
     checkAuth();

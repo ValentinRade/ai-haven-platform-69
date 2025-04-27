@@ -27,5 +27,5 @@ export const formatMessage = (msg: any): ChatMessage => ({
   type: msg.type as string,
   content: msg.content,
   timestamp: new Date(msg.created_at),
-  duration: msg.duration
+  duration: msg.duration || undefined
 });
