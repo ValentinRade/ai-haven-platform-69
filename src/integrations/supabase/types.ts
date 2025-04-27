@@ -41,7 +41,6 @@ export type Database = {
           chat_id: string
           content: string
           created_at: string
-          duration: number | null
           id: string
           type: string
         }
@@ -49,7 +48,6 @@ export type Database = {
           chat_id: string
           content: string
           created_at?: string
-          duration?: number | null
           id?: string
           type: string
         }
@@ -57,7 +55,6 @@ export type Database = {
           chat_id?: string
           content?: string
           created_at?: string
-          duration?: number | null
           id?: string
           type?: string
         }

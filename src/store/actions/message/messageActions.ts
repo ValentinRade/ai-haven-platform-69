@@ -27,107 +27,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         isLoading: true
       }));
 
-      // Determine audio duration for voice messages
-      let audioDuration: number | null = null;
-      if (typeof message.content === 'string' && 
-          (message.content.startsWith('/9j/') || 
-           message.content.startsWith('GkXf') || 
-           message.content.startsWith('T21v'))) {
-        // Create audio element to get duration
-        return new Promise<void>((resolve, reject) => {
-          const audio = new Audio(`data:audio/webm;base64,${message.content}`);
-          audio.onloadedmetadata = async () => {
-            audioDuration = audio.duration;
-
-            // Save user's message to database
-            const { data: userData, error: userError } = await supabase
-              .from('messages')
-              .insert({
-                chat_id: currentChatId,
-                content: message.content,
-                type: message.type,
-                duration: audioDuration
-              })
-              .select()
-              .single();
-
-            if (userError) throw userError;
-
-            // Update chat state with user's message
-            set((state: ChatStore) => {
-              const updatedChats = state.chats.map((chat) => {
-                if (chat.id === currentChatId) {
-                  const newMessage = {
-                    id: userData.id,
-                    type: message.type,
-                    content: message.content,
-                    timestamp: new Date(userData.created_at)
-                  };
-                  
-                  return {
-                    ...chat,
-                    lastMessage: typeof message.content === 'string' 
-                      ? message.content 
-                      : 'User message',
-                    timestamp: new Date(),
-                    messages: [...chat.messages, newMessage]
-                  };
-                }
-                return chat;
-              });
-
-              return { 
-                chats: updatedChats,
-                isLoading: true // Keep loading state while waiting for response
-              };
-            });
-
-            try {
-              const response = await sendMessageToWebhook(
-                session.session.user.id,
-                currentChatId,
-                message.content as string,
-                isFirstMessage,
-                true
-              );
-
-              const aiResponse = response.answer || response.output;
-              if (aiResponse) {
-                await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
-              } else {
-                // If no response, still set loading to false
-                set((state: ChatStore) => ({
-                  ...state,
-                  isLoading: false
-                }));
-              }
-            } catch (error) {
-              console.error('Error sending message to webhook:', error);
-              toast({
-                title: "Fehler bei der Verarbeitung",
-                description: "Die Nachricht konnte nicht verarbeitet werden.",
-                variant: "destructive"
-              });
-              // Always set loading to false when done
-              set((state: ChatStore) => ({
-                ...state,
-                isLoading: false
-              }));
-            }
-
-            resolve();
-          };
-
-          audio.onerror = (error) => {
-            console.error('Error loading audio:', error);
-            reject(error);
-          };
-
-          audio.load();
-        });
-      }
-
-      // For non-audio messages, proceed as before
+      // Save user's message to database
       const { data: userData, error: userError } = await supabase
         .from('messages')
         .insert({
@@ -169,13 +69,20 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         };
       });
 
+      // Check if it's an audio message
+      const isAudioMessage = typeof message.content === 'string' && (
+        message.content.startsWith('/9j/') || 
+        message.content.startsWith('GkXf') || 
+        message.content.startsWith('T21v')
+      );
+      
       try {
         const response = await sendMessageToWebhook(
           session.session.user.id,
           currentChatId,
           message.content as string,
           isFirstMessage,
-          false
+          isAudioMessage
         );
 
         const aiResponse = response.answer || response.output;
