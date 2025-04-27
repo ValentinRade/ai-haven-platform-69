@@ -77,8 +77,8 @@ const ChatInterface: React.FC = () => {
     if (!isRecording) return;
     
     try {
-      const base64Audio = await voiceRecorderRef.current.stopRecording();
       setIsRecording(false);
+      const { base64Audio, duration } = await voiceRecorderRef.current.stopRecording();
       
       if (!currentChatId) {
         await createNewChat();
@@ -87,12 +87,16 @@ const ChatInterface: React.FC = () => {
       await addMessageToCurrentChat({
         type: 'user',
         content: base64Audio,
-        timestamp: new Date()
+        timestamp: new Date(),
+        duration: duration
       });
 
+      toast({
+        title: "Sprachnachricht gesendet",
+        description: `${duration} Sekunden Aufnahme gesendet.`,
+      });
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      setIsRecording(false);
       toast({
         title: "Fehler beim Beenden der Aufnahme",
         description: "Bitte versuchen Sie es erneut.",
@@ -103,6 +107,8 @@ const ChatInterface: React.FC = () => {
 
   const handleCancelRecording = async () => {
     try {
+      if (!isRecording) return;
+      
       // Stop the recording but don't send the audio
       await voiceRecorderRef.current.stopRecording();
       // Reset the recording state
