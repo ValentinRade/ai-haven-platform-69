@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Chat } from '@/types/chat';
 import ChatMessage from './ChatMessage';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatMessageListProps {
   currentChat?: Chat;
@@ -17,10 +18,21 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({ currentChat, isLoadin
     }
   };
 
-  // Scroll on initial load and when messages change
+  // Scroll on initial load, when messages change, and when currentChat changes
   useEffect(() => {
     scrollToBottom();
   }, [currentChat?.messages]);
+
+  // Additional effect to handle initial chat load
+  useEffect(() => {
+    if (currentChat) {
+      // Use a small timeout to ensure the DOM is fully rendered
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentChat?.id]);
 
   return (
     <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-128px)] w-full">
