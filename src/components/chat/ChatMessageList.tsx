@@ -35,7 +35,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({ currentChat, isLoadin
   }, [currentChat?.id]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-128px)] w-full">
+    <div className="flex-1 overflow-y-auto p-4 h-[calc(100vh-128px)] w-full overscroll-none">
       {!currentChat || currentChat.messages.length === 0 ? (
         <div className="flex items-center justify-center h-full w-full">
           <div className="text-center text-gray-500">
