@@ -5,6 +5,7 @@ import { ChatStore } from '../../types/chatStore.types';
 import { MessagePayload } from './types';
 import { handleAIResponse } from './handleAIResponse';
 import { sendMessageToWebhook } from './webhookService';
+import { isAudioMessage } from '@/store/utils/chatUtils';
 
 export const createMessageActions = (set: Function, get: () => ChatStore) => ({
   addMessageToCurrentChat: async (message: MessagePayload) => {
@@ -28,11 +29,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
       }));
 
       // Check if this is an audio message
-      const isAudioMessage = typeof message.content === 'string' && (
-        message.content.startsWith('/9j/') || 
-        message.content.startsWith('GkXf') || 
-        message.content.startsWith('T21v')
-      );
+      const isAudio = typeof message.content === 'string' && isAudioMessage(message.content);
       
       // Prepare message data for database
       const messageData: {
@@ -74,12 +71,19 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
               ...(message.duration && { duration: message.duration })
             };
             
+            // Format last message for display
+            let lastMessageDisplay = '';
+            if (isAudio) {
+              lastMessageDisplay = "Sprachnachricht";
+            } else if (typeof message.content === 'string') {
+              lastMessageDisplay = message.content.substring(0, 30) + (message.content.length > 30 ? '...' : '');
+            } else {
+              lastMessageDisplay = 'User message';
+            }
+            
             return {
               ...chat,
-              lastMessage: isAudioMessage ? "Voice message" : 
-                (typeof message.content === 'string' 
-                  ? message.content.substring(0, 30) + (message.content.length > 30 ? '...' : '')
-                  : 'User message'),
+              lastMessage: lastMessageDisplay,
               timestamp: new Date(),
               messages: [...chat.messages, newMessage]
             };
@@ -100,7 +104,7 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
           currentChatId,
           message.content as string,
           isFirstMessage,
-          isAudioMessage
+          isAudio
         );
 
         const aiResponse = response.answer || response.output;
