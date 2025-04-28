@@ -1,3 +1,4 @@
+
 import { WebhookResponse } from './types';
 import { toast } from '@/hooks/use-toast';
 
@@ -76,18 +77,36 @@ export const sendMessageToWebhook = async (
 
     let result: WebhookResponse = {};
 
-    if (responseData.answer) {
-      result.answer = responseData.answer;
-    } else if (responseData.output) {
-      result.output = responseData.output;
-    } else if (Array.isArray(responseData) && responseData[0]?.output) {
-      result.output = responseData[0].output;
+    // Handle different response formats
+    if (Array.isArray(responseData) && responseData.length > 0) {
+      // Array format like [{ answer: "...", chatname: "..." }]
+      const firstItem = responseData[0];
+      if (firstItem.answer) {
+        result.answer = firstItem.answer;
+      } else if (firstItem.output) {
+        result.output = firstItem.output;
+      }
+      
+      // Extract chatname from the first message if it's available
+      if (isFirstMessage && firstItem.chatname) {
+        result.chatname = firstItem.chatname;
+      }
+    } else {
+      // Object format like { answer: "...", chatname: "..." }
+      if (responseData.answer) {
+        result.answer = responseData.answer;
+      } else if (responseData.output) {
+        result.output = responseData.output;
+      } else if (Array.isArray(responseData) && responseData[0]?.output) {
+        result.output = responseData[0].output;
+      }
+      
+      if (isFirstMessage && responseData.chatname) {
+        result.chatname = responseData.chatname;
+      }
     }
     
-    if (isFirstMessage && responseData.chatname) {
-      result.chatname = responseData.chatname;
-    }
-
+    console.log('Processed webhook response:', result);
     return result;
   } catch (error) {
     console.error('Webhook request error:', error);

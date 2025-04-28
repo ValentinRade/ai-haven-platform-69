@@ -52,8 +52,10 @@ export const handleAIResponse = async (
             timestamp: new Date(aiData.created_at)
           };
           
+          // When updating the chat, also update its title if a chatName is provided
           return {
             ...chat,
+            title: chatName || chat.title,
             lastMessage: typeof responseContent === 'string' ? 
               (responseContent.substring(0, 30) + (responseContent.length > 30 ? '...' : '')) : 
               'AI response',
@@ -72,7 +74,7 @@ export const handleAIResponse = async (
       };
     });
 
-    // If we got a chatName, update the chat title
+    // If we got a chatName, update the chat title in the database
     if (chatName) {
       const { error: updateError } = await supabase
         .from('chats')
