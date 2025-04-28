@@ -15,6 +15,20 @@ export const handleAIResponse = async (
     const responseContent = typeof aiResponse === 'object' ? 
       JSON.stringify(aiResponse) : aiResponse;
 
+    if (!responseContent) {
+      console.error('Empty AI response received');
+      toast({
+        title: "Fehler",
+        description: "Leere Antwort vom AI-System erhalten.",
+        variant: "destructive"
+      });
+      set((state: ChatStore) => ({
+        ...state,
+        isLoading: false
+      }));
+      return;
+    }
+
     const { data: aiData, error: aiError } = await supabase
       .from('messages')
       .insert({
@@ -40,7 +54,9 @@ export const handleAIResponse = async (
           
           return {
             ...chat,
-            lastMessage: typeof responseContent === 'string' ? responseContent : 'AI response',
+            lastMessage: typeof responseContent === 'string' ? 
+              (responseContent.substring(0, 30) + (responseContent.length > 30 ? '...' : '')) : 
+              'AI response',
             timestamp: new Date(),
             messages: [...chat.messages, newAiMessage]
           };
@@ -74,6 +90,11 @@ export const handleAIResponse = async (
       ...state,
       isLoading: false
     }));
-    throw error;
+    
+    toast({
+      title: "Fehler bei der Verarbeitung der Antwort",
+      description: "Die AI-Antwort konnte nicht korrekt verarbeitet werden.",
+      variant: "destructive"
+    });
   }
 };

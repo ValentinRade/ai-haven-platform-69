@@ -18,29 +18,58 @@ export const sendMessageToWebhook = async (
     )
   };
 
-  const response = await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(webhookPayload)
-  });
+  try {
+    const response = await fetch('https://automation-n8n.ny2xzw.easypanel.host/webhook/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookPayload)
+    });
 
-  const responseData = await response.json();
-  let result: WebhookResponse = {};
+    // Check if response is ok
+    if (!response.ok) {
+      console.error(`Webhook request failed with status ${response.status}`);
+      return {};
+    }
 
-  if (responseData.answer) {
-    result.answer = responseData.answer;
-  } else if (responseData.output) {
-    // Handle direct output property
-    result.output = responseData.output;
-  } else if (Array.isArray(responseData) && responseData[0]?.output) {
-    result.output = responseData[0].output;
+    // Get the response text first
+    const responseText = await response.text();
+    
+    // Return early if empty response
+    if (!responseText || responseText.trim() === '') {
+      console.log('Webhook returned empty response');
+      return {};
+    }
+    
+    // Try to parse as JSON
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse webhook response as JSON:', parseError);
+      console.log('Raw response:', responseText);
+      return {};
+    }
+
+    let result: WebhookResponse = {};
+
+    if (responseData.answer) {
+      result.answer = responseData.answer;
+    } else if (responseData.output) {
+      // Handle direct output property
+      result.output = responseData.output;
+    } else if (Array.isArray(responseData) && responseData[0]?.output) {
+      result.output = responseData[0].output;
+    }
+    
+    if (isFirstMessage && responseData.chatname) {
+      result.chatname = responseData.chatname;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Webhook request error:', error);
+    return {};
   }
-  
-  if (isFirstMessage && responseData.chatname) {
-    result.chatname = responseData.chatname;
-  }
-
-  return result;
 };

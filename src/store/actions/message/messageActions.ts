@@ -58,7 +58,9 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         .select()
         .single();
 
-      if (userError) throw userError;
+      if (userError) {
+        throw userError;
+      }
 
       // Update chat state with user's message
       set((state: ChatStore) => {
@@ -105,6 +107,11 @@ export const createMessageActions = (set: Function, get: () => ChatStore) => ({
         if (aiResponse) {
           await handleAIResponse(set, get, currentChatId, aiResponse, response.chatname);
         } else {
+          console.log('No AI response received from webhook');
+          toast({
+            title: "Information",
+            description: "Keine Antwort vom AI-System erhalten. Bitte versuchen Sie es später erneut.",
+          });
           set((state: ChatStore) => ({
             ...state,
             isLoading: false
