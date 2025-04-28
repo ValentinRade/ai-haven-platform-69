@@ -1,40 +1,21 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { BrainCircuit, Settings, UserRound } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MessageSquare } from 'lucide-react';
 
 interface ChatHeaderProps {
   title: string;
+  leftElement?: React.ReactNode;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ title }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ title, leftElement }) => {
   return (
-    <div className="bg-white shadow-sm border-b border-gray-200 p-3 h-14 flex items-center justify-between w-full">
-      <div className="flex-1">
-        <h1 className="text-xl font-medium truncate max-w-[80%]">
+    <div className="flex items-center border-b border-gray-200 px-4 py-3 h-[60px] bg-white">
+      {leftElement}
+      <div className="flex items-center space-x-2">
+        <MessageSquare className="h-5 w-5 text-gray-500" />
+        <h2 className="text-lg font-medium text-gray-800 truncate max-w-xs">
           {title}
-        </h1>
-      </div>
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" className="rounded-full border-gray-200">
-          <div className="flex items-center gap-2">
-            <BrainCircuit size={16} className="text-gray-600" />
-            <span>AI Chat</span>
-          </div>
-        </Button>
-        <Button variant="outline" size="sm" className="rounded-full border-gray-200">
-          <div className="flex items-center gap-2">
-            <Settings size={16} className="text-gray-600" />
-            <span>Admin</span>
-          </div>
-        </Button>
-        <Avatar className="h-9 w-9 border border-gray-200">
-          <AvatarImage src="" />
-          <AvatarFallback>
-            <UserRound size={20} />
-          </AvatarFallback>
-        </Avatar>
+        </h2>
       </div>
     </div>
   );

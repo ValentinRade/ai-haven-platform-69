@@ -6,11 +6,14 @@ import { useChatStore } from '@/store/chatStore';
 import { toast } from '@/hooks/use-toast';
 import ChatSidebar from './ChatSidebar';
 import ChatMainView from './ChatMainView';
+import MobileChatDrawer from './MobileChatDrawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ChatContainer: React.FC = () => {
   const navigate = useNavigate();
   const { loadChats, isLoading } = useChatStore();
   const [authChecked, setAuthChecked] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -61,9 +64,15 @@ const ChatContainer: React.FC = () => {
 
   return (
     <div className="flex h-[calc(100vh-56px)] w-screen overflow-hidden">
+      {/* Desktop sidebar */}
       <div className="w-72 border-r border-gray-200 hidden md:block flex-shrink-0">
         <ChatSidebar />
       </div>
+      
+      {/* Mobile drawer - will be controlled from ChatMainView */}
+      {isMobile && <MobileChatDrawer />}
+      
+      {/* Main chat area */}
       <div className="flex-1 overflow-hidden">
         <ChatMainView />
       </div>
