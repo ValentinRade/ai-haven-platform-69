@@ -1,11 +1,24 @@
 
-import React from 'react';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
+import React, { useState } from 'react';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import ChatSidebar from './ChatSidebar';
+import { Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const MobileChatDrawer: React.FC = () => {
+interface MobileChatDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  children?: React.ReactNode;
+}
+
+const MobileChatDrawer: React.FC<MobileChatDrawerProps> = ({ 
+  open, 
+  onOpenChange,
+  children 
+}) => {
   return (
-    <Drawer>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      {children}
       <DrawerContent className="h-[85vh] p-0">
         <div className="h-full overflow-hidden">
           <ChatSidebar />

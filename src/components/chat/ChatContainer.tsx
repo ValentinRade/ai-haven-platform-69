@@ -6,7 +6,6 @@ import { useChatStore } from '@/store/chatStore';
 import { toast } from '@/hooks/use-toast';
 import ChatSidebar from './ChatSidebar';
 import ChatMainView from './ChatMainView';
-import MobileChatDrawer from './MobileChatDrawer';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const ChatContainer: React.FC = () => {
@@ -68,9 +67,6 @@ const ChatContainer: React.FC = () => {
       <div className="w-72 border-r border-gray-200 hidden md:block flex-shrink-0">
         <ChatSidebar />
       </div>
-      
-      {/* Mobile drawer - will be controlled from ChatMainView */}
-      {isMobile && <MobileChatDrawer />}
       
       {/* Main chat area */}
       <div className="flex-1 overflow-hidden">
