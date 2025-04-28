@@ -64,32 +64,32 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onChatSelect }) => {
                     : "bg-white"
                 )}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between w-full">
                   <button
                     onClick={() => handleChatSelect(chat.id)}
-                    className="flex-1 text-left"
+                    className="flex-1 text-left min-w-0" // Added min-w-0 to allow text truncation
                   >
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Avatar className="h-6 w-6 flex-shrink-0">
                         <AvatarFallback>
                           <UserRound size={14} />
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm text-gray-600">{chat.creator_display_name || 'Unbenannt'}</span>
+                      <span className="text-sm text-gray-600 truncate">{chat.creator_display_name || 'Unbenannt'}</span>
                       {chat.is_private && (
-                        <span className="flex items-center text-xs text-gray-500">
+                        <span className="flex items-center text-xs text-gray-500 flex-shrink-0">
                           <EyeOff size={12} className="mr-1" />
                           Privat
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 overflow-hidden mt-1">
+                    <div className="flex items-center gap-2 overflow-hidden">
                       <MessageSquare size={16} className="flex-shrink-0 text-gray-500" />
-                      <span className="font-medium truncate">{chat.title}</span>
+                      <span className="font-medium break-words line-clamp-2">{chat.title}</span>
                     </div>
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
                       <span className="truncate max-w-[180px]">{chat.lastMessage}</span>
-                      <span className="flex-shrink-0">
+                      <span className="flex-shrink-0 ml-2">
                         {format(chat.timestamp, 'dd. MMM', { locale: de })}
                       </span>
                     </div>
@@ -100,7 +100,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onChatSelect }) => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="ml-2 h-8 w-8 hover:bg-red-100 hover:text-red-600"
+                        className="ml-2 h-8 w-8 hover:bg-red-100 hover:text-red-600 flex-shrink-0"
                       >
                         <Trash2 size={16} />
                       </Button>
