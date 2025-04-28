@@ -15,7 +15,7 @@ const ChatMainView: React.FC = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex flex-col h-screen w-full">
+    <div className="flex flex-col h-[calc(100vh-56px)] w-full">
       <ChatHeader 
         title={currentChat?.title || 'Neuer Chat'} 
         leftElement={isMobile && (
