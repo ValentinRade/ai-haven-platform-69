@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Mic, MicOff, Trash2 } from 'lucide-react';
+import { Send, Mic, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useChatStore } from '@/store/chatStore';
 import { VoiceRecorder } from '@/utils/voiceRecorder';
@@ -21,7 +21,6 @@ const ChatInputArea: React.FC = () => {
     isLoading 
   } = useChatStore();
 
-  // Handle textarea auto-resize
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -29,7 +28,6 @@ const ChatInputArea: React.FC = () => {
     }
   }, [input]);
 
-  // Handle recording timer
   useEffect(() => {
     if (isRecording) {
       recordingTimer.current = setInterval(() => {
@@ -186,7 +184,7 @@ const ChatInputArea: React.FC = () => {
                 onClick={handleStopRecording}
                 aria-label="Aufnahme beenden und senden"
               >
-                <MicOff size={18} />
+                <Send size={18} />
               </Button>
             </div>
           </div>

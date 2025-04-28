@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Mic, MicOff, Trash2, X } from 'lucide-react';
+import { Send, Mic, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ChatInputProps {
@@ -135,7 +135,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 onClick={onStopRecording}
                 aria-label="Aufnahme beenden und senden"
               >
-                <MicOff size={18} />
+                <Send size={18} />
               </Button>
             </div>
           </div>
