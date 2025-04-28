@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { isAudioMessage } from '@/utils/messageUtils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,32 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onChatSelect }) => {
     if (onChatSelect) {
       onChatSelect();
     }
+  };
+
+  // Helper function to get the last message display text
+  const getLastMessageText = (chat) => {
+    if (!chat.messages || chat.messages.length === 0) {
+      return '';
+    }
+    
+    // Get the last message in the messages array
+    const lastMessage = chat.messages[chat.messages.length - 1];
+    
+    if (!lastMessage || !lastMessage.content) {
+      return '';
+    }
+    
+    // Check if it's an audio message
+    if (typeof lastMessage.content === 'string' && isAudioMessage(lastMessage.content)) {
+      return 'Sprachnachricht';
+    }
+    
+    // Return truncated text for normal messages
+    const contentStr = typeof lastMessage.content === 'object' 
+      ? JSON.stringify(lastMessage.content)
+      : lastMessage.content;
+    
+    return contentStr.substring(0, 30) + (contentStr.length > 30 ? '...' : '');
   };
 
   return (
@@ -67,7 +94,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onChatSelect }) => {
                 <div className="flex items-center justify-between w-full">
                   <button
                     onClick={() => handleChatSelect(chat.id)}
-                    className="flex-1 text-left min-w-0" // Added min-w-0 to allow text truncation
+                    className="flex-1 text-left min-w-0"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Avatar className="h-6 w-6 flex-shrink-0">
@@ -88,7 +115,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ onChatSelect }) => {
                       <span className="font-medium break-words line-clamp-2">{chat.title}</span>
                     </div>
                     <div className="flex justify-between items-center mt-1 text-xs text-gray-500">
-                      <span className="truncate max-w-[180px]">{chat.lastMessage}</span>
+                      <span className="truncate max-w-[180px]">{getLastMessageText(chat)}</span>
                       <span className="flex-shrink-0 ml-2">
                         {format(chat.timestamp, 'dd. MMM', { locale: de })}
                       </span>
