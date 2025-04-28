@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import ChatSidebar from './ChatSidebar';
 import { Menu } from 'lucide-react';
@@ -16,12 +16,16 @@ const MobileChatDrawer: React.FC<MobileChatDrawerProps> = ({
   onOpenChange,
   children 
 }) => {
+  const handleChatSelect = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       {children}
       <DrawerContent className="h-[85vh] p-0">
         <div className="h-full overflow-hidden">
-          <ChatSidebar />
+          <ChatSidebar onChatSelect={handleChatSelect} />
         </div>
       </DrawerContent>
     </Drawer>

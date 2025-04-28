@@ -20,12 +20,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const ChatSidebar: React.FC = () => {
+interface ChatSidebarProps {
+  onChatSelect?: () => void;
+}
+
+const ChatSidebar: React.FC<ChatSidebarProps> = ({ onChatSelect }) => {
   const { chats, currentChatId, setCurrentChat, createNewChat, loadChats, deleteChat } = useChatStore();
 
   useEffect(() => {
     loadChats();
   }, [loadChats]);
+
+  const handleChatSelect = (chatId: string) => {
+    setCurrentChat(chatId);
+    if (onChatSelect) {
+      onChatSelect();
+    }
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-50">
@@ -55,7 +66,7 @@ const ChatSidebar: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <button
-                    onClick={() => setCurrentChat(chat.id)}
+                    onClick={() => handleChatSelect(chat.id)}
                     className="flex-1 text-left"
                   >
                     <div className="flex items-center gap-2">
