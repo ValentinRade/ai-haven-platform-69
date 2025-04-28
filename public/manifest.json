@@ -1,0 +1,22 @@
+
+{
+  "name": "Immofinanz AI Platform",
+  "short_name": "Immofinanz AI",
+  "description": "Die intelligente KI-Plattform für Immofinanz GmbH",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/lovable-uploads/e00a5b3a-48f8-4820-8d17-0370615ee884.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/lovable-uploads/e00a5b3a-48f8-4820-8d17-0370615ee884.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
