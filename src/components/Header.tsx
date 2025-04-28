@@ -7,6 +7,7 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Switch } from './ui/switch';
 import { useChatStore } from '@/store/chatStore';
 import { toast } from './ui/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const { currentChatId, getCurrentChat, loadChats } = useChatStore();
   const [isPrivate, setIsPrivate] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -138,7 +140,19 @@ const Header: React.FC = () => {
     <header className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-4 py-1 flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <img src="/lovable-uploads/70e3d10a-20be-4809-8385-3ffda9ff9893.png" alt="Immofinanz Logo" className="h-8" />
+          {isMobile ? (
+            <img 
+              src="/lovable-uploads/d3c3c26f-df32-4d33-9430-cf975050325f.png" 
+              alt="Immofinanz Mobile Logo" 
+              className="h-8"
+            />
+          ) : (
+            <img 
+              src="/lovable-uploads/70e3d10a-20be-4809-8385-3ffda9ff9893.png" 
+              alt="Immofinanz Logo" 
+              className="h-8"
+            />
+          )}
         </Link>
         <div className="flex items-center gap-4">
           {isAdmin || isProfile ? (
