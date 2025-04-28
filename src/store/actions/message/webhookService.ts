@@ -1,9 +1,8 @@
-
 import { WebhookResponse } from './types';
 import { toast } from '@/hooks/use-toast';
 
 // Fallback URL if environment variable is not set
-const FALLBACK_WEBHOOK_URL = 'https://automation-n8n.ny2xzw.easypanel.host/webhook-test/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b';
+const FALLBACK_WEBHOOK_URL = 'https://automation-n8n.ny2xzw.easypanel.host/webhook/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b';
 
 export const sendMessageToWebhook = async (
   userId: string,
