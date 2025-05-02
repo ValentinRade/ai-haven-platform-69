@@ -25,11 +25,12 @@ serve(async (req) => {
 
     console.log('Exchange code for token with redirect URI:', redirectUri)
 
-    // Updated token exchange endpoint according to documentation
+    // Token exchange according to documentation
     const tokenResponse = await fetch('https://europace.fincrm.de/api/v1/oauth/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}` // Add Basic Auth header
       },
       body: new URLSearchParams({
         client_id: clientId!,
@@ -67,7 +68,7 @@ serve(async (req) => {
     // If email not found in ID token, try to get it from FinCRM API
     if (!email) {
       try {
-        // Get user info endpoint - may need to be adjusted based on FinCRM API
+        // Get user info endpoint
         const userResponse = await fetch('https://europace.fincrm.de/api/v1/me', {
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`

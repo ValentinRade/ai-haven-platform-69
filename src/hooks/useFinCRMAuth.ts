@@ -132,11 +132,8 @@ export const useFinCRMAuth = (user: User | null) => {
       // Dynamically get the current site URL
       const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
       
-      // Required permissions
-      const scope = ''; // According to docs, finCRM API doesn't support scoped tokens
-      
-      // Updated OAuth URL according to documentation
-      const oauthUrl = `https://europace.fincrm.de/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}${scope ? `&scope=${scope}` : ''}`;
+      // Correctly format OAuth URL according to the documentation
+      const oauthUrl = `https://europace.fincrm.de/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}`;
       
       console.log("Redirecting to OAuth URL:", oauthUrl);
       
