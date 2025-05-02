@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -135,9 +134,8 @@ export const useFinCRMAuth = (user: User | null) => {
       // Required permissions
       const scope = encodeURIComponent('offline_access openid profile email user.read');
       
-      // Build the OAuth URL with response_type=code for Authorization Code flow
-      // Using the correct API endpoint
-      const oauthUrl = `https://europace.fincrm.de/api/v1/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&response_mode=query`;
+      // Updated OAuth URL - removing the /api/v1/ part from the path
+      const oauthUrl = `https://europace.fincrm.de/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&response_mode=query`;
       
       console.log("Redirecting to OAuth URL:", oauthUrl);
       
