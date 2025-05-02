@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -132,10 +133,10 @@ export const useFinCRMAuth = (user: User | null) => {
       const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
       
       // Required permissions
-      const scope = encodeURIComponent('offline_access openid profile email user.read');
+      const scope = ''; // According to docs, finCRM API doesn't support scoped tokens
       
-      // Updated OAuth URL - removing the /api/v1/ part from the path
-      const oauthUrl = `https://europace.fincrm.de/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=${scope}&response_mode=query`;
+      // Updated OAuth URL according to documentation
+      const oauthUrl = `https://europace.fincrm.de/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}${scope ? `&scope=${scope}` : ''}`;
       
       console.log("Redirecting to OAuth URL:", oauthUrl);
       
