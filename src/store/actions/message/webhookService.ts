@@ -1,8 +1,23 @@
+
 import { WebhookResponse } from './types';
 import { toast } from '@/hooks/use-toast';
 
 // Fallback URL if environment variable is not set
 const FALLBACK_WEBHOOK_URL = 'https://automation-n8n.ny2xzw.easypanel.host/webhook/06bd3c97-5c9b-49bb-88c3-d16a5d20a52b';
+
+// Function to check if the URL is accessible
+const checkWebhookUrl = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetch(url, {
+      method: 'HEAD',
+      mode: 'cors'
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Cannot access webhook URL:', error);
+    return false;
+  }
+};
 
 export const sendMessageToWebhook = async (
   userId: string,
@@ -25,6 +40,21 @@ export const sendMessageToWebhook = async (
   const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || FALLBACK_WEBHOOK_URL;
 
   try {
+    // Check if the webhook URL is accessible
+    const isUrlAccessible = await checkWebhookUrl(webhookUrl);
+    if (!isUrlAccessible) {
+      console.error('Webhook URL is not accessible:', webhookUrl);
+      toast({
+        title: "Verbindungsproblem",
+        description: "Der Webhook-Server ist nicht erreichbar. Bitte überprüfen Sie die Verbindung.",
+        variant: "destructive"
+      });
+      return {};
+    }
+
+    console.log('Sending webhook request to:', webhookUrl);
+    console.log('Webhook payload:', JSON.stringify(webhookPayload).substring(0, 200) + '...');
+
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -47,6 +77,7 @@ export const sendMessageToWebhook = async (
 
     // Get the response text first
     const responseText = await response.text();
+    console.log('Raw webhook response:', responseText ? responseText.substring(0, 200) + '...' : 'Empty response');
     
     // Return early if empty response
     if (!responseText || responseText.trim() === '') {
