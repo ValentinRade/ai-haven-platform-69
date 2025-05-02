@@ -8,9 +8,11 @@ import { supabase } from '@/integrations/supabase/client';
 import ProfileForm from '@/components/ProfileForm';
 import PasswordReset from '@/components/PasswordReset';
 import Office365Auth from '@/components/Office365Auth';
+import FinCRMAuth from '@/components/FinCRMAuth';
 
 // Hooks
 import { useOffice365Auth } from '@/hooks/useOffice365Auth';
+import { useFinCRMAuth } from '@/hooks/useFinCRMAuth';
 
 const ProfileSettingsPage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -20,12 +22,21 @@ const ProfileSettingsPage = () => {
   
   // Office 365 auth logic
   const { 
-    isConnected, 
-    isLoading, 
+    isConnected: office365Connected, 
+    isLoading: office365Loading, 
     connectToOffice365, 
     disconnectFromOffice365,
     email: office365Email 
   } = useOffice365Auth(user);
+
+  // FinCRM auth logic
+  const { 
+    isConnected: finCRMConnected, 
+    isLoading: finCRMLoading, 
+    connectToFinCRM, 
+    disconnectFromFinCRM,
+    email: finCRMEmail 
+  } = useFinCRMAuth(user);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -63,11 +74,20 @@ const ProfileSettingsPage = () => {
             
             {/* Office365 Auth Component */}
             <Office365Auth 
-              isConnected={isConnected}
-              isLoading={isLoading}
+              isConnected={office365Connected}
+              isLoading={office365Loading}
               onConnect={connectToOffice365}
               onDisconnect={disconnectFromOffice365}
               email={office365Email}
+            />
+            
+            {/* FinCRM Auth Component */}
+            <FinCRMAuth 
+              isConnected={finCRMConnected}
+              isLoading={finCRMLoading}
+              onConnect={connectToFinCRM}
+              onDisconnect={disconnectFromFinCRM}
+              email={finCRMEmail}
             />
           </div>
         </div>

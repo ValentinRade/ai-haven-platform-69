@@ -80,6 +80,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string
+          fincrm_email: string | null
+          fincrm_token: string | null
           id: string
           office365_email: string | null
           office365_token: string | null
@@ -90,6 +92,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email: string
+          fincrm_email?: string | null
+          fincrm_token?: string | null
           id: string
           office365_email?: string | null
           office365_token?: string | null
@@ -100,6 +104,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string
+          fincrm_email?: string | null
+          fincrm_token?: string | null
           id?: string
           office365_email?: string | null
           office365_token?: string | null
