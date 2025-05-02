@@ -2,6 +2,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
+// Make sure these environment variables are set to the correct values in Supabase
+// For FinCRM, the client ID should be '3' according to the documentation
 const clientId = Deno.env.get('FINCRM_CLIENT_ID')
 const clientSecret = Deno.env.get('FINCRM_CLIENT_SECRET')
 

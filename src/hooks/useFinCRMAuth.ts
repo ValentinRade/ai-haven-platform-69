@@ -126,8 +126,8 @@ export const useFinCRMAuth = (user: User | null) => {
     try {
       setIsLoading(true);
       
-      // Client ID from FinCRM App registration
-      const clientId = '54321-fincrm-client-id-12345';
+      // Client ID from FinCRM App registration - updated to correct value
+      const clientId = '3';
       
       // Dynamically get the current site URL
       const redirectUri = encodeURIComponent(`${window.location.origin}/profile`);
