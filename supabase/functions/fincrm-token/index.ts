@@ -25,8 +25,8 @@ serve(async (req) => {
 
     console.log('Exchange code for token with redirect URI:', redirectUri)
 
-    // Exchange authorization code for tokens
-    const tokenResponse = await fetch('https://api.fincrm.com/oauth2/token', {
+    // Exchange authorization code for tokens using the correct API endpoint
+    const tokenResponse = await fetch('https://europace.fincrm.de/api/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -67,7 +67,7 @@ serve(async (req) => {
     // If email not found in ID token, try to get it from FinCRM API
     if (!email) {
       try {
-        const userResponse = await fetch('https://api.fincrm.com/v1/me', {
+        const userResponse = await fetch('https://europace.fincrm.de/api/v1/me', {
           headers: {
             'Authorization': `Bearer ${tokenData.access_token}`
           }
