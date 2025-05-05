@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Home, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Header from '@/components/Header';
+import { Card, CardContent } from "@/components/ui/card";
 
 const LandingPage: React.FC = () => {
   const isMobile = useIsMobile();
@@ -60,6 +60,52 @@ const LandingPage: React.FC = () => {
                 <h3 className="font-bold text-lg mb-2 text-gray-800">Einfacher Prozess</h3>
                 <p className="text-gray-600">Vom Chat zur Besichtigung in kürzester Zeit - ohne komplizierte Formulare</p>
               </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="py-16 px-4 bg-white">
+        <div className="container mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Unser Team</h2>
+          
+          <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="md:w-1/2 max-w-lg"
+            >
+              <img 
+                src="/lovable-uploads/fa408ef3-c6f3-4d42-aa51-3c8e298ab646.png" 
+                alt="Jörg und Yannick Rademacher" 
+                className="rounded-xl shadow-lg w-full"
+              />
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="md:w-1/2 max-w-lg"
+            >
+              <Card className="border-none shadow-lg">
+                <CardContent className="pt-6">
+                  <h3 className="text-2xl font-bold mb-4 text-gray-800">Jörg & Yannick Rademacher</h3>
+                  <p className="text-gray-600 mb-4">
+                    Mit über 25 Jahren Erfahrung im Immobilienmarkt leitet Jörg Rademacher gemeinsam mit seinem Sohn Yannick unser Familienunternehmen. Als Vater-Sohn-Gespann verbinden sie jahrzehntelange Expertise mit innovativen digitalen Ansätzen.
+                  </p>
+                  <p className="text-gray-600 mb-4">
+                    Jörg bringt tiefgreifendes Fachwissen und ein umfangreiches Netzwerk mit, während Yannick als Digital Native neue Perspektiven und moderne Lösungsansätze einbringt. Gemeinsam sorgen sie dafür, dass Immofinanz stets am Puls der Zeit agiert.
+                  </p>
+                  <p className="text-gray-600 font-medium">
+                    "Unser Ziel ist es, traditionelle Immobilienwerte mit zukunftsorientierten Konzepten zu verbinden, um unseren Kunden den bestmöglichen Service zu bieten."
+                  </p>
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
         </div>
