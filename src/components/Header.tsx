@@ -52,7 +52,7 @@ const Header: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 border border-white/20">
                     <Video className="w-4 h-4 text-primary" />
-                    <span className="text-xs md:text-sm font-medium text-gray-800">TikTok Immobilien</span>
+                    <span className="text-xs md:text-sm font-medium text-gray-800">@immofinanz</span>
                   </div>
                 </div>
               </div>
