@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +18,7 @@ const ChatPage: React.FC = () => {
     messages, 
     isLoading, 
     userId,
+    chatId,
     addMessage, 
     setIsLoading,
     sendToWebhook
@@ -27,12 +27,13 @@ const ChatPage: React.FC = () => {
   // Initialize with welcome message if no messages exist
   useEffect(() => {
     if (messages.length === 0) {
+      console.log("Initializing chat with ID:", chatId);
       addMessage({
         content: "Hey! 👋 Willkommen bei Immofinanz. Erzähl mir, nach welcher Art von Immobilie du suchst?",
         isUser: false
       });
     }
-  }, [messages.length, addMessage]);
+  }, [messages.length, addMessage, chatId]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -50,6 +51,7 @@ const ChatPage: React.FC = () => {
     // Send message to webhook
     try {
       console.log("Using persistent user ID:", userId);
+      console.log("Using persistent chat ID:", chatId);
       await sendToWebhook(currentMessage);
       
       // Continue with simulated response
