@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,8 +24,11 @@ const ChatPage: React.FC = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
+  
+  // Webhook URL
+  const webhookUrl = "https://agent.snipe-solutions.de/webhook-test/antragsstrecke";
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!message.trim()) return;
 
     // Add user message
@@ -40,48 +42,86 @@ const ChatPage: React.FC = () => {
     setMessage("");
     setIsLoading(true);
 
-    // Simulate response based on the conversation flow
-    setTimeout(() => {
-      let botResponse;
+    // Send message to webhook
+    try {
+      console.log("Sending message to webhook:", message);
       
-      if (messages.length === 1) {
-        // First question response
-        botResponse = {
-          id: (Date.now() + 1).toString(),
-          content: "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.",
-          isUser: false,
-        };
-      } else if (messages.length === 3) {
-        // Second question response
-        botResponse = {
-          id: (Date.now() + 1).toString(),
-          content: "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)",
-          isUser: false,
-        };
-      } else if (messages.length === 5) {
-        // Third question response
-        botResponse = {
-          id: (Date.now() + 1).toString(),
-          content: "Was ist dein ungefähres Budget?",
-          isUser: false,
-        };
-      } else {
-        // Default response
-        botResponse = {
-          id: (Date.now() + 1).toString(),
-          content: "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?",
-          isUser: false,
-        };
-      }
-      
-      setMessages((prev) => [...prev, botResponse]);
-      setIsLoading(false);
-
-      toast({
-        title: "Neuer Schritt",
-        description: "Wir kommen deiner Traumimmobilie näher!",
+      const webhookResponse = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: message,
+          userId: "user-" + Date.now(),
+          timestamp: new Date().toISOString(),
+          conversation: messages.map(msg => ({
+            content: msg.content,
+            isUser: msg.isUser
+          }))
+        }),
       });
-    }, 1500);
+      
+      console.log("Webhook response status:", webhookResponse.status);
+      
+      // Continue with simulated response (can be replaced with actual webhook response later)
+      setTimeout(() => {
+        let botResponse;
+        
+        if (messages.length === 1) {
+          // First question response
+          botResponse = {
+            id: (Date.now() + 1).toString(),
+            content: "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.",
+            isUser: false,
+          };
+        } else if (messages.length === 3) {
+          // Second question response
+          botResponse = {
+            id: (Date.now() + 1).toString(),
+            content: "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)",
+            isUser: false,
+          };
+        } else if (messages.length === 5) {
+          // Third question response
+          botResponse = {
+            id: (Date.now() + 1).toString(),
+            content: "Was ist dein ungefähres Budget?",
+            isUser: false,
+          };
+        } else {
+          // Default response
+          botResponse = {
+            id: (Date.now() + 1).toString(),
+            content: "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?",
+            isUser: false,
+          };
+        }
+        
+        setMessages((prev) => [...prev, botResponse]);
+        setIsLoading(false);
+
+        toast({
+          title: "Neuer Schritt",
+          description: "Wir kommen deiner Traumimmobilie näher!",
+        });
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Error sending message to webhook:", error);
+      
+      // Continue with local response even if webhook fails
+      toast({
+        title: "Hinweis",
+        description: "Es gab ein Problem bei der Kommunikation. Wir verarbeiten deine Anfrage lokal.",
+        variant: "destructive",
+      });
+      
+      // Continue with simulated response
+      // ... keep existing code (simulated response logic)
+    } finally {
+      // setIsLoading will be set to false in the setTimeout above
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
