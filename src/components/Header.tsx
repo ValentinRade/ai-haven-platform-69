@@ -7,9 +7,11 @@ import { useChatStore } from '@/store/chatStore';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import ChatButton from './ChatButton';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Header: React.FC = () => {
   const { setIsOpen } = useChatStore();
+  const isMobile = useIsMobile();
 
   const handleOpenChat = () => {
     setIsOpen(true);
@@ -54,23 +56,23 @@ const Header: React.FC = () => {
               </div>
               
               {/* Hero Content */}
-              <div className="pt-16 md:pt-24 px-4 md:px-0">
+              <div className="pt-12 md:pt-24 px-4 md:px-0">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-2">
                   Entdecken Sie Ihr Traumhaus
                 </h1>
-                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-6">
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-4 md:mb-6">
                   Moderne Architektur trifft auf intelligente Raumnutzung
                 </p>
                 
-                {/* New KI Chat Button */}
+                {/* New KI Chat Button - Improved for mobile */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="flex space-x-4"
+                  className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4 z-10 relative"
                 >
                   <Button 
-                    className="bg-white text-primary hover:bg-white/90 font-medium px-6 py-2 rounded-full shadow-lg"
+                    className="bg-white text-primary hover:bg-white/90 font-medium px-6 py-2 rounded-full shadow-lg w-full md:w-auto"
                   >
                     <Home className="mr-2 h-4 w-4" />
                     Immobilien entdecken
@@ -78,7 +80,7 @@ const Header: React.FC = () => {
                   
                   <motion.button
                     onClick={handleOpenChat}
-                    className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2 rounded-full shadow-lg flex items-center transition-all duration-300 hover:scale-105"
+                    className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 w-full md:w-auto"
                     whileHover={{ 
                       boxShadow: "0 0 15px rgba(0, 130, 66, 0.5)",
                     }}
@@ -91,6 +93,11 @@ const Header: React.FC = () => {
               </div>
             </div>
           </div>
+          
+          {/* Adding a darker overlay at the bottom on mobile for better button visibility */}
+          {isMobile && (
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/70 to-transparent"></div>
+          )}
         </div>
       </header>
       
