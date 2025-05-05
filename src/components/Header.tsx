@@ -29,14 +29,14 @@ const Header: React.FC = () => {
   return (
     <>
       <header className="relative z-10">
-        {/* Hero Image Background - Increased height */}
+        {/* Hero Image Background - Maintained height */}
         <div className="w-full h-[400px] md:h-[500px] relative overflow-hidden">
           <img 
             src="/lovable-uploads/aefaa6f6-c772-4c1f-917b-f0a8c77a531d.png" 
             alt="Moderne Architektur" 
             className="w-full h-full object-cover"
           />
-          {/* Stronger dark overlay - covers the entire background */}
+          {/* Dark overlay - covers the entire background */}
           <div className="absolute inset-0 bg-black/60">
             {/* Header Content */}
             <div className="container mx-auto px-4 h-full">
@@ -56,17 +56,17 @@ const Header: React.FC = () => {
                 </div>
               </div>
               
-              {/* Hero Content with increased bottom margin */}
-              <div className="pt-16 md:pt-24 px-4 md:px-0">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-2">
+              {/* Hero Content - Adjusted spacing to match the image */}
+              <div className="pt-16 md:pt-32 px-4 md:px-0 flex flex-col h-[calc(100%-80px)] justify-center">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-3">
                   Entdecken Sie Ihr Traumhaus
                 </h1>
-                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-16">
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-8">
                   Moderne Architektur trifft auf intelligente Raumnutzung
                 </p>
                 
-                {/* Buttons with increased top margin for better spacing */}
-                <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4 mt-8">
+                {/* Buttons with proper spacing */}
+                <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4 mt-6">
                   <Button 
                     className="bg-white text-primary hover:bg-white/90 font-semibold px-6 py-2.5 rounded-full shadow-lg w-full md:w-auto text-sm"
                   >
