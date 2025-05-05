@@ -1,12 +1,13 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { useChatStore } from "@/store/chatStore";
 
 const ChatButton: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { setIsOpen } = useChatStore();
 
   const handleOpenChat = () => {
     setIsOpen(true);
