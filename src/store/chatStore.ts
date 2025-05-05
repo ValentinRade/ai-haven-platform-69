@@ -1,31 +1,19 @@
 
 import { create } from 'zustand';
 
-interface Chat {
+interface Message {
   id: string;
-  title: string;
-  messages: {
-    id: string;
-    content: string;
-    isUser: boolean;
-    timestamp: Date;
-  }[];
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
 }
 
 interface ChatStore {
-  chats: Chat[];
-  currentChatId: string | null;
+  messages: Message[];
   isLoading: boolean;
-  getCurrentChat: () => Chat | undefined;
 }
 
-export const useChatStore = create<ChatStore>((set, get) => ({
-  chats: [],
-  currentChatId: null,
+export const useChatStore = create<ChatStore>(() => ({
+  messages: [],
   isLoading: false,
-  getCurrentChat: () => {
-    const { chats, currentChatId } = get();
-    if (!currentChatId) return undefined;
-    return chats.find(chat => chat.id === currentChatId);
-  },
 }));
