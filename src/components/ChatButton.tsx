@@ -4,22 +4,17 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { useChatStore } from "@/store/chatStore";
+import { useNavigate } from "react-router-dom";
 
 const ChatButton: React.FC = () => {
-  const { setIsOpen } = useChatStore();
+  const navigate = useNavigate();
 
   const handleOpenChat = () => {
-    setIsOpen(true);
+    navigate('/chat');
     toast({
       title: "KI-Chat wird geöffnet",
       description: "Unser virtueller Assistent hilft dir bei deiner Immobiliensuche."
     });
-    // Scroll to chat section
-    const chatSection = document.getElementById("chat-section");
-    if (chatSection) {
-      chatSection.scrollIntoView({ behavior: "smooth" });
-    }
   };
 
   return (
