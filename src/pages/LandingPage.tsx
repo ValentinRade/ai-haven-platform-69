@@ -112,8 +112,47 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Call to action section */}
+      {/* Personal Consultation Section - Moved from ChatPage */}
       <section className="py-16 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Persönliche Beratung</h2>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="max-w-2xl mx-auto"
+          >
+            <Card className="overflow-hidden border-gray-200">
+              <div className="flex flex-col md:flex-row">
+                <div className="w-full md:w-1/2">
+                  <img 
+                    src="/lovable-uploads/73b0ef6d-60db-4cab-8d68-27df33713747.png" 
+                    alt="Immobilien-Berater" 
+                    className="w-full h-full object-cover aspect-square md:aspect-auto"
+                  />
+                </div>
+                <CardContent className="flex flex-col p-6 w-full md:w-1/2">
+                  <h3 className="text-xl font-bold mb-3">Persönliche Beratung</h3>
+                  <p className="text-gray-700 mb-4">
+                    Unser erfahrenes Team steht dir bei allen Fragen rund um deine Immobiliensuche zur Seite. Wir nehmen uns Zeit für ein persönliches Gespräch, um deine Wünsche und Bedürfnisse genau zu verstehen.
+                  </p>
+                  <p className="text-gray-700 mb-4">
+                    Nach dem Chat-Gespräch kontaktieren wir dich innerhalb von 24 Stunden, um die nächsten Schritte zu besprechen.
+                  </p>
+                  <Button className="mt-auto bg-primary hover:bg-primary/90">
+                    Termin vereinbaren
+                  </Button>
+                </CardContent>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Call to action section */}
+      <section className="py-16 px-4 bg-white">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6 text-gray-800">Bereit für dein neues Zuhause?</h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -5,7 +6,6 @@ import { Send, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { useChatStore } from "@/store/chatStore";
 
 const ChatPage: React.FC = () => {
@@ -124,7 +124,12 @@ const ChatPage: React.FC = () => {
           };
         }
         
-        setMessages((prev) => [...prev, botResponse]);
+        addMessage({
+          id: botResponse.id,
+          content: botResponse.content,
+          isUser: botResponse.isUser
+        });
+        
         setIsLoading(false);
 
         toast({
@@ -236,38 +241,6 @@ const ChatPage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Personal Contact Section - Added below the chat */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="max-w-2xl mx-auto mt-12 mb-8"
-        >
-          <Card className="overflow-hidden border-gray-200">
-            <div className="flex flex-col md:flex-row">
-              <div className="w-full md:w-1/2">
-                <img 
-                  src="/lovable-uploads/73b0ef6d-60db-4cab-8d68-27df33713747.png" 
-                  alt="Immobilien-Berater" 
-                  className="w-full h-full object-cover aspect-square md:aspect-auto"
-                />
-              </div>
-              <CardContent className="flex flex-col p-6 w-full md:w-1/2">
-                <h3 className="text-xl font-bold mb-3">Persönliche Beratung</h3>
-                <p className="text-gray-700 mb-4">
-                  Unser erfahrenes Team steht dir bei allen Fragen rund um deine Immobiliensuche zur Seite. Wir nehmen uns Zeit für ein persönliches Gespräch, um deine Wünsche und Bedürfnisse genau zu verstehen.
-                </p>
-                <p className="text-gray-700 mb-4">
-                  Nach dem Chat-Gespräch kontaktieren wir dich innerhalb von 24 Stunden, um die nächsten Schritte zu besprechen.
-                </p>
-                <Button className="mt-auto bg-primary hover:bg-primary/90">
-                  Termin vereinbaren
-                </Button>
-              </CardContent>
-            </div>
-          </Card>
-        </motion.div>
       </div>
 
       {/* Footer */}
