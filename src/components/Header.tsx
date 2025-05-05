@@ -29,8 +29,8 @@ const Header: React.FC = () => {
   return (
     <>
       <header className="relative z-10">
-        {/* Hero Image Background */}
-        <div className="w-full h-[300px] md:h-[400px] relative overflow-hidden">
+        {/* Hero Image Background - Increased height */}
+        <div className="w-full h-[400px] md:h-[500px] relative overflow-hidden">
           <img 
             src="/lovable-uploads/aefaa6f6-c772-4c1f-917b-f0a8c77a531d.png" 
             alt="Moderne Architektur" 
@@ -55,17 +55,17 @@ const Header: React.FC = () => {
                 </div>
               </div>
               
-              {/* Hero Content */}
-              <div className="pt-8 md:pt-20 px-4 md:px-0">
+              {/* Hero Content - Adjusted for taller header */}
+              <div className="pt-16 md:pt-32 px-4 md:px-0">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-2">
                   Entdecken Sie Ihr Traumhaus
                 </h1>
-                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-6">
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-8">
                   Moderne Architektur trifft auf intelligente Raumnutzung
                 </p>
                 
                 {/* Mobile buttons with improved visibility */}
-                <div className="absolute bottom-8 left-0 right-0 px-6 md:px-0 md:relative md:bottom-0">
+                <div className="absolute bottom-16 left-0 right-0 px-6 md:px-0 md:relative md:bottom-0">
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
