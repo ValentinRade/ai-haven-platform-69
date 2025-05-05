@@ -161,19 +161,23 @@ const ChatPage: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-grow container mx-auto px-2 md:px-4 py-3 md:py-8 flex flex-col overflow-hidden">
-        {/* Always show the heading, but make it smaller on mobile */}
+      <div className="flex-grow container mx-auto px-2 md:px-4 py-3 md:py-6 flex flex-col overflow-hidden">
+        {/* Updated heading with new text and improved styling */}
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-xl md:text-3xl font-bold text-center mb-2 md:mb-8"
+          transition={{ duration: 0.5 }}
+          className="text-xl md:text-3xl font-bold text-center mb-3 md:mb-8 text-primary relative"
         >
-          KI-Chat für deine Immobiliensuche
+          <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+            Deine Immobilien Finanzierung
+          </span>
+          <div className="h-1 w-24 md:w-32 bg-primary rounded-full mx-auto mt-2 opacity-70"></div>
         </motion.h1>
         
-        <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 overflow-hidden max-w-2xl mx-auto flex flex-col flex-grow">
+        <div className="bg-white rounded-xl md:rounded-2xl shadow-md md:shadow-lg border border-gray-200 overflow-hidden max-w-2xl mx-auto flex flex-col flex-grow transition-all duration-300 hover:shadow-lg">
           {/* Chat Messages - Expand to fill available space */}
-          <div className="p-3 md:p-4 space-y-3 md:space-y-4 overflow-y-auto flex-grow">
+          <div className="p-3 md:p-5 space-y-3 md:space-y-4 overflow-y-auto flex-grow">
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
@@ -183,10 +187,10 @@ const ChatPage: React.FC = () => {
                 className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`p-2 md:p-3 rounded-xl md:rounded-2xl max-w-[85%] ${
+                  className={`p-2.5 md:p-3.5 rounded-xl md:rounded-2xl max-w-[85%] ${
                     msg.isUser
-                      ? "bg-primary text-white rounded-br-none"
-                      : "bg-gray-100 text-gray-800 rounded-bl-none"
+                      ? "bg-primary text-white rounded-br-none shadow-sm"
+                      : "bg-gray-100 text-gray-800 rounded-bl-none shadow-sm"
                   }`}
                 >
                   {msg.content}
@@ -195,7 +199,7 @@ const ChatPage: React.FC = () => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 text-gray-800 p-2 md:p-3 rounded-xl md:rounded-2xl rounded-bl-none">
+                <div className="bg-gray-100 text-gray-800 p-2.5 md:p-3.5 rounded-xl md:rounded-2xl rounded-bl-none shadow-sm">
                   <div className="flex space-x-2">
                     <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
                     <div className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:0.2s]"></div>
@@ -208,17 +212,17 @@ const ChatPage: React.FC = () => {
           </div>
 
           {/* Chat Input - Fixed at bottom */}
-          <div className="border-t border-gray-200 p-2 md:p-3 bg-gray-50">
-            <div className="flex items-end gap-2">
+          <div className="border-t border-gray-200 p-2.5 md:p-3.5 bg-gray-50">
+            <div className="flex items-end gap-2.5">
               <Textarea
                 placeholder="Schreibe deine Nachricht hier..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 resize-none border border-gray-200 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary min-h-[40px] md:min-h-[60px] max-h-[100px] md:max-h-[120px] rounded-xl text-sm md:text-base"
+                className="flex-1 resize-none border border-gray-200 focus:border-primary focus-visible:ring-1 focus-visible:ring-primary min-h-[40px] md:min-h-[60px] max-h-[100px] md:max-h-[120px] rounded-xl text-sm md:text-base shadow-sm transition-all"
               />
               <Button
-                className="bg-primary hover:bg-primary/90 h-10 w-10 md:h-12 md:w-12 rounded-full p-0 flex items-center justify-center shadow-md"
+                className="bg-primary hover:bg-primary/90 h-10 w-10 md:h-12 md:w-12 rounded-full p-0 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300"
                 onClick={handleSendMessage}
                 disabled={!message.trim() || isLoading}
               >
