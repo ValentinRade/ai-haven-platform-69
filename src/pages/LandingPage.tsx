@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -103,69 +102,26 @@ const LandingPage: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-white to-gray-50">
-      {/* Header component */}
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Header component with hero section */}
       <Header />
 
-      {/* Hero Section */}
-      <section className="py-8 px-4 bg-gradient-to-r from-gray-50 to-white">
-        <div className="container mx-auto text-center">
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5 }}
-            className="text-3xl font-bold text-gray-800 mb-3"
-          >
-            Finde deine Traumimmobilie
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-gray-600 mb-6"
-          >
-            Mit unserem KI-Chat zu deinem neuen Zuhause - so einfach wie auf TikTok
-          </motion.p>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="relative w-full max-w-md mx-auto"
-          >
-            <img 
-              src="/lovable-uploads/c347b4c9-f575-4333-aeb2-3c8013a34710.png" 
-              alt="Immobilien Illustration" 
-              className="w-full rounded-lg shadow-lg"
-            />
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center">
-              <Button
-                variant="default"
-                size="sm"
-                className="bg-primary hover:bg-primary/90 text-white rounded-full px-6 shadow-lg animate-pulse"
-                onClick={() => scrollToBottom()}
-              >
-                Los geht's <ChevronDown className="ml-2 w-4 h-4" />
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-8 px-4">
+      {/* Features Section - with adjusted margins to account for new header */}
+      <section className="py-16 px-4">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 gap-4">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Warum Immofinanz?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="bg-white p-5 rounded-xl shadow-md border border-gray-100 flex items-start"
+              className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col items-start"
             >
-              <CheckCircle className="text-primary shrink-0 mr-3 mt-1" size={20} />
+              <CheckCircle className="text-primary mb-4" size={24} />
               <div>
-                <h3 className="font-bold text-lg mb-1 text-primary">Schnelle Beratung</h3>
-                <p className="text-gray-600 text-sm">Finde in unter 5 Minuten heraus, welche Immobilien für dich verfügbar sind</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">Schnelle Beratung</h3>
+                <p className="text-gray-600">Finde in unter 5 Minuten heraus, welche Immobilien für dich verfügbar sind</p>
               </div>
             </motion.div>
             
@@ -174,12 +130,12 @@ const LandingPage: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white p-5 rounded-xl shadow-md border border-gray-100 flex items-start"
+              className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col items-start"
             >
-              <CheckCircle className="text-primary shrink-0 mr-3 mt-1" size={20} />
+              <CheckCircle className="text-primary mb-4" size={24} />
               <div>
-                <h3 className="font-bold text-lg mb-1 text-primary">Personalisierte Vorschläge</h3>
-                <p className="text-gray-600 text-sm">Erhalte maßgeschneiderte Immobilienangebote, die perfekt zu deinen Wünschen passen</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">Personalisierte Vorschläge</h3>
+                <p className="text-gray-600">Erhalte maßgeschneiderte Immobilienangebote, die perfekt zu deinen Wünschen passen</p>
               </div>
             </motion.div>
             
@@ -188,12 +144,12 @@ const LandingPage: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-white p-5 rounded-xl shadow-md border border-gray-100 flex items-start"
+              className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col items-start"
             >
-              <CheckCircle className="text-primary shrink-0 mr-3 mt-1" size={20} />
+              <CheckCircle className="text-primary mb-4" size={24} />
               <div>
-                <h3 className="font-bold text-lg mb-1 text-primary">Einfacher Prozess</h3>
-                <p className="text-gray-600 text-sm">Vom Chat zur Besichtigung in kürzester Zeit - ohne komplizierte Formulare</p>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">Einfacher Prozess</h3>
+                <p className="text-gray-600">Vom Chat zur Besichtigung in kürzester Zeit - ohne komplizierte Formulare</p>
               </div>
             </motion.div>
           </div>
@@ -201,7 +157,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Chat Section */}
-      <section className="flex-grow py-6 px-4">
+      <section className="flex-grow py-6 px-4 bg-gray-50">
         <div className="container mx-auto">
           <motion.h2 
             initial={{ opacity: 0 }}
