@@ -56,17 +56,17 @@ const Header: React.FC = () => {
                 </div>
               </div>
               
-              {/* Hero Content - Adjusted for taller header */}
-              <div className="pt-16 md:pt-32 px-4 md:px-0">
+              {/* Hero Content with increased bottom margin */}
+              <div className="pt-16 md:pt-24 px-4 md:px-0">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-2">
                   Entdecken Sie Ihr Traumhaus
                 </h1>
-                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-8">
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-16">
                   Moderne Architektur trifft auf intelligente Raumnutzung
                 </p>
                 
-                {/* Mobile buttons with improved visibility and adjusted position */}
-                <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
+                {/* Buttons with increased top margin for better spacing */}
+                <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4 mt-8">
                   <Button 
                     className="bg-white text-primary hover:bg-white/90 font-semibold px-6 py-2.5 rounded-full shadow-lg w-full md:w-auto text-sm"
                   >
