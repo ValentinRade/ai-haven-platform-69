@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
-import ChatPage from "./pages/ChatPage";
 
 const App = () => (
   <TooltipProvider>
@@ -12,8 +11,6 @@ const App = () => (
     <Sonner />
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<LandingPage />} />
       </Routes>
     </BrowserRouter>
