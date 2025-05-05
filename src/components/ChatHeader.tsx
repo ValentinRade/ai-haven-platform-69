@@ -9,8 +9,8 @@ const ChatHeader: React.FC = () => {
       {/* Hero Image Background */}
       <div className="w-full h-[300px] md:h-[350px] relative overflow-hidden">
         <img 
-          src="/lovable-uploads/aefaa6f6-c772-4c1f-917b-f0a8c77a531d.png" 
-          alt="Moderne Architektur" 
+          src="/lovable-uploads/78e7591f-1b78-4d71-acec-50eeb55db11f.png" 
+          alt="Immobilien Experten" 
           className="w-full h-full object-cover"
         />
         {/* Dark overlay */}
