@@ -36,7 +36,7 @@ const Header: React.FC = () => {
             alt="Moderne Architektur" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent">
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/20">
             {/* Header Content */}
             <div className="container mx-auto px-4 h-full">
               <div className="flex items-center justify-between py-4">
@@ -56,48 +56,48 @@ const Header: React.FC = () => {
               </div>
               
               {/* Hero Content */}
-              <div className="pt-12 md:pt-24 px-4 md:px-0">
+              <div className="pt-8 md:pt-20 px-4 md:px-0">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-2">
                   Entdecken Sie Ihr Traumhaus
                 </h1>
-                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-4 md:mb-6">
+                <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-6">
                   Moderne Architektur trifft auf intelligente Raumnutzung
                 </p>
                 
-                {/* New KI Chat Button - Improved for mobile */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4 z-10 relative"
-                >
-                  <Button 
-                    className="bg-white text-primary hover:bg-white/90 font-medium px-6 py-2 rounded-full shadow-lg w-full md:w-auto"
+                {/* Mobile buttons with improved visibility */}
+                <div className="absolute bottom-8 left-0 right-0 px-6 md:px-0 md:relative md:bottom-0">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 z-10 relative"
                   >
-                    <Home className="mr-2 h-4 w-4" />
-                    Immobilien entdecken
-                  </Button>
-                  
-                  <motion.button
-                    onClick={handleOpenChat}
-                    className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 w-full md:w-auto"
-                    whileHover={{ 
-                      boxShadow: "0 0 15px rgba(0, 130, 66, 0.5)",
-                    }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    KI Chat öffnen
-                  </motion.button>
-                </motion.div>
+                    <Button 
+                      className="bg-white text-primary hover:bg-white/90 font-semibold px-6 py-2.5 rounded-full shadow-lg w-full md:w-auto text-sm"
+                    >
+                      <Home className="mr-2 h-4 w-4" />
+                      Immobilien entdecken
+                    </Button>
+                    
+                    <motion.button
+                      onClick={handleOpenChat}
+                      className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-2.5 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 w-full md:w-auto text-sm"
+                      whileHover={{ 
+                        boxShadow: "0 0 15px rgba(0, 130, 66, 0.5)",
+                      }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      KI Chat öffnen
+                    </motion.button>
+                  </motion.div>
+                </div>
               </div>
             </div>
           </div>
           
-          {/* Adding a darker overlay at the bottom on mobile for better button visibility */}
-          {isMobile && (
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/70 to-transparent"></div>
-          )}
+          {/* Stronger gradient overlay for better visibility on mobile */}
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent"></div>
         </div>
       </header>
       
