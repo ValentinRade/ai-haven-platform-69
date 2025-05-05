@@ -6,65 +6,91 @@ import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface Message {
-  id: string;
-  content: string;
-  isUser: boolean;
-}
+import { useChatStore } from "@/store/chatStore";
 
 const ChatPage: React.FC = () => {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hey! 👋 Willkommen bei Immofinanz. Erzähl mir, nach welcher Art von Immobilie du suchst?",
-      isUser: false,
-    },
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   
-  // Webhook URL
-  const webhookUrl = "https://agent.snipe-solutions.de/webhook-test/antragsstrecke";
+  // Use the chat store
+  const { 
+    messages, 
+    isLoading, 
+    userId,
+    addMessage, 
+    setIsLoading,
+    sendToWebhook
+  } = useChatStore();
+  
+  // Initialize with welcome message if no messages exist
+  useEffect(() => {
+    if (messages.length === 0) {
+      addMessage({
+        content: "Hey! 👋 Willkommen bei Immofinanz. Erzähl mir, nach welcher Art von Immobilie du suchst?",
+        isUser: false
+      });
+    }
+  }, [messages.length, addMessage]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
     // Add user message
-    const userMessage = {
-      id: Date.now().toString(),
+    addMessage({
       content: message,
-      isUser: true,
-    };
+      isUser: true
+    });
     
-    setMessages((prev) => [...prev, userMessage]);
+    const currentMessage = message;
     setMessage("");
     setIsLoading(true);
 
     // Send message to webhook
     try {
-      console.log("Sending message to webhook:", message);
+      console.log("Using persistent user ID:", userId);
+      await sendToWebhook(currentMessage);
       
-      const webhookResponse = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: message,
-          userId: "user-" + Date.now(),
-          timestamp: new Date().toISOString(),
-          conversation: messages.map(msg => ({
-            content: msg.content,
-            isUser: msg.isUser
-          }))
-        }),
+      // Continue with simulated response
+      setTimeout(() => {
+        let botResponse = "";
+        
+        if (messages.length === 1) {
+          // First question response
+          botResponse = "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.";
+        } else if (messages.length === 3) {
+          // Second question response
+          botResponse = "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)";
+        } else if (messages.length === 5) {
+          // Third question response
+          botResponse = "Was ist dein ungefähres Budget?";
+        } else {
+          // Default response
+          botResponse = "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?";
+        }
+        
+        addMessage({
+          content: botResponse,
+          isUser: false
+        });
+        
+        setIsLoading(false);
+
+        toast({
+          title: "Neuer Schritt",
+          description: "Wir kommen deiner Traumimmobilie näher!",
+        });
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Error sending message to webhook:", error);
+      
+      toast({
+        title: "Hinweis",
+        description: "Es gab ein Problem bei der Kommunikation. Wir verarbeiten deine Anfrage lokal.",
+        variant: "destructive",
       });
       
-      console.log("Webhook response status:", webhookResponse.status);
-      
-      // Continue with simulated response (can be replaced with actual webhook response later)
+      // Continue with simulated response even if webhook fails
       setTimeout(() => {
         let botResponse;
         
@@ -106,21 +132,6 @@ const ChatPage: React.FC = () => {
           description: "Wir kommen deiner Traumimmobilie näher!",
         });
       }, 1500);
-      
-    } catch (error) {
-      console.error("Error sending message to webhook:", error);
-      
-      // Continue with local response even if webhook fails
-      toast({
-        title: "Hinweis",
-        description: "Es gab ein Problem bei der Kommunikation. Wir verarbeiten deine Anfrage lokal.",
-        variant: "destructive",
-      });
-      
-      // Continue with simulated response
-      // ... keep existing code (simulated response logic)
-    } finally {
-      // setIsLoading will be set to false in the setTimeout above
     }
   };
 
