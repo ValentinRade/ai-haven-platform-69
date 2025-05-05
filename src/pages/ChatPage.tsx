@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +8,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useChatStore } from "@/store/chatStore";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { marked } from "marked";
 
 const ChatPage: React.FC = () => {
   const [message, setMessage] = useState("");
@@ -48,82 +50,32 @@ const ChatPage: React.FC = () => {
     setMessage("");
     setIsLoading(true);
 
-    // Send message to webhook
     try {
-      console.log("Using persistent user ID:", userId);
-      console.log("Using persistent chat ID:", chatId);
-      await sendToWebhook(currentMessage);
+      // Send message to webhook and get response
+      const botResponse = await sendToWebhook(currentMessage);
       
-      // Continue with simulated response
-      setTimeout(() => {
-        let botResponse = "";
-        
-        if (messages.length === 1) {
-          // First question response
-          botResponse = "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.";
-        } else if (messages.length === 3) {
-          // Second question response
-          botResponse = "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)";
-        } else if (messages.length === 5) {
-          // Third question response
-          botResponse = "Was ist dein ungefähres Budget?";
-        } else {
-          // Default response
-          botResponse = "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?";
-        }
-        
+      // Add bot response from webhook
+      if (botResponse) {
         addMessage({
           content: botResponse,
           isUser: false
         });
-        
-        setIsLoading(false);
-
-        toast({
-          title: "Neuer Schritt",
-          description: "Wir kommen deiner Traumimmobilie näher!",
-        });
-      }, 1500);
+      }
       
+      toast({
+        title: "Neue Nachricht",
+        description: "Wir haben eine Antwort für dich!",
+      });
     } catch (error) {
-      console.error("Error sending message to webhook:", error);
+      console.error("Error in chat interaction:", error);
       
       toast({
         title: "Hinweis",
-        description: "Es gab ein Problem bei der Kommunikation. Wir verarbeiten deine Anfrage lokal.",
+        description: "Es gab ein Problem bei der Kommunikation. Bitte versuche es später noch einmal.",
         variant: "destructive",
       });
-      
-      // Continue with simulated response even if webhook fails
-      setTimeout(() => {
-        let botResponse = "";
-        
-        if (messages.length === 1) {
-          // First question response
-          botResponse = "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.";
-        } else if (messages.length === 3) {
-          // Second question response
-          botResponse = "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)";
-        } else if (messages.length === 5) {
-          // Third question response
-          botResponse = "Was ist dein ungefähres Budget?";
-        } else {
-          // Default response
-          botResponse = "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?";
-        }
-        
-        addMessage({
-          content: botResponse,
-          isUser: false
-        });
-        
-        setIsLoading(false);
-
-        toast({
-          title: "Neuer Schritt",
-          description: "Wir kommen deiner Traumimmobilie näher!",
-        });
-      }, 1500);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,6 +95,18 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Function to render markdown and HTML in messages
+  const renderMessageContent = (content: string) => {
+    try {
+      // Use marked to parse markdown to HTML
+      const parsedHtml = marked(content);
+      return <div dangerouslySetInnerHTML={{ __html: parsedHtml }} />;
+    } catch (error) {
+      console.error("Error parsing message content:", error);
+      return <div>{content}</div>;
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen w-full bg-gradient-to-b from-gray-50 to-white overflow-hidden">
@@ -195,7 +159,11 @@ const ChatPage: React.FC = () => {
                       : "bg-gray-100 text-gray-800 rounded-bl-none shadow-sm"
                   }`}
                 >
-                  {msg.content}
+                  {msg.isUser ? (
+                    <div>{msg.content}</div>
+                  ) : (
+                    renderMessageContent(msg.content)
+                  )}
                 </div>
               </motion.div>
             ))}

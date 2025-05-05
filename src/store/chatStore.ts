@@ -20,7 +20,7 @@ interface ChatStore {
   setIsOpen: (isOpen: boolean) => void;
   addMessage: (message: Omit<Message, "id" | "timestamp">) => void;
   setIsLoading: (isLoading: boolean) => void;
-  sendToWebhook: (message: string) => Promise<void>;
+  sendToWebhook: (message: string) => Promise<string>;
 }
 
 // Generate a unique user ID
@@ -58,7 +58,7 @@ export const useChatStore = create<ChatStore>()(
           console.log("User ID:", state.userId);
           console.log("Chat ID:", state.chatId);
           
-          await fetch(state.webhookUrl, {
+          const response = await fetch(state.webhookUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -75,10 +75,15 @@ export const useChatStore = create<ChatStore>()(
             }),
           });
           
-          return Promise.resolve();
+          // Parse the response
+          const data = await response.json();
+          console.log("Webhook response received:", data);
+          
+          // Return the bot response from the webhook
+          return data.response || "";
         } catch (error) {
           console.error("Error sending message to webhook:", error);
-          return Promise.reject(error);
+          return "Es tut mir leid, es gab ein Problem bei der Kommunikation mit dem Server. Bitte versuche es später noch einmal.";
         }
       }
     }),
