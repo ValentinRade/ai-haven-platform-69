@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 142 100% 26%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -33,15 +34,6 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
@@ -72,14 +64,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -139,63 +123,44 @@
   }
 }
 
-.chat-message-user {
-  @apply bg-primary/10 rounded-r-2xl rounded-tl-2xl;
-  min-width: 200px;
-  max-width: 80%; /* Maximale Breite der Nachricht */
-  word-wrap: break-word; /* Automatischer Zeilenumbruch */
-  white-space: pre-wrap; /* Erhält Zeilenumbrüche und ermöglicht Umbruch */
+/* Animation for messages */
+.message-appear {
+  animation: fade-in 0.3s ease-out forwards;
 }
 
-.chat-message-ai {
-  @apply bg-gray-100 rounded-l-2xl rounded-tr-2xl;
-  min-width: 200px;
-  max-width: 80%; /* Maximale Breite der Nachricht */
-  word-wrap: break-word; /* Automatischer Zeilenumbruch */
-  white-space: pre-wrap; /* Erhält Zeilenumbrüche und ermöglicht Umbruch */
-}
-
-/* Custom styles for the workflow builder */
-.workflow-node {
-  @apply border border-gray-200 bg-white shadow-sm rounded-lg p-4 cursor-grab;
-}
-
-.workflow-node.is-dragging {
-  @apply shadow-lg border-primary;
-}
-
-.workflow-connection {
-  @apply stroke-secondary stroke-2;
-}
-
-.workflow-canvas {
-  @apply bg-gray-50 border border-gray-200 rounded-lg;
-}
-
-/* Admin dashboard cards */
-.stat-card {
-  @apply bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-primary/20 transition-colors;
-}
-
-/* Fix for font smoothing */
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Mobile drawer customizations */
-.drawer-content-height {
-  height: 85vh;
-  max-height: 85vh;
-}
-
-/* Drawer height fix for mobile */
-@media (max-width: 768px) {
-  [data-sonner-toast] {
-    z-index: 60 !important;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  .drawer-container {
-    z-index: 50;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TikTok style elements */
+.tiktok-btn {
+  @apply bg-primary text-white font-medium py-3 px-6 rounded-full shadow-md transform transition-transform duration-200;
+}
+
+.tiktok-btn:active {
+  @apply scale-95;
+}
+
+/* Fix for mobile viewport height issues */
+.min-h-screen {
+  min-height: -webkit-fill-available;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mobile optimization */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
   }
 }
