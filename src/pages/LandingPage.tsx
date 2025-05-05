@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -65,10 +66,10 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Section */}
+      {/* Team Section - renamed to "Eure Ansprechpartner" */}
       <section className="py-16 px-4 bg-white">
         <div className="container mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Unser Team</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Eure Ansprechpartner</h2>
           
           <div className="flex flex-col md:flex-row gap-8 items-center justify-center">
             <motion.div 
@@ -102,7 +103,7 @@ const LandingPage: React.FC = () => {
                     Jörg bringt tiefgreifendes Fachwissen und ein umfangreiches Netzwerk mit, während Yannick als Digital Native neue Perspektiven und moderne Lösungsansätze einbringt. Gemeinsam sorgen sie dafür, dass Immofinanz stets am Puls der Zeit agiert.
                   </p>
                   <p className="text-gray-600 font-medium">
-                    "Unser Ziel ist es, traditionelle Immobilienwerte mit zukunftsorientierten Konzepten zu verbinden, um unseren Kunden den bestmöglichen Service zu bieten."
+                    "Unser Ziel ist es, traditionelle Immobilienwerte mit zukunftsorientierten Konzepten zu verbinden, um dir den bestmöglichen Service zu bieten."
                   </p>
                 </CardContent>
               </Card>
@@ -114,9 +115,9 @@ const LandingPage: React.FC = () => {
       {/* Call to action section */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Bereit für Ihr neues Zuhause?</h2>
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">Bereit für dein neues Zuhause?</h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Sprechen Sie mit unserem KI-Assistenten und finden Sie in kürzester Zeit Ihre Traumimmobilie
+            Sprich mit unserem KI-Assistenten und finde in kürzester Zeit deine Traumimmobilie
           </p>
           <Link to="/chat">
             <Button 
