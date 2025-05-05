@@ -50,7 +50,7 @@ const Header: React.FC = () => {
               {/* Text content with proper spacing */}
               <div className="flex-grow flex flex-col justify-center pt-4 px-4 md:px-0">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-md mb-3">
-                  Entdecken Sie Ihr Traumhaus
+                  Entdecke dein Traumhaus
                 </h1>
                 <p className="text-lg md:text-xl text-white/90 drop-shadow-md max-w-lg mb-6">
                   Moderne Architektur trifft auf intelligente Raumnutzung
