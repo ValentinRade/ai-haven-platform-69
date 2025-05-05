@@ -36,7 +36,8 @@ const Header: React.FC = () => {
             alt="Moderne Architektur" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/20">
+          {/* Stronger dark overlay - covers the entire background */}
+          <div className="absolute inset-0 bg-black/60">
             {/* Header Content */}
             <div className="container mx-auto px-4 h-full">
               <div className="flex items-center justify-between py-4">
@@ -64,40 +65,30 @@ const Header: React.FC = () => {
                   Moderne Architektur trifft auf intelligente Raumnutzung
                 </p>
                 
-                {/* Mobile buttons with improved visibility */}
-                <div className="absolute bottom-16 left-0 right-0 px-6 md:px-0 md:relative md:bottom-0">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 z-10 relative"
+                {/* Mobile buttons with improved visibility and adjusted position */}
+                <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
+                  <Button 
+                    className="bg-white text-primary hover:bg-white/90 font-semibold px-6 py-2.5 rounded-full shadow-lg w-full md:w-auto text-sm"
                   >
-                    <Button 
-                      className="bg-white text-primary hover:bg-white/90 font-semibold px-6 py-2.5 rounded-full shadow-lg w-full md:w-auto text-sm"
-                    >
-                      <Home className="mr-2 h-4 w-4" />
-                      Immobilien entdecken
-                    </Button>
-                    
-                    <motion.button
-                      onClick={handleOpenChat}
-                      className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-2.5 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 w-full md:w-auto text-sm"
-                      whileHover={{ 
-                        boxShadow: "0 0 15px rgba(0, 130, 66, 0.5)",
-                      }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      KI Chat öffnen
-                    </motion.button>
-                  </motion.div>
+                    <Home className="mr-2 h-4 w-4" />
+                    Immobilien entdecken
+                  </Button>
+                  
+                  <motion.button
+                    onClick={handleOpenChat}
+                    className="bg-primary hover:bg-primary/90 text-white font-semibold px-6 py-2.5 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-105 w-full md:w-auto text-sm"
+                    whileHover={{ 
+                      boxShadow: "0 0 15px rgba(0, 130, 66, 0.5)",
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    KI Chat öffnen
+                  </motion.button>
                 </div>
               </div>
             </div>
           </div>
-          
-          {/* Stronger gradient overlay for better visibility on mobile */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent"></div>
         </div>
       </header>
       
