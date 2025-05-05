@@ -162,10 +162,11 @@ const ChatPage: React.FC = () => {
       </header>
 
       <div className="flex-grow container mx-auto px-2 md:px-4 py-3 md:py-8 flex flex-col overflow-hidden">
+        {/* Always show the heading, but make it smaller on mobile */}
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`text-xl md:text-3xl font-bold text-center mb-2 md:mb-8 ${isMobile ? "hidden" : "block"}`}
+          className="text-xl md:text-3xl font-bold text-center mb-2 md:mb-8"
         >
           KI-Chat für deine Immobiliensuche
         </motion.h1>
