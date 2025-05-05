@@ -69,6 +69,11 @@ const ChatPage: React.FC = () => {
     } catch (error) {
       console.error("Error in chat interaction:", error);
       
+      addMessage({
+        content: "Es tut mir leid, es gab ein Problem bei der Kommunikation mit dem Server. Bitte versuche es später noch einmal.",
+        isUser: false
+      });
+      
       toast({
         title: "Hinweis",
         description: "Es gab ein Problem bei der Kommunikation. Bitte versuche es später noch einmal.",

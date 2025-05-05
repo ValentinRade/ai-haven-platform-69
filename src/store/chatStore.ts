@@ -66,7 +66,7 @@ export const useChatStore = create<ChatStore>()(
             body: JSON.stringify({
               message: message,
               userId: state.userId,
-              chatId: state.chatId, // Include the chat ID in the webhook payload
+              chatId: state.chatId,
               timestamp: new Date().toISOString(),
               conversation: state.messages.map(msg => ({
                 content: msg.content,
