@@ -156,8 +156,8 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Chat Section */}
-      <section className="flex-grow py-6 px-4 bg-gray-50">
+      {/* Chat Section - adding id for scroll targeting */}
+      <section id="chat-section" className="flex-grow py-6 px-4 bg-gray-50">
         <div className="container mx-auto">
           <motion.h2 
             initial={{ opacity: 0 }}
