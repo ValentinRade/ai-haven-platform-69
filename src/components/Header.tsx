@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
-import ChatButton from './ChatButton';
 
 const Header: React.FC = () => {
   const isMobile = useIsMobile();
