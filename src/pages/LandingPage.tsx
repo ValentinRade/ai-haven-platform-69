@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, ChevronDown, Home, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import Header from '@/components/Header';
 
 interface Message {
   id: string;
@@ -103,20 +103,11 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-white to-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="container px-4 py-3 flex items-center justify-between">
-          <img 
-            src="/lovable-uploads/d3c3c26f-df32-4d33-9430-cf975050325f.png" 
-            alt="Immofinanz Logo" 
-            className="h-8"
-          />
-          <div className="text-xs text-primary font-medium">TikTok Immobilien</div>
-        </div>
-      </header>
+      {/* Header - replaced with component */}
+      <Header />
 
       {/* Hero Section */}
-      <section className="py-8 px-4 bg-gradient-to-r from-green-50 to-gray-50">
+      <section className="py-8 px-4 bg-gradient-to-r from-gray-50 to-white">
         <div className="container mx-auto text-center">
           <motion.h1 
             initial={{ opacity: 0, y: 10 }} 
