@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, MessageCircle, TiktokIcon } from 'lucide-react';
+import { Home, MessageCircle, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useChatStore } from '@/store/chatStore';
 import { toast } from '@/hooks/use-toast';
@@ -51,7 +51,7 @@ const Header: React.FC = () => {
                 </Link>
                 <div className="flex items-center space-x-4">
                   <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 border border-white/20">
-                    <TiktokIcon className="w-4 h-4 text-primary" />
+                    <Video className="w-4 h-4 text-primary" />
                     <span className="text-xs md:text-sm font-medium text-gray-800">TikTok Immobilien</span>
                   </div>
                 </div>
