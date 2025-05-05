@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,42 +91,25 @@ const ChatPage: React.FC = () => {
       
       // Continue with simulated response even if webhook fails
       setTimeout(() => {
-        let botResponse;
+        let botResponse = "";
         
         if (messages.length === 1) {
           // First question response
-          botResponse = {
-            id: (Date.now() + 1).toString(),
-            content: "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.",
-            isUser: false,
-          };
+          botResponse = "Super! In welcher Region/Stadt suchst du? Das hilft mir, passende Angebote zu finden.";
         } else if (messages.length === 3) {
           // Second question response
-          botResponse = {
-            id: (Date.now() + 1).toString(),
-            content: "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)",
-            isUser: false,
-          };
+          botResponse = "Wie groß sollte die Immobilie sein? (Zimmeranzahl oder m²)";
         } else if (messages.length === 5) {
           // Third question response
-          botResponse = {
-            id: (Date.now() + 1).toString(),
-            content: "Was ist dein ungefähres Budget?",
-            isUser: false,
-          };
+          botResponse = "Was ist dein ungefähres Budget?";
         } else {
           // Default response
-          botResponse = {
-            id: (Date.now() + 1).toString(),
-            content: "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?",
-            isUser: false,
-          };
+          botResponse = "Danke für deine Angaben! Ich habe alle Infos zusammengestellt. Ein Immobilienexperte wird sich innerhalb von 24 Stunden mit passenden Angeboten bei dir melden. Möchtest du noch etwas ergänzen?";
         }
         
         addMessage({
-          id: botResponse.id,
-          content: botResponse.content,
-          isUser: botResponse.isUser
+          content: botResponse,
+          isUser: false
         });
         
         setIsLoading(false);
