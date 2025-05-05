@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -102,30 +101,15 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header with Expert Image */}
+      {/* Header with Hero Image */}
       <ChatHeader />
 
       {/* Main Chat Section */}
       <div className="flex-grow py-6 px-4 bg-gray-50">
         <div className="container mx-auto max-w-3xl">
-          {/* Chat Background Banner with Expert Image */}
-          <div className="mb-6 bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="bg-primary/5 p-4 flex items-center space-x-4 border-b border-gray-100">
-              <img 
-                src="/lovable-uploads/6d473eb1-0f85-450b-9d9d-89796c9e141a.png" 
-                alt="Immobilien Experten" 
-                className="w-20 h-20 object-cover rounded-full border-2 border-white shadow-md"
-              />
-              <div>
-                <h3 className="font-medium text-gray-800">Unsere Immobilien-Experten</h3>
-                <p className="text-sm text-gray-500">Wir helfen dir bei allen Fragen rund um deine Immobiliensuche.</p>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
             {/* Chat Messages */}
-            <div className="p-4 space-y-4 min-h-[calc(100vh-400px)] max-h-[calc(100vh-400px)] overflow-y-auto">
+            <div className="p-4 space-y-4 min-h-[calc(100vh-450px)] max-h-[calc(100vh-450px)] overflow-y-auto">
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
