@@ -21,6 +21,7 @@ interface ChatStore {
   addMessage: (message: Omit<Message, "id" | "timestamp">) => void;
   setIsLoading: (isLoading: boolean) => void;
   sendToWebhook: (message: string) => Promise<string>;
+  generateNewChatId: () => string;
 }
 
 // Generate a unique user ID
@@ -51,6 +52,10 @@ export const useChatStore = create<ChatStore>()(
         ]
       })),
       setIsLoading: (isLoading) => set({ isLoading }),
+      generateNewChatId: () => {
+        const newChatId = generateChatId();
+        return newChatId;
+      },
       sendToWebhook: async (message) => {
         const state = get();
         try {
@@ -73,10 +78,10 @@ export const useChatStore = create<ChatStore>()(
                 isUser: msg.isUser
               }))
             }),
-          });
+          }),
           
           // Parse the response
-          const data = await response.json();
+          data = await response.json();
           console.log("Webhook response received:", data);
           
           // Return the bot response from the webhook
