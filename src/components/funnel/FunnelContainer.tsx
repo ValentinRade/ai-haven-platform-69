@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -77,20 +78,48 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       
       console.log("Webhook request body:", requestBody);
       
-      // Send the data directly without using JSON.stringify in the body
+      // Send the data to webhook
       const response = await fetch(actualWebhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // Use JSON.stringify to convert requestBody to JSON string
         body: JSON.stringify(requestBody)
       });
       
-      // For demo purposes, we'll add a slight delay to simulate server processing
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Parse the actual webhook response
+      const responseData = await response.json();
+      console.log("Webhook response received:", responseData);
       
-      // Since we can't read the response in no-cors mode, we'll use a default response
+      // Check if response contains nextSteps data
+      if (responseData && responseData.nextSteps) {
+        // Use the nextSteps from the webhook response
+        setDynamicSteps(responseData.nextSteps);
+        return { nextSteps: responseData.nextSteps };
+      } else {
+        // Fallback to default steps if webhook didn't provide nextSteps
+        console.warn("Webhook response didn't contain nextSteps, using default");
+        const defaultNextSteps = [
+          {
+            type: "contact",
+            title: "Ihre Kontaktdaten",
+            description: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
+          }
+        ];
+        
+        setDynamicSteps(defaultNextSteps);
+        return { nextSteps: defaultNextSteps };
+      }
+    } catch (error) {
+      console.error("Error processing webhook response:", error);
+      setError("Es gab ein Problem bei der Kommunikation mit dem Server.");
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Es gab ein Problem bei der Kommunikation mit dem Server.",
+      });
+      
+      // Use default steps in case of error
       const defaultNextSteps = [
         {
           type: "contact",
@@ -100,16 +129,6 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       ];
       
       setDynamicSteps(defaultNextSteps);
-      return { nextSteps: defaultNextSteps };
-      
-    } catch (error) {
-      console.error("Error sending data to webhook:", error);
-      setError("Es gab ein Problem bei der Kommunikation mit dem Server.");
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Es gab ein Problem bei der Kommunikation mit dem Server.",
-      });
       throw error;
     } finally {
       setIsLoading(false);
