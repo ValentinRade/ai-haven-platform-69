@@ -94,8 +94,10 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     const currentData = getValues();
     
     try {
-      // Send current step data to webhook
-      await sendDataToWebhook(currentData);
+      // Only send data to webhook after Step 2 (or after Step 1 if Step 2 is skipped)
+      if (currentStep === 2 || (currentStep === 1 && shouldSkipStep2)) {
+        await sendDataToWebhook(currentData);
+      }
       
       // Move to next step
       if (currentStep === 1 && shouldSkipStep2) {
@@ -106,6 +108,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       }
     } catch (error) {
       // Error is already handled in sendDataToWebhook
+      console.error("Error in onNext:", error);
     }
   };
 
@@ -211,7 +214,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
               <Button 
                 type="button" 
                 onClick={onNext}
-                disabled={isLoading}
+                disabled={isLoading || (currentStep === 1 && !step1Selection) || (currentStep === 2 && !form.watch("step2Selection"))}
               >
                 {isLoading ? 'Lädt...' : 'Weiter'}
               </Button>
