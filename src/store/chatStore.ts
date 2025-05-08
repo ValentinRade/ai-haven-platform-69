@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -63,25 +62,29 @@ export const useChatStore = create<ChatStore>()(
           console.log("User ID:", state.userId);
           console.log("Chat ID:", state.chatId);
           
+          // Create the request body as a JavaScript object
+          const requestBody = {
+            message: message,
+            userId: state.userId,
+            chatId: state.chatId,
+            timestamp: new Date().toISOString(),
+            conversation: state.messages.map(msg => ({
+              content: msg.content,
+              isUser: msg.isUser
+            }))
+          };
+          
           const response = await fetch(state.webhookUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              message: message,
-              userId: state.userId,
-              chatId: state.chatId,
-              timestamp: new Date().toISOString(),
-              conversation: state.messages.map(msg => ({
-                content: msg.content,
-                isUser: msg.isUser
-              }))
-            }),
-          }),
+            // No need to stringify twice - only stringify once
+            body: JSON.stringify(requestBody),
+          });
           
           // Parse the response
-          data = await response.json();
+          const data = await response.json();
           console.log("Webhook response received:", data);
           
           // Return the bot response from the webhook

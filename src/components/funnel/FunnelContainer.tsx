@@ -64,7 +64,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       console.log("Sending funnel data to webhook:", data);
       console.log("Using session chatId:", sessionChatId);
       
-      // Format the data according to the required structure
+      // Create the request body as a JavaScript object (not a string)
       const requestBody = {
         stepId: currentStep.toString(),
         previousAnswers: data, // contains all form answers up to this point
@@ -78,18 +78,18 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       
       console.log("Webhook request body:", requestBody);
       
-      // Send the data to the webhook URL with no-cors mode to handle CORS issues
+      // Send the data to the webhook URL with no-cors mode
       const response = await fetch(actualWebhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        mode: "no-cors", // Add this to handle CORS
+        mode: "no-cors", // Handle CORS
+        // JSON.stringify will convert the object to a JSON string as required by fetch
         body: JSON.stringify(requestBody),
       });
       
-      // Since we're using no-cors, we can't directly read the response
-      // We'll simulate a successful response for now
+      // Since we're using no-cors mode, we can't directly read the response
       console.log("Webhook request sent with no-cors mode");
       
       // For demo purposes, we'll add a slight delay to simulate server processing
