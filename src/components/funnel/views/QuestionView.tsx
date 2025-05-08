@@ -9,24 +9,37 @@ import { DynamicStepData } from "../DynamicStep";
 interface QuestionViewProps {
   form: UseFormReturn<FunnelData>;
   data: DynamicStepData;
+  onOptionSelect?: (optionId: string) => void;
 }
 
-const QuestionView: React.FC<QuestionViewProps> = ({ form, data }) => {
+const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect }) => {
   const { setValue, watch } = form;
-  const fieldName = data.id || `question_${Date.now()}`;
+  const fieldName = data.id || data.stepId || `question_${Date.now()}`;
   const currentValue = watch(fieldName);
+  
+  // Extract content from either format
+  const title = data.content?.headline || data.title || "Bitte wählen Sie eine Option";
+  const description = data.content?.text || data.description;
+  
+  // Extract and normalize options
+  const options = data.options || [];
   
   const handleSelection = (value: string) => {
     setValue(fieldName, value);
+    
+    // If we have a callback for option selection, call it
+    if (onOptionSelect) {
+      onOptionSelect(value);
+    }
   };
 
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
-        {data.title || "Bitte wählen Sie eine Option"}
+        {title}
       </h2>
-      {data.description && (
-        <p className="text-gray-600 mb-6">{data.description}</p>
+      {description && (
+        <p className="text-gray-600 mb-6">{description}</p>
       )}
 
       <RadioGroup
@@ -34,17 +47,17 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data }) => {
         onValueChange={handleSelection}
         className="space-y-3"
       >
-        {(data.options || []).map((option) => (
+        {options.map((option) => (
           <div 
             key={option.id} 
             className={`flex items-center rounded-lg border p-4 transition-all ${
-              currentValue === option.value 
+              currentValue === option.id 
                 ? "border-primary bg-primary/5" 
                 : "border-gray-200 hover:border-gray-300"
             }`}
           >
             <RadioGroupItem 
-              value={option.value} 
+              value={option.id} 
               id={option.id}
               className="mr-4"
             />

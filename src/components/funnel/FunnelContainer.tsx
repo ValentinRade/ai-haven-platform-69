@@ -17,6 +17,34 @@ export interface FunnelData {
   [key: string]: any;
 }
 
+// New interface definitions based on the AI agent response format
+export interface FunnelResponse {
+  stepId: string;
+  messageType: "question" | "info" | "input" | "multiSelect" | "summary" | "end";
+  content: {
+    headline?: string;
+    text: string;
+  };
+  options?: Array<{
+    id: string;
+    label: string;
+    icon?: { library: string; name: string };
+    payload?: any;
+  }>;
+  inputConfig?: {
+    inputType: string;
+    placeholder?: string;
+    validation?: {
+      required?: boolean;
+      minLength?: number;
+      maxLength?: number;
+      pattern?: string;
+    };
+  };
+  summaryItems?: Array<{ label: string; value: string }>;
+  metadata?: any;
+}
+
 interface FunnelContainerProps {
   webhookUrl?: string;
 }
@@ -28,8 +56,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [totalSteps, setTotalSteps] = useState(4); // Default number of steps
-  const [dynamicSteps, setDynamicSteps] = useState<any[]>([]);
+  const [dynamicSteps, setDynamicSteps] = useState<FunnelResponse[]>([]);
   const [sessionChatId, setSessionChatId] = useState<string>('');
+  const [responseHistory, setResponseHistory] = useState<FunnelResponse[]>([]);
   
   const form = useForm<FunnelData>();
   const { watch, setValue, getValues, handleSubmit } = form;
@@ -41,8 +70,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
 
   // Generate a new chatId for each funnel session
   useEffect(() => {
-    setSessionChatId(generateNewChatId());
-    console.log("New funnel session started with chatId:", sessionChatId);
+    const newChatId = generateNewChatId();
+    setSessionChatId(newChatId);
+    console.log("New funnel session started with chatId:", newChatId);
   }, []);
 
   // Determine if Step 2 should be skipped
@@ -50,9 +80,10 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
 
   // Update total steps when dynamic steps change
   useEffect(() => {
-    // Base steps (Step 1 + Step 2 (if not skipped) + Contact Form + Summary)
+    // Base steps (Step 1 + Step 2 (if not skipped) + estimated dynamic steps)
     const baseSteps = shouldSkipStep2 ? 3 : 4;
-    setTotalSteps(baseSteps + dynamicSteps.length);
+    const dynamicStepsCount = dynamicSteps.length > 0 ? dynamicSteps.length : 2;
+    setTotalSteps(baseSteps + dynamicStepsCount);
   }, [dynamicSteps, shouldSkipStep2]);
 
   const sendDataToWebhook = async (data: FunnelData) => {
@@ -64,13 +95,13 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       console.log("Sending funnel data to webhook:", data);
       console.log("Using session chatId:", sessionChatId);
       
-      // Create the request body as a JavaScript object
+      // Create the request body according to expected format
       const requestBody = {
         stepId: currentStep.toString(),
         previousAnswers: data, // contains all form answers up to this point
         chatId: sessionChatId, // Include the session-specific chatId
         event: {
-          type: "funnel_step",
+          type: "step_submit",
           currentStep,
           timestamp: new Date().toISOString()
         }
@@ -87,28 +118,51 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         body: JSON.stringify(requestBody)
       });
       
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       // Parse the actual webhook response
       const responseData = await response.json();
       console.log("Webhook response received:", responseData);
       
-      // Check if response contains nextSteps data
-      if (responseData && responseData.nextSteps) {
-        // Use the nextSteps from the webhook response
-        setDynamicSteps(responseData.nextSteps);
-        return { nextSteps: responseData.nextSteps };
-      } else {
-        // Fallback to default steps if webhook didn't provide nextSteps
-        console.warn("Webhook response didn't contain nextSteps, using default");
-        const defaultNextSteps = [
-          {
-            type: "contact",
-            title: "Ihre Kontaktdaten",
-            description: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
-          }
-        ];
+      // Process the response based on the FunnelResponse format
+      if (responseData) {
+        // Add the received response to history
+        const processedResponse = mapResponseToFunnelFormat(responseData);
+        setResponseHistory(prev => [...prev, processedResponse]);
         
-        setDynamicSteps(defaultNextSteps);
-        return { nextSteps: defaultNextSteps };
+        // Check if we have nextSteps as a transition format
+        if (responseData.nextSteps) {
+          console.log("Processing legacy nextSteps format");
+          setDynamicSteps(responseData.nextSteps.map(mapStepToFunnelResponse));
+          return { nextSteps: responseData.nextSteps };
+        }
+        // Process the new format directly
+        else {
+          setDynamicSteps([processedResponse]);
+          return { response: processedResponse };
+        }
+      } else {
+        // Fallback if response format is unexpected
+        console.warn("Webhook response format unexpected, using fallback");
+        const fallbackResponse: FunnelResponse = {
+          stepId: `fallback-${Date.now()}`,
+          messageType: "input",
+          content: {
+            headline: "Ihre Daten",
+            text: "Bitte geben Sie Ihre Kontaktdaten ein."
+          },
+          inputConfig: {
+            inputType: "text",
+            placeholder: "Ihre Antwort",
+            validation: { required: true }
+          }
+        };
+        
+        setDynamicSteps([fallbackResponse]);
+        return { response: fallbackResponse };
       }
     } catch (error) {
       console.error("Error processing webhook response:", error);
@@ -120,19 +174,100 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       });
       
       // Use default steps in case of error
-      const defaultNextSteps = [
-        {
-          type: "contact",
-          title: "Ihre Kontaktdaten",
-          description: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
+      const fallbackResponse: FunnelResponse = {
+        stepId: `error-${Date.now()}`,
+        messageType: "info",
+        content: {
+          headline: "Ein Fehler ist aufgetreten",
+          text: "Es gab ein Problem bei der Kommunikation mit dem Server. Bitte versuchen Sie es später erneut."
         }
-      ];
+      };
       
-      setDynamicSteps(defaultNextSteps);
+      setDynamicSteps([fallbackResponse]);
       throw error;
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Map legacy step format to new FunnelResponse format
+  const mapStepToFunnelResponse = (step: any): FunnelResponse => {
+    switch (step.type) {
+      case "contact":
+        return {
+          stepId: step.id || `contact-${Date.now()}`,
+          messageType: "input",
+          content: {
+            headline: step.title || "Ihre Kontaktdaten",
+            text: step.description || "Bitte geben Sie Ihre Kontaktdaten ein."
+          },
+          inputConfig: {
+            inputType: "text",
+            validation: { required: true }
+          }
+        };
+      case "question":
+        return {
+          stepId: step.id || `question-${Date.now()}`,
+          messageType: "question",
+          content: {
+            headline: step.title || "Ihre Frage",
+            text: step.description || "Bitte wählen Sie eine Option."
+          },
+          options: (step.options || []).map((opt: any) => ({
+            id: opt.id,
+            label: opt.label,
+            payload: opt.value
+          }))
+        };
+      case "multiSelect":
+        return {
+          stepId: step.id || `multiselect-${Date.now()}`,
+          messageType: "multiSelect",
+          content: {
+            headline: step.title || "Mehrfachauswahl",
+            text: step.description || "Bitte wählen Sie eine oder mehrere Optionen."
+          },
+          options: (step.options || []).map((opt: any) => ({
+            id: opt.id,
+            label: opt.label,
+            payload: opt.value
+          }))
+        };
+      default:
+        return {
+          stepId: step.id || `default-${Date.now()}`,
+          messageType: "info",
+          content: {
+            headline: step.title || "Information",
+            text: step.description || "Bitte beachten Sie die folgenden Informationen."
+          }
+        };
+    }
+  };
+
+  // Map the response to FunnelResponse format, handling different possible formats
+  const mapResponseToFunnelFormat = (response: any): FunnelResponse => {
+    // If response is already in the correct format
+    if (response.messageType && response.content) {
+      return response as FunnelResponse;
+    }
+    
+    // Try to determine the response type and map it
+    if (response.nextSteps && Array.isArray(response.nextSteps) && response.nextSteps.length > 0) {
+      // Map the first next step (legacy format)
+      return mapStepToFunnelResponse(response.nextSteps[0]);
+    }
+    
+    // Default fallback response
+    return {
+      stepId: `response-${Date.now()}`,
+      messageType: "info",
+      content: {
+        headline: "Vielen Dank",
+        text: "Ihre Angaben wurden erfolgreich übermittelt."
+      }
+    };
   };
 
   const onNext = async () => {
@@ -177,12 +312,19 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     setIsLoading(true);
     setIsProcessingResponse(true);
     try {
-      await sendDataToWebhook(data);
-      setSuccess(true);
-      toast({
-        title: "Erfolg",
-        description: "Ihre Daten wurden erfolgreich übermittelt.",
-      });
+      const result = await sendDataToWebhook(data);
+      // Check if we got an "end" message type
+      const response = result.response as FunnelResponse;
+      if (response && response.messageType === "end") {
+        setSuccess(true);
+        toast({
+          title: "Erfolg",
+          description: "Ihre Daten wurden erfolgreich übermittelt.",
+        });
+      } else {
+        // Continue to next step with the new response
+        setCurrentStep(prev => prev + 1);
+      }
     } catch (error) {
       // Error is already handled in sendDataToWebhook
     } finally {
@@ -240,13 +382,29 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       default:
         // Dynamic steps (including contact form)
         const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
+        const dynamicStep = dynamicSteps[dynamicStepIndex] || {
+          type: "contact",
+          messageType: "input",
+          content: {
+            headline: "Ihre Kontaktdaten",
+            text: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
+          },
+          inputConfig: {
+            inputType: "text",
+            validation: { required: true }
+          }
+        };
+        
         return (
           <DynamicStep 
             form={form}
-            stepData={dynamicSteps[dynamicStepIndex] || {
-              type: "contact",
-              title: "Ihre Kontaktdaten",
-              description: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
+            stepData={dynamicStep}
+            onOptionSelect={(optionId) => {
+              // Handle option selection in the new format
+              console.log("Option selected:", optionId);
+              setValue(`${dynamicStep.stepId}_selection`, optionId);
+              // Auto proceed to next step on selection
+              setTimeout(() => onNext(), 500);
             }}
           />
         );
