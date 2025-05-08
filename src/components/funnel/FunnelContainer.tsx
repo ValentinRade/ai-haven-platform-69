@@ -274,10 +274,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     const currentData = getValues();
     
     try {
-      // Only send data to webhook after Step 2 (or after Step 1 if Step 2 is skipped)
-      if (currentStep === 2 || (currentStep === 1 && shouldSkipStep2)) {
-        await sendDataToWebhook(currentData);
-      }
+      // Send data to webhook at every step now, not just after Step 2
+      await sendDataToWebhook(currentData);
       
       // Move to next step
       if (currentStep === 1 && shouldSkipStep2) {
@@ -382,7 +380,6 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         // Dynamic steps (including contact form)
         const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
         const dynamicStep = dynamicSteps[dynamicStepIndex] || {
-          type: "contact",
           messageType: "input",
           stepId: `contact-${Date.now()}`,
           content: {
@@ -403,9 +400,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
               // Handle option selection in the new format
               console.log("Option selected:", optionId);
               
-              // Get the step identifier - use stepId which is guaranteed to exist on FunnelResponse
-              // and is properly handled for older format in DynamicStep's getStepId function
-              const stepIdentifier = 'stepId' in dynamicStep ? dynamicStep.stepId : `step-${Date.now()}`;
+              // Use stepId from dynamicStep which is guaranteed to exist in FunnelResponse
+              const stepIdentifier = dynamicStep.stepId;
               const fieldName = `${stepIdentifier}_selection`;
               
               setValue(fieldName, optionId);
