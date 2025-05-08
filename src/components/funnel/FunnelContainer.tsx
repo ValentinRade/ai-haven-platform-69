@@ -274,7 +274,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     const currentData = getValues();
     
     try {
-      // Send data to webhook at every step now, not just after Step 2
+      // Always send data to webhook at every step transition
       await sendDataToWebhook(currentData);
       
       // Move to next step
@@ -309,7 +309,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     setIsLoading(true);
     setIsProcessingResponse(true);
     try {
+      // Ensure final submit also sends data to webhook
       const result = await sendDataToWebhook(data);
+      
       // Check if we got an "end" message type
       const response = result.response as FunnelResponse;
       if (response && response.messageType === "end") {
