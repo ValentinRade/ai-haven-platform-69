@@ -402,8 +402,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
             onOptionSelect={(optionId) => {
               // Handle option selection in the new format
               console.log("Option selected:", optionId);
-              // Use stepId if available, otherwise fall back to id
-              const fieldName = `${dynamicStep.stepId || dynamicStep.id || `step-${Date.now()}`}_selection`;
+              
+              // Get the step identifier - use stepId which is guaranteed to exist on FunnelResponse
+              // and is properly handled for older format in DynamicStep's getStepId function
+              const stepIdentifier = 'stepId' in dynamicStep ? dynamicStep.stepId : `step-${Date.now()}`;
+              const fieldName = `${stepIdentifier}_selection`;
+              
               setValue(fieldName, optionId);
               // Auto proceed to next step on selection
               setTimeout(() => onNext(), 500);
