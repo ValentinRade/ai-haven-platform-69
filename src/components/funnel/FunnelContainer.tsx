@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FunnelProgress from "./FunnelProgress";
 import Step1 from "./Step1";
@@ -9,6 +9,7 @@ import Step2 from "./Step2";
 import DynamicStep from "./DynamicStep";
 import { useChatStore } from "@/store/chatStore";
 import { toast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface FunnelData {
   step1Selection: string;
@@ -23,6 +24,7 @@ interface FunnelContainerProps {
 const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessingResponse, setIsProcessingResponse] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [totalSteps, setTotalSteps] = useState(4); // Default number of steps
@@ -48,6 +50,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
 
   const sendDataToWebhook = async (data: FunnelData) => {
     setIsLoading(true);
+    setIsProcessingResponse(true);
     setError(null);
     
     try {
@@ -119,9 +122,13 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       } else {
         setCurrentStep(prev => prev + 1);
       }
+      
+      // Hide the typing animation after transition to next step
+      setIsProcessingResponse(false);
     } catch (error) {
       // Error is already handled in sendDataToWebhook
       console.error("Error in onNext:", error);
+      setIsProcessingResponse(false);
     }
   };
 
@@ -138,6 +145,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
 
   const onSubmit = async (data: FunnelData) => {
     setIsLoading(true);
+    setIsProcessingResponse(true);
     try {
       await sendDataToWebhook(data);
       setSuccess(true);
@@ -149,8 +157,26 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       // Error is already handled in sendDataToWebhook
     } finally {
       setIsLoading(false);
+      setIsProcessingResponse(false);
     }
   };
+
+  // Typing animation component
+  const TypingAnimation = () => (
+    <div className="py-8">
+      <div className="flex items-center space-x-2 mb-4">
+        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
+          <Loader className="h-4 w-4 animate-spin" />
+        </div>
+        <div className="text-sm text-gray-500 font-medium">Antwort wird generiert...</div>
+      </div>
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-5/6" />
+      </div>
+    </div>
+  );
 
   const renderStep = () => {
     if (success) {
@@ -169,6 +195,11 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           </Button>
         </div>
       );
+    }
+
+    // Show typing animation when waiting for response
+    if (isProcessingResponse) {
+      return <TypingAnimation />;
     }
     
     switch(currentStep) {
@@ -208,7 +239,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           <div className="text-red-500 mt-4 text-center">{error}</div>
         )}
         
-        {!success && (
+        {!success && !isProcessingResponse && (
           <div className="flex justify-between mt-8">
             {currentStep > 1 ? (
               <Button 
