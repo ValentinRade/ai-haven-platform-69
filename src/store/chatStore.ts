@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -79,7 +80,6 @@ export const useChatStore = create<ChatStore>()(
             headers: {
               "Content-Type": "application/json",
             },
-            // No need to stringify twice - only stringify once
             body: JSON.stringify(requestBody),
           });
           
