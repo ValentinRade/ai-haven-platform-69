@@ -74,19 +74,27 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       value: opt.value || opt.payload || opt.id
     }));
   };
+
+  // Get the unique identifier of the step - either stepId or id
+  const getStepId = () => {
+    return 'stepId' in stepData 
+      ? stepData.stepId 
+      : (stepData as DynamicStepData).id || `step-${Date.now()}`;
+  };
   
   const mappedOptions = mapOptions(stepData.options);
       
   const renderStepContent = () => {
     // Use messageType if available, otherwise fall back to type
     const stepType = messageType || 'question';
+    const stepId = getStepId();
     
     switch (stepType) {
       case "question":
         return <QuestionView 
                 form={form} 
                 data={{
-                  id: stepData.id || stepData.stepId,
+                  id: stepId,
                   type: stepType,
                   title: title,
                   description: description,
@@ -96,7 +104,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
               />;
       case "multiSelect":
         return <MultiSelectView form={form} data={{
-                id: stepData.id || stepData.stepId,
+                id: stepId,
                 type: stepType,
                 title: title,
                 description: description,
@@ -105,7 +113,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       case "text":
       case "input":
         return <TextInputView form={form} data={{
-                id: stepData.id || stepData.stepId,
+                id: stepId,
                 type: stepType,
                 title: title,
                 description: description,
@@ -114,7 +122,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       case "textarea":
       case "longtext":
         return <TextAreaView form={form} data={{
-                id: stepData.id || stepData.stepId,
+                id: stepId,
                 type: stepType,
                 title: title,
                 description: description,
@@ -122,7 +130,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
               }} />;
       case "date":
         return <DateInputView form={form} data={{
-                id: stepData.id || stepData.stepId,
+                id: stepId,
                 type: stepType,
                 title: title,
                 description: description,
@@ -130,7 +138,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
               }} />;
       case "number":
         return <NumberInputView form={form} data={{
-                id: stepData.id || stepData.stepId,
+                id: stepId,
                 type: stepType,
                 title: title,
                 description: description,
@@ -138,7 +146,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
               }} />;
       case "contact":
         return <ContactFormView form={form} data={{
-                id: stepData.id || stepData.stepId,
+                id: stepId,
                 type: stepType,
                 title: title,
                 description: description,

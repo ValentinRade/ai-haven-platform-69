@@ -384,7 +384,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         const dynamicStep = dynamicSteps[dynamicStepIndex] || {
           type: "contact",
           messageType: "input",
-          stepId: `contact-${Date.now()}`, // Added stepId property to default
+          stepId: `contact-${Date.now()}`,
           content: {
             headline: "Ihre Kontaktdaten",
             text: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
@@ -402,7 +402,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
             onOptionSelect={(optionId) => {
               // Handle option selection in the new format
               console.log("Option selected:", optionId);
-              setValue(`${dynamicStep.stepId || dynamicStep.id}_selection`, optionId);
+              // Use stepId if available, otherwise fall back to id
+              const fieldName = `${dynamicStep.stepId || dynamicStep.id || `step-${Date.now()}`}_selection`;
+              setValue(fieldName, optionId);
               // Auto proceed to next step on selection
               setTimeout(() => onNext(), 500);
             }}
