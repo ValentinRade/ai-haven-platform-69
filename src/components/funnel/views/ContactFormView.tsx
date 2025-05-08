@@ -39,7 +39,7 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
             />
             {errors.firstName && (
               <p className="text-destructive text-sm mt-1">
-                {errors.firstName.message}
+                {String(errors.firstName.message)}
               </p>
             )}
           </div>
@@ -58,7 +58,7 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
             />
             {errors.lastName && (
               <p className="text-destructive text-sm mt-1">
-                {errors.lastName.message}
+                {String(errors.lastName.message)}
               </p>
             )}
           </div>
@@ -83,7 +83,7 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
           />
           {errors.email && (
             <p className="text-destructive text-sm mt-1">
-              {errors.email.message}
+              {String(errors.email.message)}
             </p>
           )}
         </div>
@@ -101,7 +101,7 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
           />
           {errors.phone && (
             <p className="text-destructive text-sm mt-1">
-              {errors.phone.message}
+              {String(errors.phone.message)}
             </p>
           )}
         </div>
