@@ -33,7 +33,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   const step1Selection = watch("step1Selection");
   
   const { sendToWebhook } = useChatStore();
-  const actualWebhookUrl = webhookUrl || useChatStore.getState().webhookUrl;
+  // Use the new Webhook URL
+  const actualWebhookUrl = webhookUrl || "https://agent.snipe-solutions.de/webhook-test/funnel";
 
   // Determine if Step 2 should be skipped
   const shouldSkipStep2 = step1Selection === "Ratenkredit";
@@ -52,19 +53,31 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     try {
       console.log("Sending funnel data to webhook:", data);
       
-      // Using existing webhook infrastructure from chatStore
+      // Format the data according to the required structure
+      const requestBody = {
+        stepId: currentStep.toString(),
+        previousAnswers: data, // contains all form answers up to this point
+        event: {
+          type: "funnel_step",
+          currentStep,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      console.log("Webhook request body:", requestBody);
+      
+      // Send the data to the webhook URL
       const response = await fetch(actualWebhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          action: "funnel_step",
-          currentStep,
-          data,
-          timestamp: new Date().toISOString(),
-        }),
+        body: JSON.stringify(requestBody),
       });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
       
       const responseData = await response.json();
       console.log("Webhook response:", responseData);
