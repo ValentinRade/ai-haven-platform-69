@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -135,11 +136,13 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         // Check if we have nextSteps as a transition format
         if (responseData.nextSteps) {
           console.log("Processing legacy nextSteps format");
-          setDynamicSteps(responseData.nextSteps.map(mapStepToFunnelResponse));
-          return { nextSteps: responseData.nextSteps };
+          const nextSteps = responseData.nextSteps.map(mapStepToFunnelResponse);
+          setDynamicSteps(nextSteps);
+          return { nextSteps };
         }
         // Process the new format directly
         else {
+          const processedResponse = mapResponseToFunnelFormat(responseData);
           setDynamicSteps([processedResponse]);
           return { response: processedResponse };
         }
@@ -274,10 +277,30 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     const currentData = getValues();
     
     try {
-      // Always send data to webhook at every step transition
-      await sendDataToWebhook(currentData);
+      // Always send data to webhook at every step transition AND process response
+      const result = await sendDataToWebhook(currentData);
       
-      // Move to next step
+      // Process the response from webhook before moving to next step
+      if (result && (result.response || (result.nextSteps && result.nextSteps.length > 0))) {
+        console.log("Successfully processed webhook response for next step");
+        
+        if (result.nextSteps) {
+          // Set dynamic steps from nextSteps
+          setDynamicSteps(result.nextSteps);
+        } else if (result.response && result.response.messageType === "end") {
+          // Handle end message type
+          setSuccess(true);
+          toast({
+            title: "Erfolg",
+            description: "Ihre Daten wurden erfolgreich übermittelt.",
+          });
+          setIsProcessingResponse(false);
+          return; // Don't proceed to next step
+        }
+        // For other response types, we continue to next step
+      }
+      
+      // Move to next step after processing response
       if (currentStep === 1 && shouldSkipStep2) {
         // Skip Step 2 for Ratenkredit
         setCurrentStep(3);
@@ -309,19 +332,28 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     setIsLoading(true);
     setIsProcessingResponse(true);
     try {
-      // Ensure final submit also sends data to webhook
+      // Send final data to webhook and process the response
       const result = await sendDataToWebhook(data);
       
-      // Check if we got an "end" message type
-      const response = result.response as FunnelResponse;
-      if (response && response.messageType === "end") {
-        setSuccess(true);
-        toast({
-          title: "Erfolg",
-          description: "Ihre Daten wurden erfolgreich übermittelt.",
-        });
-      } else {
-        // Continue to next step with the new response
+      // Check if we got an "end" message type or need to continue
+      if (result.response) {
+        const response = result.response as FunnelResponse;
+        if (response.messageType === "end") {
+          setSuccess(true);
+          toast({
+            title: "Erfolg",
+            description: "Ihre Daten wurden erfolgreich übermittelt.",
+          });
+        } else {
+          // For non-end responses, continue to next step with the new response
+          console.log("Received non-end response type:", response.messageType);
+          setDynamicSteps([response]);
+          setCurrentStep(prev => prev + 1);
+        }
+      } else if (result.nextSteps && result.nextSteps.length > 0) {
+        // Handle legacy nextSteps format
+        console.log("Received nextSteps in onSubmit:", result.nextSteps);
+        setDynamicSteps(result.nextSteps);
         setCurrentStep(prev => prev + 1);
       }
     } catch (error) {
