@@ -20,9 +20,11 @@ export interface DynamicStepData {
   options?: Array<{
     id: string;
     label: string;
-    value: string;
+    value?: string;
+    payload?: any;
   }>;
   // Add compatibility with FunnelResponse
+  stepId?: string;
   messageType?: string;
   content?: {
     headline?: string;
@@ -50,26 +52,30 @@ interface DynamicStepProps {
 
 const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelect }) => {
   // Determine whether we're using legacy or new format
-  const isNewFormat = 'messageType' in stepData;
-  const messageType = isNewFormat ? stepData.messageType : stepData.type;
+  const isNewFormat = 'messageType' in stepData || 'content' in stepData;
+  const messageType = isNewFormat ? stepData.messageType || (stepData as DynamicStepData).type : stepData.type;
   
   // Extract content for either format
   const title = isNewFormat && stepData.content 
     ? stepData.content.headline 
-    : stepData.title;
+    : (stepData as DynamicStepData).title;
     
   const description = isNewFormat && stepData.content
     ? stepData.content.text
-    : stepData.description;
+    : (stepData as DynamicStepData).description;
   
   // Map options format if needed
-  const mappedOptions = isNewFormat && stepData.options
-    ? stepData.options
-    : (stepData.options || []).map(opt => ({
-        id: opt.id,
-        label: opt.label,
-        payload: opt.value
-      }));
+  const mapOptions = (options: any[] | undefined) => {
+    if (!options) return [];
+    
+    return options.map(opt => ({
+      id: opt.id,
+      label: opt.label,
+      value: opt.value || opt.payload || opt.id
+    }));
+  };
+  
+  const mappedOptions = mapOptions(stepData.options);
       
   const renderStepContent = () => {
     // Use messageType if available, otherwise fall back to type
@@ -80,7 +86,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
         return <QuestionView 
                 form={form} 
                 data={{
-                  ...stepData,
+                  id: stepData.id || stepData.stepId,
+                  type: stepType,
                   title: title,
                   description: description,
                   options: mappedOptions
@@ -89,7 +96,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
               />;
       case "multiSelect":
         return <MultiSelectView form={form} data={{
-                ...stepData,
+                id: stepData.id || stepData.stepId,
+                type: stepType,
                 title: title,
                 description: description,
                 options: mappedOptions
@@ -97,46 +105,55 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       case "text":
       case "input":
         return <TextInputView form={form} data={{
-                ...stepData,
+                id: stepData.id || stepData.stepId,
+                type: stepType,
                 title: title,
                 description: description,
+                inputConfig: stepData.inputConfig
               }} />;
       case "textarea":
       case "longtext":
         return <TextAreaView form={form} data={{
-                ...stepData,
+                id: stepData.id || stepData.stepId,
+                type: stepType,
                 title: title,
                 description: description,
+                inputConfig: stepData.inputConfig
               }} />;
       case "date":
         return <DateInputView form={form} data={{
-                ...stepData,
+                id: stepData.id || stepData.stepId,
+                type: stepType,
                 title: title,
                 description: description,
+                inputConfig: stepData.inputConfig
               }} />;
       case "number":
         return <NumberInputView form={form} data={{
-                ...stepData,
+                id: stepData.id || stepData.stepId,
+                type: stepType,
                 title: title,
                 description: description,
+                inputConfig: stepData.inputConfig
               }} />;
       case "contact":
         return <ContactFormView form={form} data={{
-                ...stepData,
+                id: stepData.id || stepData.stepId,
+                type: stepType,
                 title: title,
                 description: description,
               }} />;
       case "info":
         return <InfoView data={{
-                ...stepData,
                 title: title,
                 description: description,
+                content: stepData.content
               }} />;
       case "summary":
         return <SummaryView data={{
-                ...stepData,
                 title: title,
                 description: description,
+                content: stepData.content,
                 summaryItems: stepData.summaryItems || []
               }} />;
       default:

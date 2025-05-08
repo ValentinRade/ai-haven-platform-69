@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -246,7 +245,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     }
   };
 
-  // Map the response to FunnelResponse format, handling different possible formats
+  // Updated falback response, ensuring it has a stepId property
   const mapResponseToFunnelFormat = (response: any): FunnelResponse => {
     // If response is already in the correct format
     if (response.messageType && response.content) {
@@ -385,6 +384,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         const dynamicStep = dynamicSteps[dynamicStepIndex] || {
           type: "contact",
           messageType: "input",
+          stepId: `contact-${Date.now()}`, // Added stepId property to default
           content: {
             headline: "Ihre Kontaktdaten",
             text: "Bitte geben Sie Ihre Kontaktdaten ein, damit wir Sie erreichen können."
@@ -402,7 +402,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
             onOptionSelect={(optionId) => {
               // Handle option selection in the new format
               console.log("Option selected:", optionId);
-              setValue(`${dynamicStep.stepId}_selection`, optionId);
+              setValue(`${dynamicStep.stepId || dynamicStep.id}_selection`, optionId);
               // Auto proceed to next step on selection
               setTimeout(() => onNext(), 500);
             }}
