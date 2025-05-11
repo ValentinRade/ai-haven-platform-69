@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -66,7 +65,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   
   const { sendToWebhook, generateNewChatId } = useChatStore();
   // Updated webhook URL
-  const actualWebhookUrl = webhookUrl || "https://agent.snipe-solutions.de/webhook/funnel";
+  const actualWebhookUrl = webhookUrl || "https://agent.snipe-solutions.de/webhook-test/funnel";
 
   // Generate a new chatId for each funnel session
   useEffect(() => {
