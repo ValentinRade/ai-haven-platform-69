@@ -85,6 +85,16 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     setTotalSteps(baseSteps + dynamicStepsCount);
   }, [dynamicSteps, shouldSkipStep2]);
 
+  // Function to determine if we should send data to webhook
+  const shouldSendToWebhook = (step: number) => {
+    // Only start sending webhook requests after Step 2 (or after Step 1 for Ratenkredit)
+    if (shouldSkipStep2) {
+      return step >= 1; // Start sending after Step 1 for Ratenkredit
+    } else {
+      return step >= 2; // Start sending after Step 2 for all other options
+    }
+  };
+
   const sendDataToWebhook = async (data: FunnelData) => {
     setIsLoading(true);
     setIsProcessingResponse(true);
@@ -276,30 +286,37 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     const currentData = getValues();
     
     try {
-      // Always send data to webhook at every step transition AND process response
-      const result = await sendDataToWebhook(currentData);
-      
-      // Process the response from webhook before moving to next step
-      if (result && (result.response || (result.nextSteps && result.nextSteps.length > 0))) {
-        console.log("Successfully processed webhook response for next step");
+      // Only send to webhook if we're in the dynamic part of the funnel
+      if (shouldSendToWebhook(currentStep)) {
+        // Send data to webhook at every step transition AND process response
+        const result = await sendDataToWebhook(currentData);
         
-        if (result.nextSteps) {
-          // Set dynamic steps from nextSteps
-          setDynamicSteps(result.nextSteps);
-        } else if (result.response && result.response.messageType === "end") {
-          // Handle end message type
-          setSuccess(true);
-          toast({
-            title: "Erfolg",
-            description: "Ihre Daten wurden erfolgreich übermittelt.",
-          });
-          setIsProcessingResponse(false);
-          return; // Don't proceed to next step
+        // Process the response from webhook before moving to next step
+        if (result && (result.response || (result.nextSteps && result.nextSteps.length > 0))) {
+          console.log("Successfully processed webhook response for next step");
+          
+          if (result.nextSteps) {
+            // Set dynamic steps from nextSteps
+            setDynamicSteps(result.nextSteps);
+          } else if (result.response && result.response.messageType === "end") {
+            // Handle end message type
+            setSuccess(true);
+            toast({
+              title: "Erfolg",
+              description: "Ihre Daten wurden erfolgreich übermittelt.",
+            });
+            setIsProcessingResponse(false);
+            return; // Don't proceed to next step
+          }
+          // For other response types, we continue to next step
         }
-        // For other response types, we continue to next step
+      } else {
+        // For static steps, just move to next step without sending webhook
+        console.log("Skipping webhook for static step:", currentStep);
+        setIsProcessingResponse(false);
       }
       
-      // Move to next step after processing response
+      // Move to next step after processing response or skipping webhook
       if (currentStep === 1 && shouldSkipStep2) {
         // Skip Step 2 for Ratenkredit
         setCurrentStep(3);
@@ -307,7 +324,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         setCurrentStep(prev => prev + 1);
       }
       
-      // Hide the typing animation after transition to next step
+      // Hide the typing animation
       setIsProcessingResponse(false);
     } catch (error) {
       // Error is already handled in sendDataToWebhook
@@ -331,7 +348,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     setIsLoading(true);
     setIsProcessingResponse(true);
     try {
-      // Send final data to webhook and process the response
+      // Always send final data to webhook and process the response
       const result = await sendDataToWebhook(data);
       
       // Check if we got an "end" message type or need to continue

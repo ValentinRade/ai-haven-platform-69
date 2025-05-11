@@ -20,7 +20,7 @@ const FunnelProgress: React.FC<FunnelProgressProps> = ({
           variant="default" 
           className="bg-immo-green text-white px-3 py-1 rounded-full font-medium"
         >
-          Schritt {currentStep}
+          Schritt {currentStep} von {totalSteps}
         </Badge>
         <div className="h-[1px] flex-grow bg-gray-200"></div>
       </div>
