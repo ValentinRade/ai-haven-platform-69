@@ -3,6 +3,7 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
 
@@ -13,7 +14,7 @@ interface QuestionViewProps {
 }
 
 const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect }) => {
-  const { setValue, watch } = form;
+  const { setValue, watch, register, formState: { errors } } = form;
   const fieldName = data.id || data.stepId || `question_${Date.now()}`;
   const currentValue = watch(fieldName);
   
@@ -36,6 +37,9 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
     }
   };
 
+  // Check if we should show a text input (based on options or explicit configuration)
+  const showTextInput = data.inputConfig?.inputType === "text" || options.length === 0;
+  
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
@@ -45,35 +49,62 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         <p className="text-gray-600 mb-6">{description}</p>
       )}
 
-      <RadioGroup
-        value={currentValue}
-        onValueChange={handleSelection}
-        className="space-y-3"
-      >
-        {options.map((option) => (
-          <div 
-            key={option.id} 
-            className={`flex items-center rounded-lg border p-4 transition-all cursor-pointer ${
-              currentValue === option.id 
-                ? "border-primary bg-primary/5" 
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-            onClick={() => handleSelection(option.id)}
-          >
-            <RadioGroupItem 
-              value={option.id} 
-              id={option.id}
-              className="mr-4"
-            />
-            <Label 
-              htmlFor={option.id} 
-              className="flex-grow cursor-pointer font-normal"
+      {/* Show radio options if available */}
+      {options.length > 0 && (
+        <RadioGroup
+          value={currentValue}
+          onValueChange={handleSelection}
+          className="space-y-3"
+        >
+          {options.map((option) => (
+            <div 
+              key={option.id} 
+              className={`flex items-center rounded-lg border p-4 transition-all cursor-pointer ${
+                currentValue === option.id 
+                  ? "border-primary bg-primary/5" 
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
+              onClick={() => handleSelection(option.id)}
             >
-              {option.label}
+              <RadioGroupItem 
+                value={option.id} 
+                id={option.id}
+                className="mr-4"
+              />
+              <Label 
+                htmlFor={option.id} 
+                className="flex-grow cursor-pointer font-normal"
+              >
+                {option.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      )}
+
+      {/* Show text input if no options or explicitly configured */}
+      {showTextInput && (
+        <div className="space-y-4 mt-4">
+          <div>
+            <Label htmlFor={`${fieldName}_text`} className="block mb-2">
+              {data.label || "Ihre Antwort"}
             </Label>
+            <Input
+              id={`${fieldName}_text`}
+              {...register(fieldName, { 
+                required: data.required ? "Dieses Feld ist erforderlich" : false 
+              })}
+              placeholder={data.placeholder || "Bitte geben Sie Ihre Antwort ein"}
+              className="w-full"
+            />
+            {errors[fieldName] && (
+              <p className="text-destructive text-sm mt-1">
+                {errors[fieldName]?.message as string}
+              </p>
+            )}
           </div>
-        ))}
-      </RadioGroup>
+        </div>
+      )}
     </div>
   );
 };
