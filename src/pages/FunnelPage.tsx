@@ -7,6 +7,9 @@ import FunnelContainer from "@/components/funnel/FunnelContainer";
 import { Toaster } from "@/components/ui/toaster";
 
 const FunnelPage: React.FC = () => {
+  // Use a webhook URL that will handle the funnel flow and end with a contact form
+  const webhookUrl = "https://agent.snipe-solutions.de/webhook/funnel";
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <ChatHeader />
@@ -16,7 +19,7 @@ const FunnelPage: React.FC = () => {
           <ChatHeading />
           
           <div className="mt-6 mb-12">
-            <FunnelContainer />
+            <FunnelContainer webhookUrl={webhookUrl} />
           </div>
         </div>
       </div>
