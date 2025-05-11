@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -61,7 +60,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   const [responseHistory, setResponseHistory] = useState<FunnelResponse[]>([]);
   const [currentDynamicStep, setCurrentDynamicStep] = useState<FunnelResponse | null>(null);
   
-  const form = useForm<FunnelData>();
+  const form = useForm<FunnelData>({
+    mode: "onChange" // Enable real-time validation
+  });
   const { watch, setValue, getValues, handleSubmit } = form;
   const step1Selection = watch("step1Selection");
   
@@ -293,14 +294,24 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     };
   };
 
+  // Function to handle selection in question views
+  const handleDynamicOptionSelect = (optionId: string) => {
+    console.log("Option selected in dynamic step:", optionId);
+    
+    // Move to next step automatically after selection
+    setTimeout(() => onNext(), 300);
+  };
+
   const onNext = async () => {
     // Get current form values
     const currentData = getValues();
+    console.log("Current form data on next:", currentData);
     
     try {
       // Only send to webhook if we're in the dynamic part of the funnel
       if (shouldSendToWebhook(currentStep)) {
         // Send data to webhook at every step transition AND process response
+        setIsProcessingResponse(true);
         const result = await sendDataToWebhook(currentData);
         
         // Process the response from webhook before moving to next step
@@ -325,7 +336,6 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       } else {
         // For static steps, just move to next step without sending webhook
         console.log("Skipping webhook for static step:", currentStep);
-        setIsProcessingResponse(false);
       }
       
       // Move to next step after processing response or skipping webhook
@@ -458,22 +468,15 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           }
         };
         
+        // Log step data for debugging
+        console.log("Rendering step data:", stepData);
+        console.log("Current form values:", form.getValues());
+        
         return (
           <DynamicStep 
             form={form}
             stepData={stepData}
-            onOptionSelect={(optionId) => {
-              // Handle option selection in the new format
-              console.log("Option selected:", optionId);
-              
-              // Use stepId from dynamicStep which is guaranteed to exist in FunnelResponse
-              const stepIdentifier = stepData.stepId;
-              const fieldName = `${stepIdentifier}_selection`;
-              
-              setValue(fieldName, optionId);
-              // Auto proceed to next step on selection
-              setTimeout(() => onNext(), 500);
-            }}
+            onOptionSelect={handleDynamicOptionSelect}
           />
         );
     }

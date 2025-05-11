@@ -25,7 +25,10 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
   const options = data.options || [];
   
   const handleSelection = (value: string) => {
+    // Set the value in the form
     setValue(fieldName, value);
+    
+    console.log(`Selection made: ${value} for field: ${fieldName}`);
     
     // If we have a callback for option selection, call it
     if (onOptionSelect) {

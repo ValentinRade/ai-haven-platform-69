@@ -13,15 +13,15 @@ interface NumberInputViewProps {
 
 const NumberInputView: React.FC<NumberInputViewProps> = ({ form, data }) => {
   const { register, formState: { errors } } = form;
-  const fieldName = data.id || `number_${Date.now()}`;
+  const fieldName = data.id || data.stepId || `number_${Date.now()}`;
   
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
-        {data.title || "Bitte geben Sie einen Zahlenwert ein"}
+        {data.content?.headline || data.title || "Bitte geben Sie einen Zahlenwert ein"}
       </h2>
-      {data.description && (
-        <p className="text-gray-600 mb-6">{data.description}</p>
+      {(data.content?.text || data.description) && (
+        <p className="text-gray-600 mb-6">{data.content?.text || data.description}</p>
       )}
 
       <div className="space-y-4">
