@@ -81,19 +81,17 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting form data to webhook:", payload);
       
-      const response = await fetch(data.webhookUrl, {
+      // Send the data to the webhook without waiting for the response
+      fetch(data.webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        mode: "no-cors", // Add no-cors mode to avoid CORS issues
         body: JSON.stringify(payload)
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Set local success state
+      // Immediately set success state without waiting for response
       setIsSuccess(true);
       
       // Call parent success callback if provided
@@ -107,7 +105,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error preparing form submission:", error);
       toast({
         variant: "destructive",
         title: "Fehler",
