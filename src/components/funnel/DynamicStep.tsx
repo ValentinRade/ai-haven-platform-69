@@ -12,9 +12,38 @@ import NumberInputView from "./views/NumberInputView";
 import SummaryView from "./views/SummaryView";
 import EndFormView from "./views/EndFormView";
 
+// Export the common data structure type to fix import errors in view components
+export interface DynamicStepData {
+  stepId: string;
+  messageType: string;
+  content: {
+    headline?: string;
+    text: string;
+  };
+  options?: Array<{
+    id: string;
+    label: string;
+    icon?: { library: string; name: string };
+    payload?: any;
+  }>;
+  inputConfig?: {
+    inputType: string;
+    placeholder?: string;
+    validation?: {
+      required?: boolean;
+      minLength?: number;
+      maxLength?: number;
+      pattern?: string;
+    };
+  };
+  summaryItems?: Array<{ label: string; value: string }>;
+  metadata?: any;
+  webhookUrl?: string;
+}
+
 interface DynamicStepProps {
   form: UseFormReturn<any>;
-  stepData: any;
+  stepData: DynamicStepData;
   onOptionSelect?: (optionId: string) => void;
 }
 
@@ -58,12 +87,11 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <SummaryView data={stepData} />;
     
     case "end":
-      // Here's the new handler for the end message type
       return <EndFormView data={enrichedStepData} />;
     
     default:
       // Default to ContactFormView for backwards compatibility
-      return <ContactFormView form={form} />;
+      return <ContactFormView data={stepData} form={form} />;
   }
 };
 
