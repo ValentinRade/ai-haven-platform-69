@@ -101,7 +101,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <SummaryView data={stepData} />;
     
     case "end":
-      return <EndFormView data={enrichedStepData} />;
+      return <EndFormView data={enrichedStepData} form={form} />;
     
     default:
       // Default to ContactFormView for backwards compatibility
