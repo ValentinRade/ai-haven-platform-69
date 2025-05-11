@@ -16,7 +16,7 @@ export interface FunnelData {
   [key: string]: any;
 }
 
-// New interface definitions based on the AI agent response format
+// Updated interface with previousAnswers property
 export interface FunnelResponse {
   stepId: string;
   messageType: "question" | "info" | "input" | "textarea" | "multiSelect" | "date" | "number" | "summary" | "end";
@@ -42,6 +42,7 @@ export interface FunnelResponse {
   };
   summaryItems?: Array<{ label: string; value: string }>;
   metadata?: any;
+  previousAnswers?: any; // Added this property to fix the type error
 }
 
 interface FunnelContainerProps {
