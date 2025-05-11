@@ -58,6 +58,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   const [dynamicSteps, setDynamicSteps] = useState<FunnelResponse[]>([]);
   const [sessionChatId, setSessionChatId] = useState<string>('');
   const [responseHistory, setResponseHistory] = useState<FunnelResponse[]>([]);
+  const [currentDynamicStep, setCurrentDynamicStep] = useState<FunnelResponse | null>(null);
   
   const form = useForm<FunnelData>();
   const { watch, setValue, getValues, handleSubmit } = form;
@@ -142,6 +143,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         const processedResponse = mapResponseToFunnelFormat(responseData);
         setResponseHistory(prev => [...prev, processedResponse]);
         
+        // Set the current dynamic step to display
+        setCurrentDynamicStep(processedResponse);
+        
         // Check if we have nextSteps as a transition format
         if (responseData.nextSteps) {
           console.log("Processing legacy nextSteps format");
@@ -172,6 +176,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           }
         };
         
+        setCurrentDynamicStep(fallbackResponse);
         setDynamicSteps([fallbackResponse]);
         return { response: fallbackResponse };
       }
@@ -194,6 +199,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         }
       };
       
+      setCurrentDynamicStep(fallbackResponse);
       setDynamicSteps([fallbackResponse]);
       throw error;
     } finally {
@@ -428,8 +434,11 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         return <Step2 form={form} step1Selection={step1Selection} />;
       default:
         // Dynamic steps (including contact form)
+        // Use the current dynamic step received from webhook if available
+        // Otherwise use from the dynamicSteps array
         const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
-        const dynamicStep = dynamicSteps[dynamicStepIndex] || {
+        
+        const stepData = currentDynamicStep || dynamicSteps[dynamicStepIndex] || {
           messageType: "input",
           stepId: `contact-${Date.now()}`,
           content: {
@@ -445,13 +454,13 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         return (
           <DynamicStep 
             form={form}
-            stepData={dynamicStep}
+            stepData={stepData}
             onOptionSelect={(optionId) => {
               // Handle option selection in the new format
               console.log("Option selected:", optionId);
               
               // Use stepId from dynamicStep which is guaranteed to exist in FunnelResponse
-              const stepIdentifier = dynamicStep.stepId;
+              const stepIdentifier = stepData.stepId;
               const fieldName = `${stepIdentifier}_selection`;
               
               setValue(fieldName, optionId);

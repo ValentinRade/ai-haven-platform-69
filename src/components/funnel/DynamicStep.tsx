@@ -55,6 +55,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
   const isNewFormat = 'messageType' in stepData || 'content' in stepData;
   const messageType = isNewFormat ? stepData.messageType || (stepData as DynamicStepData).type : stepData.type;
   
+  console.log("Rendering dynamic step with data:", stepData);
+  
   // Extract content for either format
   const title = isNewFormat && stepData.content 
     ? stepData.content.headline 
@@ -83,11 +85,16 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
   };
   
   const mappedOptions = mapOptions(stepData.options);
+  const stepId = getStepId();
+  
+  React.useEffect(() => {
+    console.log(`Dynamic step ${stepId} mounted with type: ${messageType}`);
+    console.log("Step options:", mappedOptions);
+  }, [stepId, messageType, mappedOptions]);
       
   const renderStepContent = () => {
     // Use messageType if available, otherwise fall back to type
     const stepType = messageType || 'question';
-    const stepId = getStepId();
     
     switch (stepType) {
       case "question":
