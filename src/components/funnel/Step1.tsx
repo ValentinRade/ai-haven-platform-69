@@ -29,10 +29,10 @@ const Step1: React.FC<Step1Props> = ({ form }) => {
   return (
     <div className="py-4">
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
-        Worum geht es in Ihrem Finanzierungsbedarf?
+        Worum geht es in deinem Finanzierungsbedarf?
       </h2>
       <p className="text-gray-600 mb-6">
-        Bitte wählen Sie eine Option aus, die am besten zu Ihrem Anliegen passt.
+        Bitte wähle eine Option aus, die am besten zu deinem Anliegen passt.
       </p>
 
       <RadioGroup

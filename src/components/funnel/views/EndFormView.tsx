@@ -104,14 +104,14 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       
       toast({
         title: "Erfolg",
-        description: "Ihre Anfrage wurde erfolgreich übermittelt.",
+        description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
         variant: "destructive",
         title: "Fehler",
-        description: "Es gab ein Problem beim Senden Ihrer Anfrage. Bitte versuchen Sie es später erneut.",
+        description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
       });
     } finally {
       setIsSubmitting(false);
@@ -132,13 +132,13 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
-        <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank für Ihre Anfrage!</h2>
+        <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank für deine Anfrage!</h2>
         <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Wir haben Ihre Informationen erhalten und werden uns in Kürze mit Ihnen in Verbindung setzen.
+          Wir haben deine Informationen erhalten und werden uns in Kürze mit dir in Verbindung setzen.
         </p>
         <div className="border-t border-gray-200 pt-6 mt-6">
           <p className="text-sm text-gray-500">
-            Bei weiteren Fragen stehen wir Ihnen gerne zur Verfügung.
+            Bei weiteren Fragen stehen wir dir gerne zur Verfügung.
           </p>
         </div>
       </div>

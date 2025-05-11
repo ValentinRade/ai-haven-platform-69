@@ -19,7 +19,7 @@ interface SummaryViewProps {
 const SummaryView: React.FC<SummaryViewProps> = ({ data, onEditStep }) => {
   // Extract content from either format
   const title = data.content?.headline || data.title || "Zusammenfassung";
-  const text = data.content?.text || data.description || "Hier ist eine Zusammenfassung Ihrer Angaben.";
+  const text = data.content?.text || data.description || "Hier ist eine Zusammenfassung deiner Angaben.";
   const items = data.summaryItems || [];
   
   return (

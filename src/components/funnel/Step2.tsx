@@ -43,7 +43,7 @@ const Step2: React.FC<Step2Props> = ({ form, step1Selection }) => {
         {question}
       </h2>
       <p className="text-gray-600 mb-6">
-        Bitte wählen Sie die passende Option für Ihre Immobilie.
+        Bitte wähle die passende Option für deine Immobilie.
       </p>
 
       <RadioGroup

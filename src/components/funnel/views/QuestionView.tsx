@@ -19,7 +19,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
   const currentValue = watch(fieldName);
   
   // Extract content from either format
-  const title = data.content?.headline || data.title || "Bitte wählen Sie eine Option";
+  const title = data.content?.headline || data.title || "Bitte wähle eine Option";
   const description = data.content?.text || data.description;
   
   // Extract and normalize options
@@ -100,14 +100,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         <div className="space-y-4 mt-4">
           <div>
             <Label htmlFor={`${fieldName}_text`} className="block mb-2">
-              {data.label || "Ihre Antwort"}
+              {data.label || "Deine Antwort"}
             </Label>
             <Input
               id={`${fieldName}_text`}
               {...register(fieldName, { 
                 required: data.required ? "Dieses Feld ist erforderlich" : false 
               })}
-              placeholder={data.placeholder || "Bitte geben Sie Ihre Antwort ein"}
+              placeholder={data.placeholder || "Bitte gib deine Antwort ein"}
               className="w-full"
             />
             {errors[fieldName] && (

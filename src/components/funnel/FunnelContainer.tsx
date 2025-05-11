@@ -233,8 +233,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           stepId: step.id || `contact-${Date.now()}`,
           messageType: "input",
           content: {
-            headline: step.title || "Ihre Kontaktdaten",
-            text: step.description || "Bitte geben Sie Ihre Kontaktdaten ein."
+            headline: step.title || "Deine Kontaktdaten",
+            text: step.description || "Bitte gib deine Kontaktdaten ein."
           },
           inputConfig: {
             inputType: "text",
@@ -246,8 +246,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           stepId: step.id || `question-${Date.now()}`,
           messageType: "question",
           content: {
-            headline: step.title || "Ihre Frage",
-            text: step.description || "Bitte wählen Sie eine Option."
+            headline: step.title || "Deine Frage",
+            text: step.description || "Bitte wähle eine Option."
           },
           options: (step.options || []).map((opt: any) => ({
             id: opt.id,
@@ -261,7 +261,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           messageType: "multiSelect",
           content: {
             headline: step.title || "Mehrfachauswahl",
-            text: step.description || "Bitte wählen Sie eine oder mehrere Optionen."
+            text: step.description || "Bitte wähle eine oder mehrere Optionen."
           },
           options: (step.options || []).map((opt: any) => ({
             id: opt.id,
@@ -275,7 +275,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           messageType: "info",
           content: {
             headline: step.title || "Information",
-            text: step.description || "Bitte beachten Sie die folgenden Informationen."
+            text: step.description || "Bitte beachte die folgenden Informationen."
           }
         };
     }
@@ -456,7 +456,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       return (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank!</h2>
-          <p className="text-gray-600 mb-6">Ihre Anfrage wurde erfolgreich übermittelt. Wir melden uns in Kürze bei Ihnen.</p>
+          <p className="text-gray-600 mb-6">Deine Anfrage wurde erfolgreich übermittelt. Wir melden uns in Kürze bei dir.</p>
           <Button 
             onClick={() => {
               setCurrentStep(1);
