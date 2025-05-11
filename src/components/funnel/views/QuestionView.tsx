@@ -50,11 +50,12 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         {options.map((option) => (
           <div 
             key={option.id} 
-            className={`flex items-center rounded-lg border p-4 transition-all ${
+            className={`flex items-center rounded-lg border p-4 transition-all cursor-pointer ${
               currentValue === option.id 
                 ? "border-primary bg-primary/5" 
                 : "border-gray-200 hover:border-gray-300"
             }`}
+            onClick={() => handleSelection(option.id)}
           >
             <RadioGroupItem 
               value={option.id} 
