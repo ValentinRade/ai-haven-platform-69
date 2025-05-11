@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
@@ -34,14 +34,18 @@ interface EndFormViewProps {
     previousAnswers?: any;
     webhookUrl: string;
   };
+  form: UseFormReturn<any>; // Add this line to include the form prop
 }
 
 type FormValues = {
   [key: string]: string;
 };
 
-const EndFormView: React.FC<EndFormViewProps> = ({ data }) => {
-  const form = useForm<FormValues>();
+const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm }) => {
+  // Use a local form if no parent form is provided (for backward compatibility)
+  const localForm = useForm<FormValues>();
+  const form = parentForm || localForm;
+  
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
 
