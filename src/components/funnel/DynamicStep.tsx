@@ -23,6 +23,7 @@ export interface DynamicStepData {
   options?: Array<{
     id: string;
     label: string;
+    value?: string; // Add value property for MultiSelectView
     icon?: { library: string; name: string };
     payload?: any;
   }>;
@@ -39,6 +40,19 @@ export interface DynamicStepData {
   summaryItems?: Array<{ label: string; value: string }>;
   metadata?: any;
   webhookUrl?: string;
+  
+  // Additional properties used in view components
+  title?: string;
+  description?: string;
+  label?: string;
+  placeholder?: string;
+  required?: boolean;
+  id?: string;
+  min?: number;
+  max?: number;
+  step?: string;
+  minDate?: string;
+  maxDate?: string;
 }
 
 interface DynamicStepProps {
@@ -63,7 +77,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
   // Determine which view component to render based on messageType
   switch (stepData.messageType) {
     case "question":
-      return <QuestionView data={stepData} onOptionSelect={onOptionSelect} />;
+      return <QuestionView data={stepData} form={form} onOptionSelect={onOptionSelect} />;
     
     case "info":
       return <InfoView data={stepData} />;

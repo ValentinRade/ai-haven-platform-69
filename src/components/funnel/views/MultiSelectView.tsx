@@ -13,7 +13,7 @@ interface MultiSelectViewProps {
 
 const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
   const { setValue, watch } = form;
-  const fieldName = data.id || `multiselect_${Date.now()}`;
+  const fieldName = data.id || data.stepId || `multiselect_${Date.now()}`;
   const currentValues = watch(fieldName) || [];
   
   const handleCheckedChange = (value: string, checked: boolean) => {
@@ -27,10 +27,10 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
-        {data.title || "Mehrere Optionen auswählen"}
+        {data.content?.headline || data.title || "Mehrere Optionen auswählen"}
       </h2>
-      {data.description && (
-        <p className="text-gray-600 mb-6">{data.description}</p>
+      {(data.content?.text || data.description) && (
+        <p className="text-gray-600 mb-6">{data.content?.text || data.description}</p>
       )}
 
       <div className="space-y-3">
@@ -38,15 +38,15 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
           <div 
             key={option.id} 
             className={`flex items-center rounded-lg border p-4 transition-all ${
-              currentValues.includes(option.value) 
+              currentValues.includes(option.id) 
                 ? "border-primary bg-primary/5" 
                 : "border-gray-200 hover:border-gray-300"
             }`}
           >
             <Checkbox 
               id={option.id}
-              checked={currentValues.includes(option.value)}
-              onCheckedChange={(checked) => handleCheckedChange(option.value, checked as boolean)}
+              checked={currentValues.includes(option.id)}
+              onCheckedChange={(checked) => handleCheckedChange(option.id, checked as boolean)}
               className="mr-4"
             />
             <Label 
