@@ -28,20 +28,23 @@ interface EndFormViewProps {
         validation?: {
           required?: boolean;
           pattern?: string;
+          minLength?: number;
+          maxLength?: number;
         };
       }>;
     };
     previousAnswers?: any;
     webhookUrl: string;
   };
-  form: UseFormReturn<any>; // Add this line to include the form prop
+  form: UseFormReturn<any>; // Parent form from FunnelContainer
+  onSuccess?: () => void;  // Add callback for success state
 }
 
 type FormValues = {
   [key: string]: string;
 };
 
-const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm }) => {
+const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuccess }) => {
   // Use a local form if no parent form is provided (for backward compatibility)
   const localForm = useForm<FormValues>();
   const form = parentForm || localForm;
@@ -49,12 +52,19 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm }) => 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
 
+  // Extract form fields from metadata or use defaults
   const formFields = data.metadata?.formFields || [
     { id: "firstName", label: "Vorname", inputType: "text", validation: { required: true } },
     { id: "lastName", label: "Nachname", inputType: "text", validation: { required: true } },
     { id: "email", label: "E-Mail", inputType: "email", validation: { required: true, pattern: "^[^@]+@[^@]+\\.[^@]+$" } },
     { id: "phone", label: "Telefonnummer", inputType: "tel", validation: { required: true } }
   ];
+
+  console.log("EndFormView rendering with data:", {
+    headline: data.content.headline,
+    formFields: formFields.length,
+    hasSuccessCallback: !!onSuccess
+  });
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
@@ -83,7 +93,15 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm }) => 
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      // Set local success state
       setIsSuccess(true);
+      
+      // Call parent success callback if provided
+      if (onSuccess) {
+        console.log("Calling onSuccess callback from EndFormView");
+        onSuccess();
+      }
+      
       toast({
         title: "Erfolg",
         description: "Ihre Anfrage wurde erfolgreich übermittelt.",
@@ -100,7 +118,9 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm }) => 
     }
   };
 
-  if (isSuccess) {
+  // Only show success state if we're NOT using the parent's success callback
+  // This prevents double success screens
+  if (isSuccess && !onSuccess) {
     return (
       <div className="text-center py-10">
         <svg 
@@ -147,6 +167,18 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm }) => 
                   ? {
                       value: new RegExp(field.validation.pattern),
                       message: `Ungültiges Format für ${field.label}`,
+                    }
+                  : undefined,
+                minLength: field.validation?.minLength
+                  ? {
+                      value: field.validation.minLength,
+                      message: `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`,
+                    }
+                  : undefined,
+                maxLength: field.validation?.maxLength
+                  ? {
+                      value: field.validation.maxLength,
+                      message: `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`,
                     }
                   : undefined,
               }}

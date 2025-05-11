@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import QuestionView from "./views/QuestionView";
@@ -58,9 +59,10 @@ interface DynamicStepProps {
   form: UseFormReturn<any>;
   stepData: DynamicStepData;
   onOptionSelect?: (optionId: string) => void;
+  onFormSuccess?: () => void; // Add callback for form submission success
 }
 
-const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelect }) => {
+const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelect, onFormSuccess }) => {
   // Get the webhook URL from the parent component (FunnelContainer)
   const webhookUrl = (window as any).__FUNNEL_WEBHOOK_URL__ || "https://agent.snipe-solutions.de/webhook/funnel";
 
@@ -109,7 +111,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     
     case "end":
       console.log("Rendering EndFormView with data:", enrichedStepData);
-      return <EndFormView data={enrichedStepData} form={form} />;
+      return <EndFormView data={enrichedStepData} form={form} onSuccess={onFormSuccess} />;
     
     default:
       console.warn("Unknown messageType:", stepData.messageType);

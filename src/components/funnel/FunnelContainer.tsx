@@ -151,38 +151,21 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       
       // Process the response based on the FunnelResponse format
       if (responseData) {
+        // Handle array response (fixes issue with array-wrapped responses)
+        const actualResponse = Array.isArray(responseData) ? responseData[0] : responseData;
+        console.log("Processing webhook response:", actualResponse);
+        
         // Add the received response to history
-        const processedResponse = mapResponseToFunnelFormat(responseData);
+        const processedResponse = mapResponseToFunnelFormat(actualResponse);
+        console.log("Processed response:", processedResponse);
+        
         setResponseHistory(prev => [...prev, processedResponse]);
         
         // Set the current dynamic step to display
         setCurrentDynamicStep(processedResponse);
         
-        // Only show contact form if message type is "end"
-        if (processedResponse.messageType === "end") {
-          console.log("Received 'end' message type - showing contact form:", processedResponse);
-          
-          // If processedResponse doesn't already have contact form fields in metadata,
-          // we can add them for backward compatibility
-          if (!processedResponse.metadata?.formFields) {
-            const contactFormResponse: FunnelResponse = {
-              ...processedResponse,
-              metadata: {
-                ...processedResponse.metadata,
-                formFields: [
-                  { id: "firstName", label: "Vorname", inputType: "text", validation: { required: true } },
-                  { id: "lastName", label: "Nachname", inputType: "text", validation: { required: true } },
-                  { id: "email", label: "E-Mail", inputType: "email", validation: { required: true, pattern: "^[^@]+@[^@]+\\.[^@]+$" } },
-                  { id: "phone", label: "Telefonnummer", inputType: "tel", validation: { required: true } }
-                ]
-              },
-              previousAnswers: allResponses
-            };
-            
-            setCurrentDynamicStep(contactFormResponse);
-          }
-          return { response: processedResponse };
-        }
+        // IMPORTANT: Do NOT set success flag here for "end" messageType
+        // Instead, let the EndFormView handle that after successful form submission
         
         // Check if we have nextSteps as a transition format
         if (responseData.nextSteps) {
@@ -193,30 +176,27 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         }
         // Process the new format directly
         else {
-          const processedResponse = mapResponseToFunnelFormat(responseData);
+          const processedResponse = mapResponseToFunnelFormat(actualResponse);
           setDynamicSteps([processedResponse]);
           return { response: processedResponse };
         }
       } else {
-        // Fallback if response format is unexpected
-        console.warn("Webhook response format unexpected, using fallback");
-        const fallbackResponse: FunnelResponse = {
-          stepId: `fallback-${Date.now()}`,
-          messageType: "input",
+        // Log error for unexpected response format
+        console.error("Unexpected webhook response format:", responseData);
+        
+        // Return an error response instead of a fallback "thank you" message
+        const errorResponse: FunnelResponse = {
+          stepId: `error-${Date.now()}`,
+          messageType: "info",
           content: {
-            headline: "Ihre Daten",
-            text: "Bitte geben Sie Ihre Kontaktdaten ein."
-          },
-          inputConfig: {
-            inputType: "text",
-            placeholder: "Ihre Antwort",
-            validation: { required: true }
+            headline: "Fehler bei der Verarbeitung",
+            text: "Es gab ein Problem bei der Verarbeitung Ihrer Anfrage. Bitte versuchen Sie es später erneut."
           }
         };
         
-        setCurrentDynamicStep(fallbackResponse);
-        setDynamicSteps([fallbackResponse]);
-        return { response: fallbackResponse };
+        setCurrentDynamicStep(errorResponse);
+        setDynamicSteps([errorResponse]);
+        return { response: errorResponse };
       }
     } catch (error) {
       console.error("Error processing webhook response:", error);
@@ -227,8 +207,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         description: "Es gab ein Problem bei der Kommunikation mit dem Server.",
       });
       
-      // Use default steps in case of error
-      const fallbackResponse: FunnelResponse = {
+      // Use error response instead of default steps
+      const errorResponse: FunnelResponse = {
         stepId: `error-${Date.now()}`,
         messageType: "info",
         content: {
@@ -237,8 +217,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
         }
       };
       
-      setCurrentDynamicStep(fallbackResponse);
-      setDynamicSteps([fallbackResponse]);
+      setCurrentDynamicStep(errorResponse);
+      setDynamicSteps([errorResponse]);
       throw error;
     } finally {
       setIsLoading(false);
@@ -301,26 +281,32 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     }
   };
 
-  // Updated fallback response, ensuring it has a stepId property
+  // Updated mapResponseToFunnelFormat function with better handling and no default "thank you" message
   const mapResponseToFunnelFormat = (response: any): FunnelResponse => {
-    // If response is already in the correct format
-    if (response.messageType && response.content) {
+    console.log("Mapping response to funnel format:", response);
+    
+    // If response is already in the correct format with messageType and content
+    if (response && response.messageType && response.content) {
+      console.log("Response already in correct format with messageType:", response.messageType);
       return response as FunnelResponse;
     }
     
     // Try to determine the response type and map it
-    if (response.nextSteps && Array.isArray(response.nextSteps) && response.nextSteps.length > 0) {
+    if (response && response.nextSteps && Array.isArray(response.nextSteps) && response.nextSteps.length > 0) {
       // Map the first next step (legacy format)
+      console.log("Mapping legacy nextSteps format");
       return mapStepToFunnelResponse(response.nextSteps[0]);
     }
     
-    // Default fallback response
+    // If we have a completely unexpected format, return a proper error message
+    // instead of a "thank you" message
+    console.error("Unknown response format:", response);
     return {
-      stepId: `response-${Date.now()}`,
+      stepId: `unknown-${Date.now()}`,
       messageType: "info",
       content: {
-        headline: "Vielen Dank",
-        text: "Ihre Angaben wurden erfolgreich übermittelt."
+        headline: "Unbekanntes Format",
+        text: "Die Serverantwort hat ein unerwartetes Format. Bitte versuchen Sie es später erneut."
       }
     };
   };
@@ -358,10 +344,28 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
             
             // Handle end message type specially
             if (result.response.messageType === "end") {
-              console.log("Received end message type in onNext - showing final form");
-              setCurrentStep(prev => prev + 1);
-              setIsProcessingResponse(false);
-              return; // Don't proceed further
+              console.log("Received 'end' message type - showing contact form:", result.response);
+              
+              // If processedResponse doesn't already have contact form fields in metadata,
+              // we can add them for backward compatibility
+              if (!result.response.metadata?.formFields) {
+                const contactFormResponse: FunnelResponse = {
+                  ...result.response,
+                  metadata: {
+                    ...result.response.metadata,
+                    formFields: [
+                      { id: "firstName", label: "Vorname", inputType: "text", validation: { required: true } },
+                      { id: "lastName", label: "Nachname", inputType: "text", validation: { required: true } },
+                      { id: "email", label: "E-Mail", inputType: "email", validation: { required: true, pattern: "^[^@]+@[^@]+\\.[^@]+$" } },
+                      { id: "phone", label: "Telefonnummer", inputType: "tel", validation: { required: true } }
+                    ]
+                  },
+                  previousAnswers: allResponses
+                };
+                
+                setCurrentDynamicStep(contactFormResponse);
+              }
+              return { response: result.response };
             }
           }
         }
@@ -406,9 +410,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       const result = await sendDataToWebhook(data);
       
       if (result.response) {
-        // Set success flag for EndFormView submission
+        // IMPORTANT: Do NOT set success flag here
+        // EndFormView will handle its own submission and success state
         if (result.response.messageType === "end") {
-          setSuccess(true);
+          // Just move to the next step which will show the EndFormView
+          setCurrentDynamicStep(result.response);
+          setCurrentStep(prev => prev + 1);
         } else {
           // For non-end responses, continue to next step with the new response
           setCurrentDynamicStep(result.response);
@@ -477,9 +484,6 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       return <Step2 form={form} step1Selection={step1Selection} />;
     }
     
-    // For all steps after Step 2 (or Step 1 if Step 2 is skipped),
-    // we ONLY use the dynamic step from webhook response
-    
     // IMPORTANT: Log for debugging what's being rendered at step 3+
     console.log(`Rendering step ${currentStep}`, {
       currentDynamicStep,
@@ -494,6 +498,13 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           form={form}
           stepData={currentDynamicStep}
           onOptionSelect={handleDynamicOptionSelect}
+          onFormSuccess={() => {
+            // This callback will be triggered by EndFormView when its form is successfully submitted
+            if (currentDynamicStep.messageType === "end") {
+              console.log("EndFormView submission successful - now showing success screen");
+              setSuccess(true);
+            }
+          }}
         />
       );
     }
@@ -507,6 +518,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           form={form}
           stepData={dynamicSteps[dynamicStepIndex]}
           onOptionSelect={handleDynamicOptionSelect}
+          onFormSuccess={() => {
+            if (dynamicSteps[dynamicStepIndex].messageType === "end") {
+              console.log("EndFormView submission successful - now showing success screen");
+              setSuccess(true);
+            }
+          }}
         />
       );
     }
