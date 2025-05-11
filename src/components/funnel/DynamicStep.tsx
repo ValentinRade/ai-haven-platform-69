@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import QuestionView from "./views/QuestionView";
@@ -71,8 +70,16 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     webhookUrl
   };
 
-  // Log the current step data for debugging
-  console.log("Current dynamic step data:", enrichedStepData);
+  // Log the current step data for debugging with more details
+  console.log("Current dynamic step data:", {
+    stepId: enrichedStepData.stepId,
+    messageType: enrichedStepData.messageType,
+    content: enrichedStepData.content,
+    hasOptions: !!enrichedStepData.options?.length,
+    optionsCount: enrichedStepData.options?.length || 0,
+    hasInputConfig: !!enrichedStepData.inputConfig,
+    inputType: enrichedStepData.inputConfig?.inputType || "none"
+  });
 
   // Determine which view component to render based on messageType
   switch (stepData.messageType) {
@@ -101,11 +108,27 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <SummaryView data={stepData} />;
     
     case "end":
+      console.log("Rendering EndFormView with data:", enrichedStepData);
       return <EndFormView data={enrichedStepData} form={form} />;
     
     default:
-      // Default to ContactFormView for backwards compatibility
-      return <ContactFormView data={stepData} form={form} />;
+      console.warn("Unknown messageType:", stepData.messageType);
+      // Default to ContactFormView for backwards compatibility ONLY IF messageType is undefined
+      if (!stepData.messageType) {
+        return <ContactFormView data={stepData} form={form} />;
+      }
+      
+      // Otherwise show an error state
+      return (
+        <div className="text-center py-8">
+          <h3 className="text-lg font-medium text-red-500 mb-4">
+            Unbekannter Nachrichtentyp: {stepData.messageType}
+          </h3>
+          <p className="text-gray-600">
+            Der Server hat einen unbekannten Nachrichtentyp gesendet.
+          </p>
+        </div>
+      );
   }
 };
 

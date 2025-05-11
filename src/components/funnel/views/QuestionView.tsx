@@ -37,18 +37,20 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
     }
   };
 
-  // Check if we should show a text input - ONLY when:
-  // 1. Explicitly configured with inputType=text OR
-  // 2. No options available AND not explicitly configured otherwise
-  const showTextInput = data.inputConfig?.inputType === "text" || 
-                        (options.length === 0 && !data.inputConfig?.inputType);
+  // STRICT CONTROL: Only show text input when BOTH conditions are met:
+  // 1. No options are provided AND
+  // 2. Explicitly configured as inputType="text"
+  const showTextInput = 
+    options.length === 0 && 
+    data.inputConfig?.inputType === "text";
   
-  // Log the decision factors for debugging
-  console.log(`Question step ${fieldName}:`, {
+  // Log the decision factors for debugging with more clarity
+  console.log(`QuestionView for ${fieldName} - Text input visibility decision:`, {
+    hasOptions: options.length > 0,
+    optionsCount: options.length,
     hasInputConfig: !!data.inputConfig,
-    inputType: data.inputConfig?.inputType,
-    optionsLength: options.length,
-    showTextInput
+    inputType: data.inputConfig?.inputType || "none",
+    showTextInput: showTextInput
   });
   
   return (
@@ -93,7 +95,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         </RadioGroup>
       )}
 
-      {/* Show text input ONLY when specifically instructed to do so */}
+      {/* Show text input ONLY under strict control */}
       {showTextInput && (
         <div className="space-y-4 mt-4">
           <div>

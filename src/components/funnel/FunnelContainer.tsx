@@ -468,50 +468,61 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       return <TypingAnimation />;
     }
     
-    switch(currentStep) {
-      case 1:
-        return <Step1 form={form} />;
-      case 2:
-        return <Step2 form={form} step1Selection={step1Selection} />;
-      default:
-        // For dynamic steps, always use currentDynamicStep from webhook if available
-        if (currentDynamicStep) {
-          console.log("Rendering dynamic step from currentDynamicStep:", currentDynamicStep);
-          return (
-            <DynamicStep 
-              form={form}
-              stepData={currentDynamicStep}
-              onOptionSelect={handleDynamicOptionSelect}
-            />
-          );
-        }
-        
-        // Fallback if no currentDynamicStep is set - use from dynamicSteps array
-        const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
-        if (dynamicSteps[dynamicStepIndex]) {
-          console.log("Rendering dynamic step from dynamicSteps array:", dynamicSteps[dynamicStepIndex]);
-          return (
-            <DynamicStep 
-              form={form}
-              stepData={dynamicSteps[dynamicStepIndex]}
-              onOptionSelect={handleDynamicOptionSelect}
-            />
-          );
-        }
-        
-        // Last resort fallback - should rarely happen if webhook is working properly
-        console.warn("No dynamic step data available, using fallback");
-        return (
-          <div className="text-center py-8">
-            <h2 className="text-xl font-medium text-primary mb-4">
-              Keine Daten verfügbar
-            </h2>
-            <p className="text-gray-600">
-              Es konnten keine Daten für diesen Schritt geladen werden.
-            </p>
-          </div>
-        );
+    // Handle the first two static steps
+    if (currentStep === 1) {
+      return <Step1 form={form} />;
     }
+    
+    if (currentStep === 2 && !shouldSkipStep2) {
+      return <Step2 form={form} step1Selection={step1Selection} />;
+    }
+    
+    // For all steps after Step 2 (or Step 1 if Step 2 is skipped),
+    // we ONLY use the dynamic step from webhook response
+    
+    // IMPORTANT: Log for debugging what's being rendered at step 3+
+    console.log(`Rendering step ${currentStep}`, {
+      currentDynamicStep,
+      isEndForm: currentDynamicStep?.messageType === "end",
+      dynamicStepsLength: dynamicSteps.length
+    });
+    
+    // Always use currentDynamicStep if available as it contains the latest response from webhook
+    if (currentDynamicStep) {
+      return (
+        <DynamicStep 
+          form={form}
+          stepData={currentDynamicStep}
+          onOptionSelect={handleDynamicOptionSelect}
+        />
+      );
+    }
+    
+    // Fallback to using dynamic steps array if currentDynamicStep is not set
+    // (this should rarely happen if webhook responses are handled correctly)
+    const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
+    if (dynamicSteps.length > 0 && dynamicStepIndex >= 0 && dynamicStepIndex < dynamicSteps.length) {
+      return (
+        <DynamicStep 
+          form={form}
+          stepData={dynamicSteps[dynamicStepIndex]}
+          onOptionSelect={handleDynamicOptionSelect}
+        />
+      );
+    }
+    
+    // If we have no dynamic step data to render, show an error state
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-xl font-medium text-red-500 mb-4">
+          Fehler beim Laden der Daten
+        </h2>
+        <p className="text-gray-600 mb-4">
+          Die Antwort vom Server konnte nicht verarbeitet werden.
+        </p>
+        <Button onClick={onBack}>Zurück</Button>
+      </div>
+    );
   };
 
   return (
