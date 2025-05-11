@@ -37,8 +37,19 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
     }
   };
 
-  // Check if we should show a text input (based on options or explicit configuration)
-  const showTextInput = data.inputConfig?.inputType === "text" || options.length === 0;
+  // Check if we should show a text input - ONLY when:
+  // 1. Explicitly configured with inputType=text OR
+  // 2. No options available AND not explicitly configured otherwise
+  const showTextInput = data.inputConfig?.inputType === "text" || 
+                        (options.length === 0 && !data.inputConfig?.inputType);
+  
+  // Log the decision factors for debugging
+  console.log(`Question step ${fieldName}:`, {
+    hasInputConfig: !!data.inputConfig,
+    inputType: data.inputConfig?.inputType,
+    optionsLength: options.length,
+    showTextInput
+  });
   
   return (
     <div>
@@ -82,7 +93,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         </RadioGroup>
       )}
 
-      {/* Show text input if no options or explicitly configured */}
+      {/* Show text input ONLY when specifically instructed to do so */}
       {showTextInput && (
         <div className="space-y-4 mt-4">
           <div>
