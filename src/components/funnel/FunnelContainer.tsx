@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -67,6 +68,11 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   const { sendToWebhook, generateNewChatId } = useChatStore();
   // Updated webhook URL
   const actualWebhookUrl = webhookUrl || "https://agent.snipe-solutions.de/webhook/funnel";
+
+  // Make the webhook URL available globally for the EndFormView component
+  useEffect(() => {
+    (window as any).__FUNNEL_WEBHOOK_URL__ = actualWebhookUrl;
+  }, [actualWebhookUrl]);
 
   // Generate a new chatId for each funnel session
   useEffect(() => {
@@ -360,12 +366,13 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
       // Check if we got an "end" message type or need to continue
       if (result.response) {
         const response = result.response as FunnelResponse;
+        
+        // Special handling for "end" message type
         if (response.messageType === "end") {
-          setSuccess(true);
-          toast({
-            title: "Erfolg",
-            description: "Ihre Daten wurden erfolgreich übermittelt.",
-          });
+          console.log("Received end message type - showing final form:", response);
+          setCurrentDynamicStep(response);
+          // Don't set success flag yet as we need to show the form
+          setCurrentStep(prev => prev + 1);
         } else {
           // For non-end responses, continue to next step with the new response
           console.log("Received non-end response type:", response.messageType);
@@ -488,7 +495,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
           <div className="text-red-500 mt-4 text-center">{error}</div>
         )}
         
-        {!success && !isProcessingResponse && (
+        {!success && !isProcessingResponse && currentDynamicStep?.messageType !== "end" && (
           <div className="flex justify-between mt-8">
             {currentStep > 1 ? (
               <Button 

@@ -1,190 +1,70 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { FunnelData, FunnelResponse } from "./FunnelContainer";
 import QuestionView from "./views/QuestionView";
-import MultiSelectView from "./views/MultiSelectView";
+import InfoView from "./views/InfoView";
+import ContactFormView from "./views/ContactFormView";
 import TextInputView from "./views/TextInputView";
 import TextAreaView from "./views/TextAreaView";
+import MultiSelectView from "./views/MultiSelectView";
 import DateInputView from "./views/DateInputView";
 import NumberInputView from "./views/NumberInputView";
-import ContactFormView from "./views/ContactFormView";
-import InfoView from "./views/InfoView";
 import SummaryView from "./views/SummaryView";
-
-export interface DynamicStepData {
-  type?: string;
-  id?: string;
-  title?: string;
-  description?: string;
-  options?: Array<{
-    id: string;
-    label: string;
-    value?: string;
-    payload?: any;
-  }>;
-  // Add compatibility with FunnelResponse
-  stepId?: string;
-  messageType?: string;
-  content?: {
-    headline?: string;
-    text: string;
-  };
-  inputConfig?: {
-    inputType: string;
-    placeholder?: string;
-    validation?: {
-      required?: boolean;
-      minLength?: number;
-      maxLength?: number;
-      pattern?: string;
-    };
-  };
-  summaryItems?: Array<{ label: string; value: string }>;
-  [key: string]: any;
-}
+import EndFormView from "./views/EndFormView";
 
 interface DynamicStepProps {
-  form: UseFormReturn<FunnelData>;
-  stepData: DynamicStepData | FunnelResponse;
+  form: UseFormReturn<any>;
+  stepData: any;
   onOptionSelect?: (optionId: string) => void;
 }
 
 const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelect }) => {
-  // Determine whether we're using legacy or new format
-  const isNewFormat = 'messageType' in stepData || 'content' in stepData;
-  const messageType = isNewFormat ? stepData.messageType || (stepData as DynamicStepData).type : stepData.type;
-  
-  console.log("Rendering dynamic step with data:", stepData);
-  
-  // Extract content for either format
-  const title = isNewFormat && stepData.content 
-    ? stepData.content.headline 
-    : (stepData as DynamicStepData).title;
-    
-  const description = isNewFormat && stepData.content
-    ? stepData.content.text
-    : (stepData as DynamicStepData).description;
-  
-  // Map options format if needed
-  const mapOptions = (options: any[] | undefined) => {
-    if (!options) return [];
-    
-    return options.map(opt => ({
-      id: opt.id,
-      label: opt.label,
-      value: opt.value || opt.payload || opt.id
-    }));
+  // Get the webhook URL from the parent component (FunnelContainer)
+  const webhookUrl = (window as any).__FUNNEL_WEBHOOK_URL__ || "https://agent.snipe-solutions.de/webhook/funnel";
+
+  // Add the webhookUrl to the stepData object so it can be used in EndFormView
+  const enrichedStepData = {
+    ...stepData,
+    webhookUrl
   };
 
-  // Get the unique identifier of the step - either stepId or id
-  const getStepId = () => {
-    return 'stepId' in stepData 
-      ? stepData.stepId 
-      : (stepData as DynamicStepData).id || `step-${Date.now()}`;
-  };
-  
-  const mappedOptions = mapOptions(stepData.options);
-  const stepId = getStepId();
-  
-  React.useEffect(() => {
-    console.log(`Dynamic step ${stepId} mounted with type: ${messageType}`);
-    console.log("Step options:", mappedOptions);
-  }, [stepId, messageType, mappedOptions]);
-      
-  const renderStepContent = () => {
-    // Use messageType if available, otherwise fall back to type
-    const stepType = messageType || 'question';
-    
-    switch (stepType) {
-      case "question":
-        return <QuestionView 
-                form={form} 
-                data={{
-                  id: stepId,
-                  type: stepType,
-                  title: title,
-                  description: description,
-                  options: mappedOptions
-                }}
-                onOptionSelect={onOptionSelect}
-              />;
-      case "multiSelect":
-        return <MultiSelectView form={form} data={{
-                id: stepId,
-                type: stepType,
-                title: title,
-                description: description,
-                options: mappedOptions
-              }} />;
-      case "text":
-      case "input":
-        return <TextInputView form={form} data={{
-                id: stepId,
-                type: stepType,
-                title: title,
-                description: description,
-                inputConfig: stepData.inputConfig
-              }} />;
-      case "textarea":
-      case "longtext":
-        return <TextAreaView form={form} data={{
-                id: stepId,
-                type: stepType,
-                title: title,
-                description: description,
-                inputConfig: stepData.inputConfig
-              }} />;
-      case "date":
-        return <DateInputView form={form} data={{
-                id: stepId,
-                type: stepType,
-                title: title,
-                description: description,
-                inputConfig: stepData.inputConfig
-              }} />;
-      case "number":
-        return <NumberInputView form={form} data={{
-                id: stepId,
-                type: stepType,
-                title: title,
-                description: description,
-                inputConfig: stepData.inputConfig
-              }} />;
-      case "contact":
-        return <ContactFormView form={form} data={{
-                id: stepId,
-                type: stepType,
-                title: title,
-                description: description,
-              }} />;
-      case "info":
-        return <InfoView data={{
-                title: title,
-                description: description,
-                content: stepData.content
-              }} />;
-      case "summary":
-        return <SummaryView data={{
-                title: title,
-                description: description,
-                content: stepData.content,
-                summaryItems: stepData.summaryItems || []
-              }} />;
-      default:
-        return (
-          <div className="p-4 text-center text-yellow-600 bg-yellow-50 rounded-md">
-            Dieser Fragentyp ({stepType}) wird nicht unterstützt.
-          </div>
-        );
-    }
-  };
+  // Log the current step data for debugging
+  console.log("Current dynamic step data:", enrichedStepData);
 
-  return (
-    <div className="py-4">
-      {renderStepContent()}
-    </div>
-  );
+  // Determine which view component to render based on messageType
+  switch (stepData.messageType) {
+    case "question":
+      return <QuestionView data={stepData} onOptionSelect={onOptionSelect} />;
+    
+    case "info":
+      return <InfoView data={stepData} />;
+    
+    case "input":
+      return <TextInputView data={stepData} form={form} />;
+    
+    case "textarea":
+      return <TextAreaView data={stepData} form={form} />;
+    
+    case "multiSelect":
+      return <MultiSelectView data={stepData} form={form} />;
+    
+    case "date":
+      return <DateInputView data={stepData} form={form} />;
+    
+    case "number":
+      return <NumberInputView data={stepData} form={form} />;
+    
+    case "summary":
+      return <SummaryView data={stepData} />;
+    
+    case "end":
+      // Here's the new handler for the end message type
+      return <EndFormView data={enrichedStepData} />;
+    
+    default:
+      // Default to ContactFormView for backwards compatibility
+      return <ContactFormView form={form} />;
+  }
 };
 
 export default DynamicStep;

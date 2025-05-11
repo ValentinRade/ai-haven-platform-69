@@ -4,6 +4,7 @@ import ChatHeader from "@/components/chat/ChatHeader";
 import ChatFooter from "@/components/chat/ChatFooter";
 import ChatHeading from "@/components/chat/ChatHeading";
 import FunnelContainer from "@/components/funnel/FunnelContainer";
+import { Toaster } from "@/components/ui/toaster";
 
 const FunnelPage: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ const FunnelPage: React.FC = () => {
       </div>
       
       <ChatFooter />
+      <Toaster />
     </div>
   );
 };
