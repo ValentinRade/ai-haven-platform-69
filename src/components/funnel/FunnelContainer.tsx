@@ -66,7 +66,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
   
   const { sendToWebhook, generateNewChatId } = useChatStore();
   // Updated webhook URL
-  const actualWebhookUrl = webhookUrl || "https://agent.snipe-solutions.de/webhook-test/funnel";
+  const actualWebhookUrl = webhookUrl || "https://agent.snipe-solutions.de/webhook/funnel";
 
   // Generate a new chatId for each funnel session
   useEffect(() => {
