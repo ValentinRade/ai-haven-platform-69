@@ -65,11 +65,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
 
       {/* Show radio options if available */}
       {options.length > 0 && (
-        <RadioGroup
-          value={currentValue}
-          onValueChange={handleSelection}
-          className="space-y-3"
-        >
+        <div className="space-y-3">
           {options.map((option) => (
             <div 
               key={option.id} 
@@ -80,10 +76,14 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
               }`}
               onClick={() => handleSelection(option.id)}
             >
-              <RadioGroupItem 
-                value={option.id} 
+              <input
+                type="radio"
                 id={option.id}
-                className="mr-4"
+                name={fieldName}
+                value={option.id}
+                checked={currentValue === option.id}
+                onChange={() => handleSelection(option.id)}
+                className="mr-4 h-4 w-4 text-primary border-gray-300 focus:ring-primary"
               />
               <Label 
                 htmlFor={option.id} 
@@ -93,7 +93,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
               </Label>
             </div>
           ))}
-        </RadioGroup>
+        </div>
       )}
 
       {/* Show text input ONLY under strict control */}
