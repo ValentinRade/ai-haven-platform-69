@@ -129,6 +129,8 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       if (onSuccess) {
         console.log("EndFormView: Calling onSuccess callback AFTER form submission");
         onSuccess();
+      } else {
+        console.error("EndFormView: No onSuccess callback provided, cannot show thank you page!");
       }
       
       toast({
