@@ -311,12 +311,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
     };
   };
 
-  // Function to handle selection in question views
+  // Function to handle selection in question views - MODIFIED to remove auto-advance
   const handleDynamicOptionSelect = (optionId: string) => {
     console.log("Option selected in dynamic step:", optionId);
     
-    // Move to next step automatically after selection
-    setTimeout(() => onNext(), 300);
+    // REMOVED: The setTimeout that automatically advanced to the next step
+    // Now the user must explicitly click the "Next" button to proceed
   };
 
   const onNext = async () => {

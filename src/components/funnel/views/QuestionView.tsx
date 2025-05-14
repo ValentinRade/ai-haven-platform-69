@@ -32,6 +32,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
     console.log(`Selection made: ${value} for field: ${fieldName}`);
     
     // If we have a callback for option selection, call it
+    // But do NOT automatically advance to the next step!
     if (onOptionSelect) {
       onOptionSelect(value);
     }
