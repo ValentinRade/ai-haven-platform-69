@@ -20,6 +20,7 @@ interface EndFormViewProps {
       text: string;
     };
     stepId: string;
+    messageType?: string; // Add messageType to properly handle "end" messages
     metadata?: {
       formFields?: Array<{
         id: string;
@@ -50,6 +51,24 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
   const form = parentForm || localForm;
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [endReached, setEndReached] = React.useState(false);
+
+  // Check if this is an end messageType immediately on component mount
+  React.useEffect(() => {
+    console.log("EndFormView checking messageType:", data.messageType);
+    
+    // If this is an "end" message type, immediately trigger end state
+    if (data.messageType === "end") {
+      console.log("EndFormView: Detected END messageType, setting endReached=true");
+      setEndReached(true);
+      
+      // Immediately trigger onSuccess to show thank you page without waiting for form submission
+      if (onSuccess && !endReached) {
+        console.log("EndFormView: Auto-triggering onSuccess due to END messageType");
+        onSuccess();
+      }
+    }
+  }, [data.messageType, onSuccess]);
 
   // Extract form fields from metadata or use defaults
   const formFields = data.metadata?.formFields || [
@@ -61,11 +80,21 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
   console.log("EndFormView rendering with data:", {
     headline: data.content.headline,
+    messageType: data.messageType,
     formFields: formFields.length,
-    hasSuccessCallback: !!onSuccess
+    hasSuccessCallback: !!onSuccess,
+    endReached
   });
 
   const onSubmit = async (values: FormValues) => {
+    // If end state is already reached, do nothing - prevent duplicate submissions
+    if (endReached) {
+      console.log("EndFormView: Submission prevented - end already reached");
+      return;
+    }
+    
+    // Mark as end reached immediately to prevent any subsequent submissions
+    setEndReached(true);
     setIsSubmitting(true);
     console.log("EndFormView: Form submitted with values:", values);
     
@@ -81,7 +110,8 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting form data to webhook:", payload);
       
-      // First call onSuccess to make sure thank you page appears quickly
+      // CRITICAL: First call onSuccess to make sure thank you page appears quickly
+      // This must happen before the webhook request to ensure UI shows immediately
       if (onSuccess) {
         console.log("EndFormView: Calling onSuccess callback BEFORE webhook to ensure thank you page appears");
         onSuccess();
@@ -134,59 +164,62 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         <p className="text-gray-600 mb-6">{data.content.text}</p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {formFields.map((field) => (
-            <FormField
-              key={field.id}
-              control={form.control}
-              name={field.id}
-              rules={{
-                required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
-                pattern: field.validation?.pattern
-                  ? {
-                      value: new RegExp(field.validation.pattern),
-                      message: `Ungültiges Format für ${field.label}`,
-                    }
-                  : undefined,
-                minLength: field.validation?.minLength
-                  ? {
-                      value: field.validation.minLength,
-                      message: `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`,
-                    }
-                  : undefined,
-                maxLength: field.validation?.maxLength
-                  ? {
-                      value: field.validation.maxLength,
-                      message: `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`,
-                    }
-                  : undefined,
-              }}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type={field.inputType}
-                      placeholder={field.label}
-                      {...formField}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
+      {/* Only show the form if end state hasn't been reached yet */}
+      {!endReached && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {formFields.map((field) => (
+              <FormField
+                key={field.id}
+                control={form.control}
+                name={field.id}
+                rules={{
+                  required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
+                  pattern: field.validation?.pattern
+                    ? {
+                        value: new RegExp(field.validation.pattern),
+                        message: `Ungültiges Format für ${field.label}`,
+                      }
+                    : undefined,
+                  minLength: field.validation?.minLength
+                    ? {
+                        value: field.validation.minLength,
+                        message: `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`,
+                      }
+                    : undefined,
+                  maxLength: field.validation?.maxLength
+                    ? {
+                        value: field.validation.maxLength,
+                        message: `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`,
+                      }
+                    : undefined,
+                }}
+                render={({ field: formField }) => (
+                  <FormItem>
+                    <FormLabel>{field.label}</FormLabel>
+                    <FormControl>
+                      <Input
+                        type={field.inputType}
+                        placeholder={field.label}
+                        {...formField}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
 
-          <Button
-            type="submit"
-            className="w-full mt-6"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Wird gesendet..." : "Absenden"}
-          </Button>
-        </form>
-      </Form>
+            <Button
+              type="submit"
+              className="w-full mt-6"
+              disabled={isSubmitting || endReached}
+            >
+              {isSubmitting ? "Wird gesendet..." : "Absenden"}
+            </Button>
+          </form>
+        </Form>
+      )}
     </div>
   );
 };

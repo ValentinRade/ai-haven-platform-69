@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ChatHeader from "@/components/chat/ChatHeader";
 import ChatFooter from "@/components/chat/ChatFooter";
 import ChatHeading from "@/components/chat/ChatHeading";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 const FunnelPage: React.FC = () => {
   const [funnelCompleted, setFunnelCompleted] = useState(false);
   const [showFunnel, setShowFunnel] = useState(true);
+  const [isEndStateReached, setIsEndStateReached] = useState(false);
   
   // Use a webhook URL that will handle the funnel flow and end with a contact form
   const webhookUrl = "https://agent.snipe-solutions.de/webhook/funnel";
@@ -17,21 +18,40 @@ const FunnelPage: React.FC = () => {
   // Handle funnel completion - THIS FUNCTION MUST BE CALLED when the funnel is complete
   const handleFunnelComplete = () => {
     console.log("FunnelPage: handleFunnelComplete called - showing thank you page");
+    
+    // Mark end state as reached to prevent any resets or reloads
+    setIsEndStateReached(true);
+    
     // First hide the funnel
     setShowFunnel(false);
+    
     // Then mark it as completed to show thank you page
     setFunnelCompleted(true);
   };
 
   // Handle restart of funnel - only available from thank you page
+  // AND only if we haven't reached an end state
   const handleRestartFunnel = () => {
+    // Prevent restart if we've reached the final end state
+    if (isEndStateReached) {
+      console.log("FunnelPage: Restart prevented - end state has been reached");
+      return;
+    }
+    
     console.log("FunnelPage: handleRestartFunnel called - restarting funnel");
     // Reset the state to show the funnel again
     setFunnelCompleted(false);
     setShowFunnel(true);
   };
 
-  console.log("FunnelPage rendering state:", { showFunnel, funnelCompleted });
+  // Log the current state for debugging
+  useEffect(() => {
+    console.log("FunnelPage state changed:", { 
+      showFunnel, 
+      funnelCompleted, 
+      isEndStateReached 
+    });
+  }, [showFunnel, funnelCompleted, isEndStateReached]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -63,9 +83,13 @@ const FunnelPage: React.FC = () => {
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
                     Wir haben deine Anfrage erhalten und werden uns <strong>innerhalb von 48 Stunden</strong> bei dir melden.
                   </p>
-                  <Button onClick={handleRestartFunnel} className="mt-6">
-                    Neuen Antrag starten
-                  </Button>
+                  
+                  {/* Only show restart button if we're not in the final end state */}
+                  {!isEndStateReached && (
+                    <Button onClick={handleRestartFunnel} className="mt-6">
+                      Neuen Antrag starten
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : null}
