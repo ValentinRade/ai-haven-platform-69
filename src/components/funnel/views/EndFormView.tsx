@@ -53,25 +53,16 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [endReached, setEndReached] = React.useState(false);
 
-  // CRITICAL: Check if this is an end messageType immediately on component mount
-  // and immediately trigger end state without requiring form submission
+  // Log when this component renders with messageType: "end"
   useEffect(() => {
     console.log("EndFormView checking messageType:", data.messageType);
     
-    // If this is an "end" message type, immediately trigger end state
+    // No longer automatically calling onSuccess here!
+    // We'll only show the form and wait for the user to submit it
     if (data.messageType === "end") {
-      console.log("EndFormView: Detected END messageType, setting endReached=true");
-      
-      // Set end reached state to true to prevent any further submissions
-      setEndReached(true);
-      
-      // IMMEDIATELY trigger onSuccess to show thank you page without waiting for form submission
-      if (onSuccess) {
-        console.log("EndFormView: Auto-triggering onSuccess due to END messageType");
-        onSuccess();
-      }
+      console.log("EndFormView: Detected END messageType, but showing form first");
     }
-  }, [data.messageType, onSuccess]);
+  }, [data.messageType]);
 
   // Extract form fields from metadata or use defaults
   const formFields = data.metadata?.formFields || [
@@ -102,13 +93,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     console.log("EndFormView: Form submitted with values:", values);
     
     try {
-      // CRITICAL: First call onSuccess to make sure thank you page appears quickly
-      // This must happen before the webhook request to ensure UI shows immediately
-      if (onSuccess) {
-        console.log("EndFormView: Calling onSuccess callback BEFORE webhook to ensure thank you page appears");
-        onSuccess();
-      }
-      
+      // Prepare the payload for the webhook
       const payload = {
         stepId: data.stepId,
         previousAnswers: data.previousAnswers || {},
@@ -120,7 +105,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting form data to webhook:", payload);
 
-      // Send the data to the webhook (this happens after onSuccess is called)
+      // Send the data to the webhook
       try {
         const fetchPromise = fetch(data.webhookUrl, {
           method: "POST",
@@ -140,6 +125,12 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         console.warn("Webhook submission error (continuing anyway):", webhookError);
       }
       
+      // CRITICAL: Only NOW call onSuccess to show thank you page AFTER form submission
+      if (onSuccess) {
+        console.log("EndFormView: Calling onSuccess callback AFTER form submission");
+        onSuccess();
+      }
+      
       toast({
         title: "Erfolg",
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
@@ -147,24 +138,15 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     } catch (error) {
       console.error("Error in form submission:", error);
       
-      // Even if there's an error, if we've called onSuccess already, we don't need
-      // to show an error toast since the user is already seeing the thank you page
-      if (!onSuccess) {
-        toast({
-          variant: "destructive",
-          title: "Fehler",
-          description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
-        });
-      }
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Don't show the form at all if endReached is true
-  if (endReached && data.messageType === "end") {
-    return null;
-  }
 
   return (
     <div className="space-y-6">
@@ -175,7 +157,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         <p className="text-gray-600 mb-6">{data.content.text}</p>
       </div>
 
-      {/* Only show the form if end state hasn't been reached yet */}
+      {/* Always show the form if end state hasn't been reached yet */}
       {!endReached && (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
