@@ -67,6 +67,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
+    console.log("EndFormView: Form submitted with values:", values);
     
     try {
       const payload = {
@@ -80,8 +81,8 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting form data to webhook:", payload);
       
-      // Send the data to the webhook and wait for completion
-      await fetch(data.webhookUrl, {
+      // Send the data to the webhook
+      const fetchPromise = fetch(data.webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -93,14 +94,18 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         console.warn("Fetch error in no-cors mode (can be ignored):", err);
       });
       
+      // Wait for the fetch to complete, but don't let it block the UI flow
+      await fetchPromise;
+      
       console.log("Form submission to webhook complete");
       
-      // Always call parent success callback if provided
+      // IMPORTANT: Call onSuccess callback immediately after form is submitted
+      // This is crucial for showing the thank you page
       if (onSuccess) {
-        console.log("Calling onSuccess callback from EndFormView");
+        console.log("EndFormView: Calling onSuccess callback to show thank you page");
         onSuccess();
       } else {
-        console.warn("No onSuccess callback provided to EndFormView");
+        console.warn("EndFormView: No onSuccess callback provided - user won't see thank you page");
       }
       
       toast({
@@ -108,12 +113,19 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
     } catch (error) {
-      console.error("Error preparing form submission:", error);
+      console.error("Error in form submission:", error);
       toast({
         variant: "destructive",
         title: "Fehler",
         description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
       });
+      
+      // Even if there's an error with the webhook, we want to show the thank you page
+      // because the user has filled out the form and expects confirmation
+      if (onSuccess) {
+        console.log("EndFormView: Calling onSuccess callback despite error");
+        onSuccess();
+      }
     } finally {
       setIsSubmitting(false);
     }

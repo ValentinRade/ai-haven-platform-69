@@ -14,11 +14,13 @@ const FunnelPage: React.FC = () => {
   // Use a webhook URL that will handle the funnel flow and end with a contact form
   const webhookUrl = "https://agent.snipe-solutions.de/webhook/funnel";
 
-  // Handle funnel completion
+  // Handle funnel completion - THIS FUNCTION MUST BE CALLED when the funnel is complete
   const handleFunnelComplete = () => {
     console.log("FunnelPage: handleFunnelComplete called - showing thank you page");
-    setFunnelCompleted(true);
+    // First hide the funnel
     setShowFunnel(false);
+    // Then mark it as completed to show thank you page
+    setFunnelCompleted(true);
   };
 
   // Handle restart of funnel - only available from thank you page

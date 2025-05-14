@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -59,6 +60,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  // New state to track if we've reached an end state
+  const [reachedEndState, setReachedEndState] = useState(false);
   const [totalSteps, setTotalSteps] = useState(4); // Default number of steps
   const [dynamicSteps, setDynamicSteps] = useState<FunnelResponse[]>([]);
   const [sessionChatId, setSessionChatId] = useState<string>('');
@@ -110,7 +113,20 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     }
   };
 
+  // If funnel has reached an end state, we should not do any further processing
+  useEffect(() => {
+    if (reachedEndState && onFunnelComplete) {
+      console.log("Funnel has reached end state, preventing further processing");
+    }
+  }, [reachedEndState, onFunnelComplete]);
+
   const sendDataToWebhook = async (data: FunnelData) => {
+    // If we've already reached an end state, don't send more requests
+    if (reachedEndState) {
+      console.log("Funnel has already reached end state, skipping webhook request");
+      return null;
+    }
+    
     setIsLoading(true);
     setIsProcessingResponse(true);
     setError(null);
@@ -180,6 +196,11 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
         
         // Set the current dynamic step to display, now with previousAnswers
         setCurrentDynamicStep(processedResponse);
+        
+        // IMPORTANT: Check if this is an end message type
+        if (processedResponse.messageType === "end") {
+          console.log("RECEIVED END MESSAGE TYPE - This will be the final step before thank you page");
+        }
         
         // Check if we have nextSteps as a transition format
         if (responseData.nextSteps) {
@@ -351,6 +372,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   };
 
   const onNext = async () => {
+    // Don't proceed if we've already reached an end state
+    if (reachedEndState) {
+      console.log("Funnel has already reached end state, ignoring onNext");
+      return;
+    }
+    
     // Get current form values
     const currentData = getValues();
     console.log("Current form data on next:", currentData);
@@ -422,6 +449,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   };
 
   const onBack = () => {
+    // Don't allow going back if we've already reached an end state
+    if (reachedEndState) {
+      console.log("Funnel has already reached end state, ignoring onBack");
+      return;
+    }
+    
     if (currentStep > 1) {
       // Handle skipping back from step 3 to step 1 when step 2 is skipped
       if (currentStep === 3 && shouldSkipStep2) {
@@ -433,6 +466,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   };
 
   const onSubmit = async (data: FunnelData) => {
+    // Don't proceed if we've already reached an end state
+    if (reachedEndState) {
+      console.log("Funnel has already reached end state, ignoring onSubmit");
+      return;
+    }
+    
     console.log("Final form submission with data:", data);
     setIsLoading(true);
     setIsProcessingResponse(true);
@@ -471,11 +510,16 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   const handleEndFormSuccess = () => {
     console.log("EndFormView submission successful - triggering onFunnelComplete");
     
-    // Always call the parent callback if it exists
+    // Mark the funnel as completed to prevent further processing
+    setReachedEndState(true);
+    
+    // IMPORTANT: Always call the parent callback if it exists
     if (onFunnelComplete) {
+      console.log("Calling parent onFunnelComplete callback to show thank you page");
       onFunnelComplete();
     } else {
       // If no parent callback, handle success internally
+      console.log("No parent onFunnelComplete callback, showing internal success state");
       setSuccess(true);
     }
   };
@@ -498,6 +542,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   );
 
   const renderStep = () => {
+    // If we've already reached end state but there's no parent callback,
+    // show the internal success view
     if (success) {
       console.log("Rendering internal success view (should not be shown if onFunnelComplete exists)");
       return (
@@ -585,7 +631,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
 
   return (
     <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-4 md:p-8">
-      {!success && (
+      {!success && !reachedEndState && (
         <FunnelProgress 
           currentStep={currentStep} 
           totalSteps={totalSteps} 
@@ -599,14 +645,14 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
           <div className="text-red-500 mt-4 text-center">{error}</div>
         )}
         
-        {!success && !isProcessingResponse && currentDynamicStep?.messageType !== "end" && (
+        {!success && !isProcessingResponse && currentDynamicStep?.messageType !== "end" && !reachedEndState && (
           <div className="flex justify-between mt-8">
             {currentStep > 1 ? (
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={onBack}
-                disabled={isLoading}
+                disabled={isLoading || reachedEndState}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" /> Zurück
               </Button>
@@ -618,14 +664,14 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
               <Button 
                 type="button" 
                 onClick={onNext}
-                disabled={isLoading || (currentStep === 1 && !step1Selection) || (currentStep === 2 && !form.watch("step2Selection"))}
+                disabled={isLoading || reachedEndState || (currentStep === 1 && !step1Selection) || (currentStep === 2 && !form.watch("step2Selection"))}
               >
                 {isLoading ? 'Lädt...' : 'Weiter'}
               </Button>
             ) : (
               <Button 
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || reachedEndState}
               >
                 {isLoading ? 'Wird gesendet...' : 'Absenden'}
               </Button>
