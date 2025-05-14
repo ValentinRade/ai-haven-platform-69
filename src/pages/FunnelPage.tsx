@@ -26,9 +26,12 @@ const FunnelPage: React.FC = () => {
   // Handle restart of funnel - only available from thank you page
   const handleRestartFunnel = () => {
     console.log("FunnelPage: handleRestartFunnel called - restarting funnel");
+    // Reset the state to show the funnel again
     setFunnelCompleted(false);
     setShowFunnel(true);
   };
+
+  console.log("FunnelPage rendering state:", { showFunnel, funnelCompleted });
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">

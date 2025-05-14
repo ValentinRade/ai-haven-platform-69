@@ -81,7 +81,15 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting form data to webhook:", payload);
       
-      // Send the data to the webhook
+      // First call onSuccess to make sure thank you page appears quickly
+      if (onSuccess) {
+        console.log("EndFormView: Calling onSuccess callback BEFORE webhook to ensure thank you page appears");
+        onSuccess();
+      } else {
+        console.warn("EndFormView: No onSuccess callback provided - user won't see thank you page");
+      }
+
+      // Send the data to the webhook (this happens after onSuccess is called)
       const fetchPromise = fetch(data.webhookUrl, {
         method: "POST",
         headers: {
@@ -99,15 +107,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       
       console.log("Form submission to webhook complete");
       
-      // IMPORTANT: Call onSuccess callback immediately after form is submitted
-      // This is crucial for showing the thank you page
-      if (onSuccess) {
-        console.log("EndFormView: Calling onSuccess callback to show thank you page");
-        onSuccess();
-      } else {
-        console.warn("EndFormView: No onSuccess callback provided - user won't see thank you page");
-      }
-      
       toast({
         title: "Erfolg",
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
@@ -120,12 +119,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
       });
       
-      // Even if there's an error with the webhook, we want to show the thank you page
-      // because the user has filled out the form and expects confirmation
-      if (onSuccess) {
-        console.log("EndFormView: Calling onSuccess callback despite error");
-        onSuccess();
-      }
+      // We've already called onSuccess before the webhook, so we don't need to call it again
     } finally {
       setIsSubmitting(false);
     }
