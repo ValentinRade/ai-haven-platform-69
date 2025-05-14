@@ -80,20 +80,27 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting form data to webhook:", payload);
       
-      // Send the data to the webhook without waiting for the response
-      fetch(data.webhookUrl, {
+      // Send the data to the webhook and wait for completion
+      await fetch(data.webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         mode: "no-cors", // Add no-cors mode to avoid CORS issues
         body: JSON.stringify(payload)
+      }).catch(err => {
+        // Still continue even if fetch errors out in no-cors mode
+        console.warn("Fetch error in no-cors mode (can be ignored):", err);
       });
+      
+      console.log("Form submission to webhook complete");
       
       // Always call parent success callback if provided
       if (onSuccess) {
         console.log("Calling onSuccess callback from EndFormView");
         onSuccess();
+      } else {
+        console.warn("No onSuccess callback provided to EndFormView");
       }
       
       toast({

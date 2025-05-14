@@ -16,12 +16,14 @@ const FunnelPage: React.FC = () => {
 
   // Handle funnel completion
   const handleFunnelComplete = () => {
+    console.log("FunnelPage: handleFunnelComplete called - showing thank you page");
     setFunnelCompleted(true);
     setShowFunnel(false);
   };
 
   // Handle restart of funnel - only available from thank you page
   const handleRestartFunnel = () => {
+    console.log("FunnelPage: handleRestartFunnel called - restarting funnel");
     setFunnelCompleted(false);
     setShowFunnel(true);
   };

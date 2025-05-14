@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import QuestionView from "./views/QuestionView";
@@ -79,7 +80,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     hasOptions: !!enrichedStepData.options?.length,
     optionsCount: enrichedStepData.options?.length || 0,
     hasInputConfig: !!enrichedStepData.inputConfig,
-    inputType: enrichedStepData.inputConfig?.inputType || "none"
+    inputType: enrichedStepData.inputConfig?.inputType || "none",
+    hasFormSuccessCallback: !!onFormSuccess
   });
 
   // Determine which view component to render based on messageType
@@ -109,7 +111,10 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <SummaryView data={stepData} />;
     
     case "end":
-      console.log("Rendering EndFormView with data:", enrichedStepData);
+      console.log("Rendering EndFormView with data and onSuccess callback:", {
+        hasCallback: !!onFormSuccess,
+        dataStepId: enrichedStepData.stepId
+      });
       return <EndFormView data={enrichedStepData} form={form} onSuccess={onFormSuccess} />;
     
     default:
