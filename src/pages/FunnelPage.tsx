@@ -20,7 +20,7 @@ const FunnelPage: React.FC = () => {
     setShowFunnel(false);
   };
 
-  // Handle restart of funnel
+  // Handle restart of funnel - only available from thank you page
   const handleRestartFunnel = () => {
     setFunnelCompleted(false);
     setShowFunnel(true);
@@ -54,7 +54,7 @@ const FunnelPage: React.FC = () => {
                   </svg>
                   <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank!</h2>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Wir haben deine Anfrage erhalten und werden uns in Kürze bei dir melden.
+                    Wir haben deine Anfrage erhalten und werden uns innerhalb von 48 Stunden bei dir melden.
                   </p>
                   <Button onClick={handleRestartFunnel} className="mt-6">
                     Neuen Antrag starten

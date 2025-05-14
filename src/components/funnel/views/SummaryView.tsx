@@ -21,6 +21,7 @@ interface SummaryViewProps {
 const fieldNameMapping: Record<string, string> = {
   finanzierungsbedarf: "Finanzierungsbedarf",
   wohnstatus: "Wohn-/Vermietungsstatus",
+  wohnVermietungsstatus: "Wohn-/Vermietungsstatus",
   vorhaben: "Vorhaben",
   region: "Region",
   zeitplan: "Zeitplan",
@@ -32,6 +33,12 @@ const fieldNameMapping: Record<string, string> = {
   "finanzierungs-prioritaet": "Finanzierungs-Priorität",
   step1Selection: "Art der Finanzierung",
   step2Selection: "Finanzierungsart",
+  wunschimmobilie: "Wunschimmobilie",
+  nutzungsart: "Nutzung",
+  immobilienstatus: "Immobilienstatus",
+  rate: "Monatliche Rate",
+  fokus: "Finanzierungs-Wünsche",
+  besonderheiten: "Besonderheiten",
   // Add more mappings as needed
 };
 
@@ -44,10 +51,32 @@ const getReadableLabel = (key: string): string => {
 const getReadableValue = (value: any): string => {
   if (value === undefined || value === null) return "-";
   if (typeof value === "boolean") return value ? "Ja" : "Nein";
-  if (typeof value === "string" && value.startsWith("{{") && value.endsWith("}}")) {
-    return "-"; // Skip template variables
+  
+  // Check for template variables and extract the field name
+  if (typeof value === "string") {
+    const templateMatch = value.match(/{{previousAnswers\.([^}]+)}}/);
+    if (templateMatch) {
+      const fieldName = templateMatch[1];
+      return `[Wert für ${fieldName}]`; // Placeholder for template value
+    }
   }
+  
   return value.toString();
+};
+
+// Function to parse template variables from actual data
+const resolveTemplateValue = (template: string, data: Record<string, any>): string => {
+  if (!template || typeof template !== 'string') return String(template || '-');
+  
+  // Check if this is a template variable format: {{previousAnswers.fieldName}}
+  const match = template.match(/{{previousAnswers\.([^}]+)}}/);
+  if (match) {
+    const fieldName = match[1];
+    const value = data[fieldName];
+    return value !== undefined && value !== null ? String(value) : '-';
+  }
+  
+  return template;
 };
 
 const SummaryView: React.FC<SummaryViewProps> = ({ data, onEditStep }) => {
@@ -57,16 +86,27 @@ const SummaryView: React.FC<SummaryViewProps> = ({ data, onEditStep }) => {
   
   // Process summary items from both formats
   let items = data.summaryItems || [];
+  const previousAnswers = data.previousAnswers || {};
+  
+  // Process template variables in existing summary items
+  items = items.map(item => {
+    if (typeof item.value === 'string' && item.value.includes('{{previousAnswers.')) {
+      return {
+        ...item,
+        value: resolveTemplateValue(item.value, previousAnswers)
+      };
+    }
+    return item;
+  });
   
   // If we have previousAnswers, convert them to summary items
-  if (data.previousAnswers && Object.keys(data.previousAnswers).length > 0) {
+  if (Object.keys(previousAnswers).length > 0) {
     // Filter out empty values, template strings, and system fields
-    const filteredAnswers = Object.entries(data.previousAnswers)
+    const filteredAnswers = Object.entries(previousAnswers)
       .filter(([key, value]) => {
         // Skip empty values, system fields, and template strings
         if (value === undefined || value === null || value === '') return false;
         if (key.startsWith('_') || key === 'chatId') return false;
-        if (typeof value === "string" && value.startsWith("{{") && value.endsWith("}}")) return false;
         return true;
       })
       .map(([key, value]) => ({
@@ -74,8 +114,12 @@ const SummaryView: React.FC<SummaryViewProps> = ({ data, onEditStep }) => {
         value: getReadableValue(value),
       }));
     
+    // Only add filtered answers that don't already exist in items
+    const existingLabels = new Set(items.map(item => item.label));
+    const newItems = filteredAnswers.filter(item => !existingLabels.has(item.label));
+    
     // Add filtered answers to existing items
-    items = [...items, ...filteredAnswers];
+    items = [...items, ...newItems];
   }
   
   return (
