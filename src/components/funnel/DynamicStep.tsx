@@ -23,7 +23,7 @@ export interface DynamicStepData {
   options?: Array<{
     id: string;
     label: string;
-    value?: string; // Add value property for MultiSelectView
+    value?: string;
     icon?: { library: string; name: string };
     payload?: any;
   }>;
@@ -35,12 +35,15 @@ export interface DynamicStepData {
       minLength?: number;
       maxLength?: number;
       pattern?: string;
+      min?: number;
+      max?: number;
     };
+    step?: string;
   };
   summaryItems?: Array<{ label: string; value: string }>;
   metadata?: any;
   webhookUrl?: string;
-  previousAnswers?: Record<string, any>; // Add previousAnswers to the interface
+  previousAnswers?: Record<string, any>;
   
   // Additional properties used in view components
   title?: string;
@@ -60,7 +63,7 @@ interface DynamicStepProps {
   form: UseFormReturn<any>;
   stepData: DynamicStepData;
   onOptionSelect?: (optionId: string) => void;
-  onFormSuccess?: () => void; // Add callback for form submission success
+  onFormSuccess?: () => void;
 }
 
 const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelect, onFormSuccess }) => {
@@ -86,9 +89,31 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     previousAnswersCount: Object.keys(enrichedStepData.previousAnswers || {}).length,
     hasFormSuccessCallback: !!onFormSuccess
   });
+  
+  // Enhanced message type detection logic with budget-related keywords for number fields
+  let effectiveMessageType = stepData.messageType;
+  
+  // Intelligent message type detection as fallback
+  if (!effectiveMessageType || effectiveMessageType === "input") {
+    // Check if this might be a number input based on content 
+    const contentText = (stepData.content?.headline || '') + ' ' + (stepData.content?.text || '');
+    const budgetKeywords = ['budget', 'betrag', 'summe', 'geld', 'euro', '€', 'kosten', 'preis', 'kaufpreis', 'modernisierungsbudget', 'kaufbudget'];
+    
+    const mightBeNumberInput = budgetKeywords.some(keyword => 
+      contentText.toLowerCase().includes(keyword.toLowerCase())
+    );
+    
+    if (mightBeNumberInput) {
+      console.log("Auto-detected number input based on content:", contentText);
+      effectiveMessageType = "number";
+    } else if (stepData.inputConfig?.inputType === 'number') {
+      console.log("Auto-detected number input based on inputConfig.inputType");
+      effectiveMessageType = "number";
+    }
+  }
 
   // Determine which view component to render based on messageType
-  switch (stepData.messageType) {
+  switch (effectiveMessageType) {
     case "question":
       return <QuestionView data={stepData} form={form} onOptionSelect={onOptionSelect} />;
     
@@ -108,6 +133,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <DateInputView data={stepData} form={form} />;
     
     case "number":
+      console.log("Rendering NumberInputView with data:", stepData);
       return <NumberInputView data={stepData} form={form} />;
     
     case "summary":
@@ -138,6 +164,9 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
           <p className="text-gray-600">
             Der Server hat einen unbekannten Nachrichtentyp gesendet.
           </p>
+          <pre className="bg-gray-100 p-3 mt-4 rounded text-xs text-left overflow-auto max-h-40">
+            {JSON.stringify(stepData, null, 2)}
+          </pre>
         </div>
       );
   }
