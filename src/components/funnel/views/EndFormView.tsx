@@ -50,7 +50,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
   const form = parentForm || localForm;
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isSuccess, setIsSuccess] = React.useState(false);
 
   // Extract form fields from metadata or use defaults
   const formFields = data.metadata?.formFields || [
@@ -90,11 +89,8 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         mode: "no-cors", // Add no-cors mode to avoid CORS issues
         body: JSON.stringify(payload)
       });
-
-      // Set success state
-      setIsSuccess(true);
       
-      // Call parent success callback if provided
+      // Always call parent success callback if provided
       if (onSuccess) {
         console.log("Calling onSuccess callback from EndFormView");
         onSuccess();
@@ -115,32 +111,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       setIsSubmitting(false);
     }
   };
-
-  // Show success state always after form submission
-  if (isSuccess) {
-    return (
-      <div className="text-center py-10">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-16 w-16 text-green-500 mx-auto mb-6" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank für deine Anfrage!</h2>
-        <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Wir haben deine Informationen erhalten und unsere Experten werden sich <strong>innerhalb der nächsten 48 Stunden</strong> mit dir in Verbindung setzen.
-        </p>
-        <div className="border-t border-gray-200 pt-6 mt-6">
-          <p className="text-sm text-gray-500">
-            Bei weiteren Fragen stehen wir dir gerne zur Verfügung.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

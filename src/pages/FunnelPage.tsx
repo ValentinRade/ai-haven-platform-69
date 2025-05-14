@@ -54,7 +54,7 @@ const FunnelPage: React.FC = () => {
                   </svg>
                   <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank!</h2>
                   <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Wir haben deine Anfrage erhalten und werden uns innerhalb von 48 Stunden bei dir melden.
+                    Wir haben deine Anfrage erhalten und werden uns <strong>innerhalb von 48 Stunden</strong> bei dir melden.
                   </p>
                   <Button onClick={handleRestartFunnel} className="mt-6">
                     Neuen Antrag starten
