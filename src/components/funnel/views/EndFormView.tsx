@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -116,9 +115,8 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     }
   };
 
-  // Only show success state if we're NOT using the parent's success callback
-  // This prevents double success screens
-  if (isSuccess && !onSuccess) {
+  // Show success state always after form submission
+  if (isSuccess) {
     return (
       <div className="text-center py-10">
         <svg 
@@ -132,7 +130,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         </svg>
         <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank für deine Anfrage!</h2>
         <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Wir haben deine Informationen erhalten und werden uns in Kürze mit dir in Verbindung setzen.
+          Wir haben deine Informationen erhalten und unsere Experten werden sich <strong>innerhalb der nächsten 48 Stunden</strong> mit dir in Verbindung setzen.
         </p>
         <div className="border-t border-gray-200 pt-6 mt-6">
           <p className="text-sm text-gray-500">
