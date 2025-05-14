@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -43,7 +42,7 @@ export interface FunnelResponse {
   };
   summaryItems?: Array<{ label: string; value: string }>;
   metadata?: any;
-  previousAnswers?: any; // Added this property to fix the type error
+  previousAnswers?: any; // This property is crucial for SummaryView
 }
 
 interface FunnelContainerProps {
@@ -65,6 +64,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   const [sessionChatId, setSessionChatId] = useState<string>('');
   const [responseHistory, setResponseHistory] = useState<FunnelResponse[]>([]);
   const [currentDynamicStep, setCurrentDynamicStep] = useState<FunnelResponse | null>(null);
+  // Explicitly track all collected responses in one place
   const [allResponses, setAllResponses] = useState<Record<string, any>>({});
   
   const form = useForm<FunnelData>({
@@ -119,13 +119,16 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
       console.log("Sending funnel data to webhook:", data);
       console.log("Using session chatId:", sessionChatId);
       
-      // Save current answers for later submission
-      setAllResponses(prev => ({ ...prev, ...data }));
+      // First, add current data to allResponses
+      const updatedResponses = { ...allResponses, ...data };
+      setAllResponses(updatedResponses);
+      
+      console.log("All collected responses so far:", updatedResponses);
       
       // Create the request body according to expected format
       const requestBody = {
         stepId: currentStep.toString(),
-        previousAnswers: data, // contains all form answers up to this point
+        previousAnswers: updatedResponses, // Send ALL collected answers, not just current step
         chatId: sessionChatId, // Include the session-specific chatId
         event: {
           type: "step_submit",
@@ -161,25 +164,40 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
         const actualResponse = Array.isArray(responseData) ? responseData[0] : responseData;
         console.log("Processing webhook response:", JSON.stringify(actualResponse, null, 2));
         
-        // Add the received response to history
-        const processedResponse = mapResponseToFunnelFormat(actualResponse);
-        console.log("Processed response:", JSON.stringify(processedResponse, null, 2));
+        // IMPORTANT: Enrich the response with previousAnswers if it doesn't have them already
+        const enrichedResponse = {
+          ...actualResponse,
+          previousAnswers: actualResponse.previousAnswers || updatedResponses
+        };
+        
+        console.log("Enriched response with previousAnswers:", JSON.stringify(enrichedResponse, null, 2));
+        
+        // Add the enriched response to history
+        const processedResponse = mapResponseToFunnelFormat(enrichedResponse);
+        console.log("Final processed response with previousAnswers:", JSON.stringify(processedResponse, null, 2));
         
         setResponseHistory(prev => [...prev, processedResponse]);
         
-        // Set the current dynamic step to display
+        // Set the current dynamic step to display, now with previousAnswers
         setCurrentDynamicStep(processedResponse);
         
         // Check if we have nextSteps as a transition format
         if (responseData.nextSteps) {
           console.log("Processing legacy nextSteps format:", JSON.stringify(responseData.nextSteps, null, 2));
-          const nextSteps = responseData.nextSteps.map(mapStepToFunnelResponse);
+          // Enrich each step with previousAnswers
+          const nextSteps = responseData.nextSteps.map(step => ({
+            ...mapStepToFunnelResponse(step),
+            previousAnswers: updatedResponses
+          }));
           setDynamicSteps(nextSteps);
           return { nextSteps };
         }
         // Process the new format directly
         else {
-          const processedResponse = mapResponseToFunnelFormat(actualResponse);
+          const processedResponse = {
+            ...mapResponseToFunnelFormat(actualResponse),
+            previousAnswers: updatedResponses
+          };
           setDynamicSteps([processedResponse]);
           return { response: processedResponse };
         }
@@ -292,14 +310,22 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     // If response is already in the correct format with messageType and content
     if (response && response.messageType && response.content) {
       console.log("Response already in correct format with messageType:", response.messageType);
-      return response as FunnelResponse;
+      // Ensure previousAnswers are included
+      return {
+        ...response,
+        previousAnswers: response.previousAnswers || allResponses
+      } as FunnelResponse;
     }
     
     // Try to determine the response type and map it
     if (response && response.nextSteps && Array.isArray(response.nextSteps) && response.nextSteps.length > 0) {
       // Map the first next step (legacy format)
       console.log("Mapping legacy nextSteps format");
-      return mapStepToFunnelResponse(response.nextSteps[0]);
+      const mappedResponse = mapStepToFunnelResponse(response.nextSteps[0]);
+      return {
+        ...mappedResponse,
+        previousAnswers: response.previousAnswers || allResponses
+      };
     }
     
     // If we have a completely unexpected format, return a proper error message
@@ -311,7 +337,8 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
       content: {
         headline: "Unbekanntes Format",
         text: "Die Serverantwort hat ein unerwartetes Format. Bitte versuchen Sie es später erneut."
-      }
+      },
+      previousAnswers: allResponses
     };
   };
 
@@ -499,15 +526,23 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     console.log(`Rendering step ${currentStep}`, {
       currentDynamicStep,
       isEndForm: currentDynamicStep?.messageType === "end",
-      dynamicStepsLength: dynamicSteps.length
+      dynamicStepsLength: dynamicSteps.length,
+      hasPreviousAnswers: !!currentDynamicStep?.previousAnswers,
+      previousAnswersCount: Object.keys(currentDynamicStep?.previousAnswers || {}).length
     });
     
     // Always use currentDynamicStep if available as it contains the latest response from webhook
     if (currentDynamicStep) {
+      // Ensure previousAnswers are passed along
+      const enrichedStepData = {
+        ...currentDynamicStep,
+        previousAnswers: currentDynamicStep.previousAnswers || allResponses
+      };
+      
       return (
         <DynamicStep 
           form={form}
-          stepData={currentDynamicStep}
+          stepData={enrichedStepData}
           onOptionSelect={handleDynamicOptionSelect}
           onFormSuccess={handleEndFormSuccess}
         />
@@ -518,10 +553,16 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     // (this should rarely happen if webhook responses are handled correctly)
     const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
     if (dynamicSteps.length > 0 && dynamicStepIndex >= 0 && dynamicStepIndex < dynamicSteps.length) {
+      // Ensure previousAnswers are passed along
+      const enrichedStepData = {
+        ...dynamicSteps[dynamicStepIndex],
+        previousAnswers: dynamicSteps[dynamicStepIndex].previousAnswers || allResponses
+      };
+      
       return (
         <DynamicStep 
           form={form}
-          stepData={dynamicSteps[dynamicStepIndex]}
+          stepData={enrichedStepData}
           onOptionSelect={handleDynamicOptionSelect}
           onFormSuccess={handleEndFormSuccess}
         />

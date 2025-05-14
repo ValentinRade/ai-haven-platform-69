@@ -40,6 +40,7 @@ export interface DynamicStepData {
   summaryItems?: Array<{ label: string; value: string }>;
   metadata?: any;
   webhookUrl?: string;
+  previousAnswers?: Record<string, any>; // Add previousAnswers to the interface
   
   // Additional properties used in view components
   title?: string;
@@ -81,6 +82,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     optionsCount: enrichedStepData.options?.length || 0,
     hasInputConfig: !!enrichedStepData.inputConfig,
     inputType: enrichedStepData.inputConfig?.inputType || "none",
+    hasPreviousAnswers: !!enrichedStepData.previousAnswers,
+    previousAnswersCount: Object.keys(enrichedStepData.previousAnswers || {}).length,
     hasFormSuccessCallback: !!onFormSuccess
   });
 
@@ -108,12 +111,14 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <NumberInputView data={stepData} form={form} />;
     
     case "summary":
-      return <SummaryView data={stepData} />;
+      console.log("Rendering SummaryView with previousAnswers:", enrichedStepData.previousAnswers);
+      return <SummaryView data={enrichedStepData} />;
     
     case "end":
       console.log("Rendering EndFormView with data and onSuccess callback:", {
         hasCallback: !!onFormSuccess,
-        dataStepId: enrichedStepData.stepId
+        dataStepId: enrichedStepData.stepId,
+        hasPreviousAnswers: !!enrichedStepData.previousAnswers
       });
       return <EndFormView data={enrichedStepData} form={form} onSuccess={onFormSuccess} />;
     

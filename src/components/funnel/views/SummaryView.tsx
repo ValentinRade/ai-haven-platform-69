@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
+import { resolveTemplateVariable } from "@/lib/utils";
 
 interface SummaryViewProps {
   data: {
@@ -52,20 +53,13 @@ const getReadableValue = (value: any): string => {
   if (value === undefined || value === null) return "-";
   if (typeof value === "boolean") return value ? "Ja" : "Nein";
   
-  // Check for template variables and extract the field name
-  if (typeof value === "string") {
-    const templateMatch = value.match(/{{previousAnswers\.([^}]+)}}/);
-    if (templateMatch) {
-      const fieldName = templateMatch[1];
-      return `[Wert für ${fieldName}]`; // Placeholder for template value
-    }
-  }
-  
   return value.toString();
 };
 
-// Function to parse template variables from actual data
-const resolveTemplateValue = (template: string, data: Record<string, any>): string => {
+// Improved function to resolve template variables from actual data
+const resolveTemplateValue = (template: string, data: Record<string, any> = {}): string => {
+  console.log("Resolving template value:", { template, dataKeys: Object.keys(data) });
+  
   if (!template || typeof template !== 'string') return String(template || '-');
   
   // Check if this is a template variable format: {{previousAnswers.fieldName}}
@@ -73,6 +67,7 @@ const resolveTemplateValue = (template: string, data: Record<string, any>): stri
   if (match) {
     const fieldName = match[1];
     const value = data[fieldName];
+    console.log(`Template match found for ${fieldName}, value: ${value}`);
     return value !== undefined && value !== null ? String(value) : '-';
   }
   
@@ -84,23 +79,32 @@ const SummaryView: React.FC<SummaryViewProps> = ({ data, onEditStep }) => {
   const title = data.content?.headline || data.title || "Zusammenfassung";
   const text = data.content?.text || data.description || "Hier ist eine Zusammenfassung deiner Angaben.";
   
+  // Get previousAnswers and log them for debugging
+  const previousAnswers = data.previousAnswers || {};
+  console.log("SummaryView received previousAnswers:", previousAnswers);
+  
   // Process summary items from both formats
   let items = data.summaryItems || [];
-  const previousAnswers = data.previousAnswers || {};
+  console.log("Original summary items:", items);
   
   // Process template variables in existing summary items
   items = items.map(item => {
     if (typeof item.value === 'string' && item.value.includes('{{previousAnswers.')) {
+      const resolvedValue = resolveTemplateValue(item.value, previousAnswers);
+      console.log(`Resolved template ${item.value} to: ${resolvedValue}`);
+      
       return {
         ...item,
-        value: resolveTemplateValue(item.value, previousAnswers)
+        value: resolvedValue
       };
     }
     return item;
   });
   
-  // If we have previousAnswers, convert them to summary items
-  if (Object.keys(previousAnswers).length > 0) {
+  // If we have previousAnswers but no (or few) summary items, convert previousAnswers to summary items
+  if (Object.keys(previousAnswers).length > 0 && items.length < 3) {
+    console.log("Converting previousAnswers to summary items");
+    
     // Filter out empty values, template strings, and system fields
     const filteredAnswers = Object.entries(previousAnswers)
       .filter(([key, value]) => {
@@ -109,18 +113,27 @@ const SummaryView: React.FC<SummaryViewProps> = ({ data, onEditStep }) => {
         if (key.startsWith('_') || key === 'chatId') return false;
         return true;
       })
-      .map(([key, value]) => ({
-        label: getReadableLabel(key),
-        value: getReadableValue(value),
-      }));
+      .map(([key, value]) => {
+        console.log(`Converting answer: ${key} = ${value}`);
+        return {
+          label: getReadableLabel(key),
+          value: getReadableValue(value),
+        };
+      });
+    
+    console.log("Filtered answers:", filteredAnswers);
     
     // Only add filtered answers that don't already exist in items
     const existingLabels = new Set(items.map(item => item.label));
     const newItems = filteredAnswers.filter(item => !existingLabels.has(item.label));
     
+    console.log("New items to add:", newItems);
+    
     // Add filtered answers to existing items
     items = [...items, ...newItems];
   }
+  
+  console.log("Final summary items to display:", items);
   
   return (
     <div>
