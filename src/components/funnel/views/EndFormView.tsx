@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,17 +53,20 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [endReached, setEndReached] = React.useState(false);
 
-  // Check if this is an end messageType immediately on component mount
-  React.useEffect(() => {
+  // CRITICAL: Check if this is an end messageType immediately on component mount
+  // and immediately trigger end state without requiring form submission
+  useEffect(() => {
     console.log("EndFormView checking messageType:", data.messageType);
     
     // If this is an "end" message type, immediately trigger end state
     if (data.messageType === "end") {
       console.log("EndFormView: Detected END messageType, setting endReached=true");
+      
+      // Set end reached state to true to prevent any further submissions
       setEndReached(true);
       
-      // Immediately trigger onSuccess to show thank you page without waiting for form submission
-      if (onSuccess && !endReached) {
+      // IMMEDIATELY trigger onSuccess to show thank you page without waiting for form submission
+      if (onSuccess) {
         console.log("EndFormView: Auto-triggering onSuccess due to END messageType");
         onSuccess();
       }
@@ -99,6 +102,13 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     console.log("EndFormView: Form submitted with values:", values);
     
     try {
+      // CRITICAL: First call onSuccess to make sure thank you page appears quickly
+      // This must happen before the webhook request to ensure UI shows immediately
+      if (onSuccess) {
+        console.log("EndFormView: Calling onSuccess callback BEFORE webhook to ensure thank you page appears");
+        onSuccess();
+      }
+      
       const payload = {
         stepId: data.stepId,
         previousAnswers: data.previousAnswers || {},
@@ -109,33 +119,26 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       };
 
       console.log("Submitting form data to webhook:", payload);
-      
-      // CRITICAL: First call onSuccess to make sure thank you page appears quickly
-      // This must happen before the webhook request to ensure UI shows immediately
-      if (onSuccess) {
-        console.log("EndFormView: Calling onSuccess callback BEFORE webhook to ensure thank you page appears");
-        onSuccess();
-      } else {
-        console.warn("EndFormView: No onSuccess callback provided - user won't see thank you page");
-      }
 
       // Send the data to the webhook (this happens after onSuccess is called)
-      const fetchPromise = fetch(data.webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: "no-cors", // Add no-cors mode to avoid CORS issues
-        body: JSON.stringify(payload)
-      }).catch(err => {
-        // Still continue even if fetch errors out in no-cors mode
-        console.warn("Fetch error in no-cors mode (can be ignored):", err);
-      });
-      
-      // Wait for the fetch to complete, but don't let it block the UI flow
-      await fetchPromise;
-      
-      console.log("Form submission to webhook complete");
+      try {
+        const fetchPromise = fetch(data.webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          mode: "no-cors", // Add no-cors mode to avoid CORS issues
+          body: JSON.stringify(payload)
+        });
+        
+        // We don't await this fetch to ensure the UI flow continues
+        fetchPromise.catch(err => {
+          // Still continue even if fetch errors out in no-cors mode
+          console.warn("Fetch error in no-cors mode (can be ignored):", err);
+        });
+      } catch (webhookError) {
+        console.warn("Webhook submission error (continuing anyway):", webhookError);
+      }
       
       toast({
         title: "Erfolg",
@@ -143,17 +146,25 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       });
     } catch (error) {
       console.error("Error in form submission:", error);
-      toast({
-        variant: "destructive",
-        title: "Fehler",
-        description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
-      });
       
-      // We've already called onSuccess before the webhook, so we don't need to call it again
+      // Even if there's an error, if we've called onSuccess already, we don't need
+      // to show an error toast since the user is already seeing the thank you page
+      if (!onSuccess) {
+        toast({
+          variant: "destructive",
+          title: "Fehler",
+          description: "Es gab ein Problem beim Senden deiner Anfrage. Bitte versuche es später erneut.",
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Don't show the form at all if endReached is true
+  if (endReached && data.messageType === "end") {
+    return null;
+  }
 
   return (
     <div className="space-y-6">

@@ -19,20 +19,22 @@ const FunnelPage: React.FC = () => {
   const handleFunnelComplete = () => {
     console.log("FunnelPage: handleFunnelComplete called - showing thank you page");
     
-    // Mark end state as reached to prevent any resets or reloads
+    // CRITICAL: Mark end state as reached to prevent any resets or reloads
+    // This must be set FIRST to ensure no further actions can reset the funnel
     setIsEndStateReached(true);
     
-    // First hide the funnel
+    // First hide the funnel completely
     setShowFunnel(false);
     
     // Then mark it as completed to show thank you page
     setFunnelCompleted(true);
   };
 
-  // Handle restart of funnel - only available from thank you page
-  // AND only if we haven't reached an end state
+  // Handle restart of funnel - ONLY available from thank you page
+  // AND ONLY if we haven't reached an end state
   const handleRestartFunnel = () => {
-    // Prevent restart if we've reached the final end state
+    // CRITICAL: Prevent restart if we've reached the final end state
+    // This ensures that once endState is reached, no restart is possible
     if (isEndStateReached) {
       console.log("FunnelPage: Restart prevented - end state has been reached");
       return;
@@ -84,7 +86,7 @@ const FunnelPage: React.FC = () => {
                     Wir haben deine Anfrage erhalten und werden uns <strong>innerhalb von 48 Stunden</strong> bei dir melden.
                   </p>
                   
-                  {/* Only show restart button if we're not in the final end state */}
+                  {/* CRITICAL: Only show restart button if we're NOT in the final end state */}
                   {!isEndStateReached && (
                     <Button onClick={handleRestartFunnel} className="mt-6">
                       Neuen Antrag starten
