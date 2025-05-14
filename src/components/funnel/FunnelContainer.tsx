@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -133,7 +134,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
         }
       };
       
-      console.log("Webhook request body:", requestBody);
+      console.log("Webhook request body:", JSON.stringify(requestBody, null, 2));
       
       // Send the data to webhook
       const response = await fetch(actualWebhookUrl, {
@@ -146,34 +147,32 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
       
       // Check if response is ok
       if (!response.ok) {
+        console.error("Webhook response not OK:", response.status);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       // Parse the actual webhook response
       const responseData = await response.json();
-      console.log("Webhook response received:", responseData);
+      console.log("Webhook response received:", JSON.stringify(responseData, null, 2));
       
       // Process the response based on the FunnelResponse format
       if (responseData) {
         // Handle array response (fixes issue with array-wrapped responses)
         const actualResponse = Array.isArray(responseData) ? responseData[0] : responseData;
-        console.log("Processing webhook response:", actualResponse);
+        console.log("Processing webhook response:", JSON.stringify(actualResponse, null, 2));
         
         // Add the received response to history
         const processedResponse = mapResponseToFunnelFormat(actualResponse);
-        console.log("Processed response:", processedResponse);
+        console.log("Processed response:", JSON.stringify(processedResponse, null, 2));
         
         setResponseHistory(prev => [...prev, processedResponse]);
         
         // Set the current dynamic step to display
         setCurrentDynamicStep(processedResponse);
         
-        // IMPORTANT: Do NOT set success flag here for "end" messageType
-        // Instead, let the EndFormView handle that after successful form submission
-        
         // Check if we have nextSteps as a transition format
         if (responseData.nextSteps) {
-          console.log("Processing legacy nextSteps format");
+          console.log("Processing legacy nextSteps format:", JSON.stringify(responseData.nextSteps, null, 2));
           const nextSteps = responseData.nextSteps.map(mapStepToFunnelResponse);
           setDynamicSteps(nextSteps);
           return { nextSteps };
@@ -231,6 +230,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
 
   // Map legacy step format to new FunnelResponse format
   const mapStepToFunnelResponse = (step: any): FunnelResponse => {
+    console.log("Mapping step to FunnelResponse:", JSON.stringify(step, null, 2));
     switch (step.type) {
       case "contact":
         return {
@@ -287,7 +287,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
 
   // Updated mapResponseToFunnelFormat function with better handling and no default "thank you" message
   const mapResponseToFunnelFormat = (response: any): FunnelResponse => {
-    console.log("Mapping response to funnel format:", response);
+    console.log("Mapping response to funnel format:", JSON.stringify(response, null, 2));
     
     // If response is already in the correct format with messageType and content
     if (response && response.messageType && response.content) {
@@ -348,7 +348,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
             
             // Handle end message type specially
             if (result.response.messageType === "end") {
-              console.log("Received 'end' message type - showing contact form:", result.response);
+              console.log("Received 'end' message type - showing contact form:", JSON.stringify(result.response, null, 2));
               
               // If processedResponse doesn't already have contact form fields in metadata,
               // we can add them for backward compatibility
@@ -369,7 +369,6 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
                 
                 setCurrentDynamicStep(contactFormResponse);
               }
-              return { response: result.response };
             }
           }
         }
@@ -407,34 +406,50 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
   };
 
   const onSubmit = async (data: FunnelData) => {
+    console.log("Final form submission with data:", data);
     setIsLoading(true);
     setIsProcessingResponse(true);
     try {
       // Always send final data to webhook and process the response
       const result = await sendDataToWebhook(data);
       
-      if (result.response) {
-        // IMPORTANT: Do NOT set success flag here
-        // EndFormView will handle its own submission and success state
+      if (result && result.response) {
+        console.log("Received final submission response:", JSON.stringify(result.response, null, 2));
+        
         if (result.response.messageType === "end") {
-          // Just move to the next step which will show the EndFormView
+          console.log("Received 'end' message type on final submission - preparing EndFormView");
+          // Set the current dynamic step to the end response to show the EndFormView
           setCurrentDynamicStep(result.response);
-          setCurrentStep(prev => prev + 1);
         } else {
           // For non-end responses, continue to next step with the new response
           setCurrentDynamicStep(result.response);
           setCurrentStep(prev => prev + 1);
         }
-      } else if (result.nextSteps && result.nextSteps.length > 0) {
+      } else if (result && result.nextSteps && result.nextSteps.length > 0) {
         // Handle legacy nextSteps format
+        console.log("Received legacy nextSteps format on final submission");
         setDynamicSteps(result.nextSteps);
         setCurrentStep(prev => prev + 1);
       }
     } catch (error) {
       // Error is already handled in sendDataToWebhook
+      console.error("Error in final form submission:", error);
     } finally {
       setIsLoading(false);
       setIsProcessingResponse(false);
+    }
+  };
+
+  // Handle form success from EndFormView
+  const handleEndFormSuccess = () => {
+    console.log("EndFormView submission successful - triggering onFunnelComplete");
+    
+    // Always call the parent callback if it exists
+    if (onFunnelComplete) {
+      onFunnelComplete();
+    } else {
+      // If no parent callback, handle success internally
+      setSuccess(true);
     }
   };
 
@@ -457,14 +472,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
 
   const renderStep = () => {
     if (success) {
-      // When success is true, call onFunnelComplete if it exists
-      React.useEffect(() => {
-        if (onFunnelComplete) {
-          console.log("Funnel completed successfully, calling onFunnelComplete");
-          onFunnelComplete();
-        }
-      }, [success]);
-
+      console.log("Rendering internal success view (should not be shown if onFunnelComplete exists)");
       return (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank!</h2>
@@ -501,18 +509,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
           form={form}
           stepData={currentDynamicStep}
           onOptionSelect={handleDynamicOptionSelect}
-          onFormSuccess={() => {
-            // This callback will be triggered by EndFormView when its form is successfully submitted
-            if (currentDynamicStep.messageType === "end") {
-              console.log("EndFormView submission successful - now showing success screen");
-              setSuccess(true);
-              // Call the onFunnelComplete callback if it exists
-              if (onFunnelComplete) {
-                console.log("Calling onFunnelComplete from EndFormView success");
-                onFunnelComplete();
-              }
-            }
-          }}
+          onFormSuccess={handleEndFormSuccess}
         />
       );
     }
@@ -526,12 +523,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
           form={form}
           stepData={dynamicSteps[dynamicStepIndex]}
           onOptionSelect={handleDynamicOptionSelect}
-          onFormSuccess={() => {
-            if (dynamicSteps[dynamicStepIndex].messageType === "end") {
-              console.log("EndFormView submission successful - now showing success screen");
-              setSuccess(true);
-            }
-          }}
+          onFormSuccess={handleEndFormSuccess}
         />
       );
     }
@@ -566,7 +558,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
           <div className="text-red-500 mt-4 text-center">{error}</div>
         )}
         
-        {!success && !isProcessingResponse && (
+        {!success && !isProcessingResponse && currentDynamicStep?.messageType !== "end" && (
           <div className="flex justify-between mt-8">
             {currentStep > 1 ? (
               <Button 
