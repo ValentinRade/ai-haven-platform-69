@@ -11,7 +11,7 @@ const ChatHeading: React.FC = () => {
   
   // Display different heading based on the page
   const headingText = isFunnelPage 
-    ? "Ihr Finanzierungsantrag"
+    ? "Deine Kontaktanfrage"
     : "Deine Immobilien Finanzierung";
 
   return (
