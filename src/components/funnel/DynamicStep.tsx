@@ -76,41 +76,96 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     webhookUrl
   };
 
-  // Log the current step data for debugging with more details
+  // Advanced logging for better debugging
   console.log("Current dynamic step data:", {
     stepId: enrichedStepData.stepId,
     messageType: enrichedStepData.messageType,
     content: enrichedStepData.content,
+    inputConfig: enrichedStepData.inputConfig,
     hasOptions: !!enrichedStepData.options?.length,
     optionsCount: enrichedStepData.options?.length || 0,
     hasInputConfig: !!enrichedStepData.inputConfig,
     inputType: enrichedStepData.inputConfig?.inputType || "none",
     hasPreviousAnswers: !!enrichedStepData.previousAnswers,
     previousAnswersCount: Object.keys(enrichedStepData.previousAnswers || {}).length,
-    hasFormSuccessCallback: !!onFormSuccess
+    hasFormSuccessCallback: !!onFormSuccess,
+    title: enrichedStepData.title || enrichedStepData.content?.headline,
+    description: enrichedStepData.description || enrichedStepData.content?.text,
   });
   
-  // Enhanced message type detection logic with budget-related keywords for number fields
+  // Improved message type detection logic with more robust fallbacks
   let effectiveMessageType = stepData.messageType;
   
-  // Intelligent message type detection as fallback
+  // Input type detection based on multiple signals
   if (!effectiveMessageType || effectiveMessageType === "input") {
-    // Check if this might be a number input based on content 
-    const contentText = (stepData.content?.headline || '') + ' ' + (stepData.content?.text || '');
-    const budgetKeywords = ['budget', 'betrag', 'summe', 'geld', 'euro', '€', 'kosten', 'preis', 'kaufpreis', 'modernisierungsbudget', 'kaufbudget'];
-    
-    const mightBeNumberInput = budgetKeywords.some(keyword => 
-      contentText.toLowerCase().includes(keyword.toLowerCase())
-    );
-    
-    if (mightBeNumberInput) {
-      console.log("Auto-detected number input based on content:", contentText);
-      effectiveMessageType = "number";
-    } else if (stepData.inputConfig?.inputType === 'number') {
-      console.log("Auto-detected number input based on inputConfig.inputType");
-      effectiveMessageType = "number";
+    // First check if inputConfig.inputType is provided
+    if (stepData.inputConfig?.inputType) {
+      console.log(`Auto-detected input type from inputConfig.inputType: ${stepData.inputConfig.inputType}`);
+      switch(stepData.inputConfig.inputType.toLowerCase()) {
+        case 'text':
+          effectiveMessageType = "input";
+          break;
+        case 'textarea':
+        case 'long_text':
+          effectiveMessageType = "textarea";
+          break;
+        case 'number':
+          effectiveMessageType = "number";
+          break;
+        case 'date':
+          effectiveMessageType = "date";
+          break;
+        case 'multiselect':
+        case 'multi_select':
+          effectiveMessageType = "multiSelect";
+          break;
+        default:
+          // Default to text input
+          effectiveMessageType = "input";
+      }
+    } 
+    // If no inputConfig.inputType, check content for clues
+    else {
+      // Check content text for type hints
+      const contentText = (stepData.content?.headline || '') + ' ' + (stepData.content?.text || '');
+      
+      // Budget/number detection
+      const budgetKeywords = ['budget', 'betrag', 'summe', 'geld', 'euro', '€', 'kosten', 'preis', 'kaufpreis', 'modernisierungsbudget', 'kaufbudget'];
+      const mightBeNumberInput = budgetKeywords.some(keyword => 
+        contentText.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
+      // Date detection
+      const dateKeywords = ['datum', 'wann', 'zeitpunkt', 'termin', 'tag', 'monat', 'jahr'];
+      const mightBeDateInput = dateKeywords.some(keyword => 
+        contentText.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
+      // Longer text detection
+      const textareaKeywords = ['beschreibung', 'erzählen', 'erklären', 'erläutern', 'ausführlich', 'kommentar'];
+      const mightBeTextareaInput = textareaKeywords.some(keyword => 
+        contentText.toLowerCase().includes(keyword.toLowerCase())
+      );
+      
+      // Make decision based on strongest signal
+      if (mightBeNumberInput) {
+        console.log("Auto-detected number input based on content:", contentText);
+        effectiveMessageType = "number";
+      } else if (mightBeDateInput) {
+        console.log("Auto-detected date input based on content:", contentText);
+        effectiveMessageType = "date";
+      } else if (mightBeTextareaInput) {
+        console.log("Auto-detected textarea input based on content:", contentText);
+        effectiveMessageType = "textarea";
+      } else {
+        // Default to regular text input
+        console.log("Defaulting to text input based on content:", contentText);
+        effectiveMessageType = "input";
+      }
     }
   }
+
+  console.log(`Final determined message type: ${effectiveMessageType}`);
 
   // Determine which view component to render based on messageType
   switch (effectiveMessageType) {
@@ -121,6 +176,11 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       return <InfoView data={stepData} />;
     
     case "input":
+      console.log("Rendering TextInputView with data:", {
+        id: stepData.id,
+        stepId: stepData.stepId,
+        title: stepData.title || stepData.content?.headline,
+      });
       return <TextInputView data={stepData} form={form} />;
     
     case "textarea":
@@ -150,9 +210,10 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     
     default:
       console.warn("Unknown messageType:", stepData.messageType);
-      // Default to ContactFormView for backwards compatibility ONLY IF messageType is undefined
-      if (!stepData.messageType) {
-        return <ContactFormView data={stepData} form={form} />;
+      // Default to TextInputView if not specified (more likely to be useful than showing an error)
+      if (!stepData.messageType || stepData.messageType === "") {
+        console.log("No messageType specified, defaulting to TextInputView");
+        return <TextInputView data={stepData} form={form} />;
       }
       
       // Otherwise show an error state
