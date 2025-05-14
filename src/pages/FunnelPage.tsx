@@ -1,14 +1,30 @@
 
-import React from "react";
+import React, { useState } from "react";
 import ChatHeader from "@/components/chat/ChatHeader";
 import ChatFooter from "@/components/chat/ChatFooter";
 import ChatHeading from "@/components/chat/ChatHeading";
 import FunnelContainer from "@/components/funnel/FunnelContainer";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
 
 const FunnelPage: React.FC = () => {
+  const [funnelCompleted, setFunnelCompleted] = useState(false);
+  const [showFunnel, setShowFunnel] = useState(true);
+  
   // Use a webhook URL that will handle the funnel flow and end with a contact form
   const webhookUrl = "https://agent.snipe-solutions.de/webhook/funnel";
+
+  // Handle funnel completion
+  const handleFunnelComplete = () => {
+    setFunnelCompleted(true);
+    setShowFunnel(false);
+  };
+
+  // Handle restart of funnel
+  const handleRestartFunnel = () => {
+    setFunnelCompleted(false);
+    setShowFunnel(true);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -19,7 +35,33 @@ const FunnelPage: React.FC = () => {
           <ChatHeading />
           
           <div className="mt-6 mb-12">
-            <FunnelContainer webhookUrl={webhookUrl} />
+            {showFunnel ? (
+              <FunnelContainer 
+                webhookUrl={webhookUrl} 
+                onFunnelComplete={handleFunnelComplete} 
+              />
+            ) : funnelCompleted ? (
+              <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-4 md:p-8">
+                <div className="text-center py-10">
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-16 w-16 text-green-500 mx-auto mb-6" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank!</h2>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Wir haben deine Anfrage erhalten und werden uns in Kürze bei dir melden.
+                  </p>
+                  <Button onClick={handleRestartFunnel} className="mt-6">
+                    Neuen Antrag starten
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

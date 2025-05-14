@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -90,7 +91,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         body: JSON.stringify(payload)
       });
 
-      // Immediately set success state without waiting for response
+      // Set success state
       setIsSuccess(true);
       
       // Call parent success callback if provided

@@ -47,9 +47,13 @@ export interface FunnelResponse {
 
 interface FunnelContainerProps {
   webhookUrl?: string;
+  onFunnelComplete?: () => void; // Add callback for funnel completion
 }
 
-const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
+const FunnelContainer: React.FC<FunnelContainerProps> = ({ 
+  webhookUrl,
+  onFunnelComplete 
+}) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
@@ -453,19 +457,18 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
 
   const renderStep = () => {
     if (success) {
+      // When success is true, call onFunnelComplete if it exists
+      React.useEffect(() => {
+        if (onFunnelComplete) {
+          console.log("Funnel completed successfully, calling onFunnelComplete");
+          onFunnelComplete();
+        }
+      }, [success]);
+
       return (
         <div className="text-center py-8">
           <h2 className="text-2xl font-bold text-primary mb-4">Vielen Dank!</h2>
           <p className="text-gray-600 mb-6">Deine Anfrage wurde erfolgreich übermittelt. Wir melden uns in Kürze bei dir.</p>
-          <Button 
-            onClick={() => {
-              setCurrentStep(1);
-              setSuccess(false);
-              form.reset();
-            }}
-          >
-            Neue Anfrage starten
-          </Button>
         </div>
       );
     }
@@ -503,6 +506,11 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({ webhookUrl }) => {
             if (currentDynamicStep.messageType === "end") {
               console.log("EndFormView submission successful - now showing success screen");
               setSuccess(true);
+              // Call the onFunnelComplete callback if it exists
+              if (onFunnelComplete) {
+                console.log("Calling onFunnelComplete from EndFormView success");
+                onFunnelComplete();
+              }
             }
           }}
         />
