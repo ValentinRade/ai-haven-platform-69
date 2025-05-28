@@ -1,10 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
+import TypewriterText from "@/components/chat/TypewriterText";
+import AnimatedOptions from "@/components/chat/AnimatedOptions";
 
 interface MultiSelectViewProps {
   form: UseFormReturn<FunnelData>;
@@ -15,6 +17,7 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
   const { setValue, watch } = form;
   const fieldName = data.id || data.stepId || `multiselect_${Date.now()}`;
   const currentValues = watch(fieldName) || [];
+  const [textAnimationComplete, setTextAnimationComplete] = useState(false);
   
   const handleCheckedChange = (value: string, checked: boolean) => {
     const updatedValues = checked
@@ -27,37 +30,49 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
-        {data.content?.headline || data.title || "Mehrere Optionen auswählen"}
+        <TypewriterText 
+          content={data.content?.headline || data.title || "Mehrere Optionen auswählen"}
+          speed={15}
+          onComplete={() => setTextAnimationComplete(true)}
+        />
       </h2>
       {(data.content?.text || data.description) && (
-        <p className="text-gray-600 mb-6">{data.content?.text || data.description}</p>
+        <div className="text-gray-600 mb-6">
+          <TypewriterText 
+            content={data.content?.text || data.description} 
+            speed={15}
+          />
+        </div>
       )}
 
-      <div className="space-y-3">
-        {(data.options || []).map((option) => (
-          <div 
-            key={option.id} 
-            className={`flex items-center rounded-lg border p-4 transition-all ${
-              currentValues.includes(option.id) 
-                ? "border-primary bg-primary/5" 
-                : "border-gray-200 hover:border-gray-300"
-            }`}
-          >
-            <Checkbox 
-              id={option.id}
-              checked={currentValues.includes(option.id)}
-              onCheckedChange={(checked) => handleCheckedChange(option.id, checked as boolean)}
-              className="mr-4"
-            />
-            <Label 
-              htmlFor={option.id} 
-              className="flex-grow cursor-pointer font-normal"
+      {/* Show options only after text animation completes */}
+      {textAnimationComplete && (
+        <AnimatedOptions delay={200} staggerDelay={100}>
+          {(data.options || []).map((option) => (
+            <div 
+              key={option.id} 
+              className={`flex items-center rounded-lg border p-4 transition-all ${
+                currentValues.includes(option.id) 
+                  ? "border-primary bg-primary/5" 
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
             >
-              {option.label}
-            </Label>
-          </div>
-        ))}
-      </div>
+              <Checkbox 
+                id={option.id}
+                checked={currentValues.includes(option.id)}
+                onCheckedChange={(checked) => handleCheckedChange(option.id, checked as boolean)}
+                className="mr-4"
+              />
+              <Label 
+                htmlFor={option.id} 
+                className="flex-grow cursor-pointer font-normal"
+              >
+                {option.label}
+              </Label>
+            </div>
+          ))}
+        </AnimatedOptions>
+      )}
     </div>
   );
 };

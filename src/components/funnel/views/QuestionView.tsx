@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
+import TypewriterText from "@/components/chat/TypewriterText";
+import AnimatedOptions from "@/components/chat/AnimatedOptions";
 
 interface QuestionViewProps {
   form: UseFormReturn<FunnelData>;
@@ -17,6 +18,7 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
   const { setValue, watch, register, formState: { errors } } = form;
   const fieldName = data.id || data.stepId || `question_${Date.now()}`;
   const currentValue = watch(fieldName);
+  const [textAnimationComplete, setTextAnimationComplete] = useState(false);
   
   // Extract content from either format
   const title = data.content?.headline || data.title || "Bitte wähle eine Option";
@@ -57,15 +59,21 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
-        {title}
+        <TypewriterText 
+          content={title} 
+          speed={15}
+          onComplete={() => setTextAnimationComplete(true)}
+        />
       </h2>
       {description && (
-        <p className="text-gray-600 mb-6">{description}</p>
+        <div className="text-gray-600 mb-6">
+          <TypewriterText content={description} speed={15} />
+        </div>
       )}
 
-      {/* Show radio options if available */}
-      {options.length > 0 && (
-        <div className="space-y-3">
+      {/* Show radio options if available - animated after text completion */}
+      {options.length > 0 && textAnimationComplete && (
+        <AnimatedOptions delay={200} staggerDelay={100}>
           {options.map((option) => (
             <div 
               key={option.id} 
@@ -93,11 +101,11 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
               </Label>
             </div>
           ))}
-        </div>
+        </AnimatedOptions>
       )}
 
-      {/* Show text input ONLY under strict control */}
-      {showTextInput && (
+      {/* Show text input ONLY under strict control - animated after text completion */}
+      {showTextInput && textAnimationComplete && (
         <div className="space-y-4 mt-4">
           <div>
             <Label htmlFor={`${fieldName}_text`} className="block mb-2">
