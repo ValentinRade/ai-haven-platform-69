@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
-import TypewriterText from "../../chat/TypewriterText";
 
 interface QuestionViewProps {
   form: UseFormReturn<FunnelData>;
@@ -57,49 +56,19 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
   
   return (
     <div>
-      <TypewriterText 
-        content={`## ${title}`}
-        speed={30}
-      />
+      <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
+        {title}
+      </h2>
       {description && (
-        <div className="mt-4">
-          <TypewriterText 
-            content={description}
-            speed={30}
-          />
-        </div>
+        <p className="text-gray-600 mb-6">{description}</p>
       )}
 
       {/* Show radio options if available */}
       {options.length > 0 && (
-        <div className="space-y-3 mt-6">
-          {options.map((option, index) => (
-            <TypewriterText
-              key={option.id}
-              content={`[OPTION:${option.id}]${option.label}`}
-              speed={30}
-              onComplete={() => {
-                // After animation completes, render the actual clickable option
-                setTimeout(() => {
-                  const optionElement = document.getElementById(`option-${option.id}`);
-                  if (optionElement) {
-                    optionElement.style.display = 'flex';
-                  }
-                  const animationElement = document.getElementById(`animation-${option.id}`);
-                  if (animationElement) {
-                    animationElement.style.display = 'none';
-                  }
-                }, index * 200); // Stagger the appearance
-              }}
-            />
-          ))}
-          
-          {/* Hidden actual options that will be shown after animation */}
+        <div className="space-y-3">
           {options.map((option) => (
             <div 
-              key={`actual-${option.id}`}
-              id={`option-${option.id}`}
-              style={{ display: 'none' }}
+              key={option.id} 
               className={`flex items-center rounded-lg border p-4 transition-all cursor-pointer ${
                 currentValue === option.id 
                   ? "border-primary bg-primary/5" 

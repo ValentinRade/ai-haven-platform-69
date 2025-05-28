@@ -39,14 +39,6 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
   }, [content]);
 
   const renderTypedContent = (text: string) => {
-    // Handle special option format [OPTION:id]text
-    if (text.startsWith('[OPTION:')) {
-      const match = text.match(/^\[OPTION:([^\]]+)\](.+)$/);
-      if (match) {
-        return <div className="text-gray-600">☐ {match[2]}</div>;
-      }
-    }
-
     try {
       // Use marked to parse markdown to HTML
       const parsedHtml = marked(text);
