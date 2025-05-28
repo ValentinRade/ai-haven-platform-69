@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
 import TypewriterText from "@/components/chat/TypewriterText";
-import AnimatedOptions from "@/components/chat/AnimatedOptions";
 
 interface QuestionViewProps {
   form: UseFormReturn<FunnelData>;
@@ -71,9 +70,9 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         </div>
       )}
 
-      {/* Show radio options if available - animated after text completion */}
+      {/* Show radio options immediately after text animation completes */}
       {options.length > 0 && textAnimationComplete && (
-        <AnimatedOptions delay={200} staggerDelay={100}>
+        <div className="space-y-3">
           {options.map((option) => (
             <div 
               key={option.id} 
@@ -101,10 +100,10 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
               </Label>
             </div>
           ))}
-        </AnimatedOptions>
+        </div>
       )}
 
-      {/* Show text input ONLY under strict control - animated after text completion */}
+      {/* Show text input ONLY under strict control - immediately after text animation completes */}
       {showTextInput && textAnimationComplete && (
         <div className="space-y-4 mt-4">
           <div>

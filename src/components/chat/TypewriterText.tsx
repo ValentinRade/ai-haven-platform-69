@@ -10,7 +10,7 @@ interface TypewriterTextProps {
 
 const TypewriterText: React.FC<TypewriterTextProps> = ({ 
   content, 
-  speed = 15, // Doppelt so schnell: von 30ms auf 15ms
+  speed = 15,
   onComplete 
 }) => {
   const [displayedContent, setDisplayedContent] = useState("");

@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
 import TypewriterText from "@/components/chat/TypewriterText";
-import AnimatedOptions from "@/components/chat/AnimatedOptions";
 
 interface MultiSelectViewProps {
   form: UseFormReturn<FunnelData>;
@@ -45,9 +44,9 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
         </div>
       )}
 
-      {/* Show options only after text animation completes */}
+      {/* Show options immediately after text animation completes - without additional animation */}
       {textAnimationComplete && (
-        <AnimatedOptions delay={200} staggerDelay={100}>
+        <div className="space-y-3">
           {(data.options || []).map((option) => (
             <div 
               key={option.id} 
@@ -71,7 +70,7 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
               </Label>
             </div>
           ))}
-        </AnimatedOptions>
+        </div>
       )}
     </div>
   );
