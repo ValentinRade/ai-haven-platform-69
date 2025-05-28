@@ -17,26 +17,29 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
-  useEffect(() => {
-    if (currentIndex < content.length && !isComplete) {
-      const timer = setTimeout(() => {
-        setDisplayedContent(prev => prev + content[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
-
-      return () => clearTimeout(timer);
-    } else if (currentIndex >= content.length && !isComplete) {
-      setIsComplete(true);
-      onComplete?.();
-    }
-  }, [currentIndex, content, speed, isComplete, onComplete]);
-
   // Reset when content changes
   useEffect(() => {
     setDisplayedContent("");
     setCurrentIndex(0);
     setIsComplete(false);
   }, [content]);
+
+  // Main typewriter effect
+  useEffect(() => {
+    if (currentIndex < content.length && !isComplete) {
+      const timer = setTimeout(() => {
+        setDisplayedContent(content.substring(0, currentIndex + 1));
+        setCurrentIndex(currentIndex + 1);
+      }, speed);
+
+      return () => clearTimeout(timer);
+    } else if (currentIndex >= content.length && !isComplete) {
+      setIsComplete(true);
+      if (onComplete) {
+        onComplete();
+      }
+    }
+  }, [currentIndex, content, speed, isComplete, onComplete]);
 
   const renderTypedContent = (text: string) => {
     try {
