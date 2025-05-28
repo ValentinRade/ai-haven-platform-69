@@ -2,6 +2,7 @@
 import React from "react";
 import { marked } from "marked";
 import { motion } from "framer-motion";
+import TypewriterText from "./TypewriterText";
 
 interface Message {
   id: string;
@@ -15,7 +16,7 @@ interface ChatMessageBubbleProps {
 }
 
 const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
-  // Function to render markdown and HTML in messages
+  // Function to render markdown and HTML in messages (for user messages)
   const renderMessageContent = (content: string) => {
     try {
       // Use marked to parse markdown to HTML
@@ -44,7 +45,7 @@ const ChatMessageBubble: React.FC<ChatMessageBubbleProps> = ({ message }) => {
         {message.isUser ? (
           <div>{message.content}</div>
         ) : (
-          renderMessageContent(message.content)
+          <TypewriterText content={message.content} speed={30} />
         )}
       </div>
     </motion.div>
