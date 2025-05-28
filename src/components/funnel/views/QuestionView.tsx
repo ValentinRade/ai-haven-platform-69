@@ -17,61 +17,48 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
   const { setValue, watch, register, formState: { errors } } = form;
   const fieldName = data.id || data.stepId || `question_${Date.now()}`;
   const currentValue = watch(fieldName);
+  const [titleAnimationComplete, setTitleAnimationComplete] = useState(false);
   const [textAnimationComplete, setTextAnimationComplete] = useState(false);
   
-  // Extract content from either format
   const title = data.content?.headline || data.title || "Bitte wähle eine Option";
   const description = data.content?.text || data.description;
   
-  // Extract and normalize options
   const options = data.options || [];
   
   const handleSelection = (value: string) => {
-    // Set the value in the form
     setValue(fieldName, value);
-    
     console.log(`Selection made: ${value} for field: ${fieldName}`);
     
-    // If we have a callback for option selection, call it
-    // But do NOT automatically advance to the next step!
     if (onOptionSelect) {
       onOptionSelect(value);
     }
   };
 
-  // STRICT CONTROL: Only show text input when BOTH conditions are met:
-  // 1. No options are provided AND
-  // 2. Explicitly configured as inputType="text"
   const showTextInput = 
     options.length === 0 && 
     data.inputConfig?.inputType === "text";
-  
-  // Log the decision factors for debugging with more clarity
-  console.log(`QuestionView for ${fieldName} - Text input visibility decision:`, {
-    hasOptions: options.length > 0,
-    optionsCount: options.length,
-    hasInputConfig: !!data.inputConfig,
-    inputType: data.inputConfig?.inputType || "none",
-    showTextInput: showTextInput
-  });
   
   return (
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
         <TypewriterText 
           content={title} 
-          speed={15}
-          onComplete={() => setTextAnimationComplete(true)}
+          speed={8}
+          onComplete={() => setTitleAnimationComplete(true)}
         />
       </h2>
-      {description && (
+      {description && titleAnimationComplete && (
         <div className="text-gray-600 mb-6">
-          <TypewriterText content={description} speed={15} />
+          <TypewriterText 
+            content={description} 
+            speed={8} 
+            onComplete={() => setTextAnimationComplete(true)}
+          />
         </div>
       )}
 
-      {/* Show radio options immediately after text animation completes */}
-      {options.length > 0 && textAnimationComplete && (
+      {/* Show radio options after text animation completes */}
+      {options.length > 0 && ((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-3">
           {options.map((option) => (
             <div 
@@ -103,8 +90,8 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
         </div>
       )}
 
-      {/* Show text input ONLY under strict control - immediately after text animation completes */}
-      {showTextInput && textAnimationComplete && (
+      {/* Show text input after text animation completes */}
+      {showTextInput && ((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-4 mt-4">
           <div>
             <Label htmlFor={`${fieldName}_text`} className="block mb-2">

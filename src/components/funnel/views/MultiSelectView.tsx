@@ -16,7 +16,11 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
   const { setValue, watch } = form;
   const fieldName = data.id || data.stepId || `multiselect_${Date.now()}`;
   const currentValues = watch(fieldName) || [];
+  const [titleAnimationComplete, setTitleAnimationComplete] = useState(false);
   const [textAnimationComplete, setTextAnimationComplete] = useState(false);
+  
+  const title = data.content?.headline || data.title || "Mehrere Optionen auswählen";
+  const description = data.content?.text || data.description;
   
   const handleCheckedChange = (value: string, checked: boolean) => {
     const updatedValues = checked
@@ -30,22 +34,23 @@ const MultiSelectView: React.FC<MultiSelectViewProps> = ({ form, data }) => {
     <div>
       <h2 className="text-xl md:text-2xl font-medium text-primary mb-6">
         <TypewriterText 
-          content={data.content?.headline || data.title || "Mehrere Optionen auswählen"}
-          speed={15}
-          onComplete={() => setTextAnimationComplete(true)}
+          content={title}
+          speed={8}
+          onComplete={() => setTitleAnimationComplete(true)}
         />
       </h2>
-      {(data.content?.text || data.description) && (
+      {description && titleAnimationComplete && (
         <div className="text-gray-600 mb-6">
           <TypewriterText 
-            content={data.content?.text || data.description} 
-            speed={15}
+            content={description} 
+            speed={8}
+            onComplete={() => setTextAnimationComplete(true)}
           />
         </div>
       )}
 
-      {/* Show options immediately after text animation completes - without additional animation */}
-      {textAnimationComplete && (
+      {/* Show options after text animation completes */}
+      {((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-3">
           {(data.options || []).map((option) => (
             <div 
