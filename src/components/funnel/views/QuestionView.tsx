@@ -94,9 +94,6 @@ const QuestionView: React.FC<QuestionViewProps> = ({ form, data, onOptionSelect 
       {showTextInput && ((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-4 mt-4">
           <div>
-            <Label htmlFor={`${fieldName}_text`} className="block mb-2">
-              {data.label || "Deine Antwort"}
-            </Label>
             <Input
               id={`${fieldName}_text`}
               {...register(fieldName, { 

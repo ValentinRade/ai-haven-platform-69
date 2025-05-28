@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
@@ -43,9 +42,6 @@ const DateInputView: React.FC<DateInputViewProps> = ({ form, data }) => {
       {((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-4">
           <div>
-            <Label htmlFor={fieldName} className="block mb-2">
-              {data.label || "Datum auswählen"}
-            </Label>
             <Input
               id={fieldName}
               type="date"

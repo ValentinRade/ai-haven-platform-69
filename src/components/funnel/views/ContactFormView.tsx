@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
@@ -43,15 +42,12 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="firstName" className="block mb-2">
-                Vorname
-              </Label>
               <Input
                 id="firstName"
                 {...register("firstName", { 
                   required: "Vorname ist erforderlich"
                 })}
-                placeholder="Max"
+                placeholder="Vorname"
                 className="w-full"
               />
               {errors.firstName && (
@@ -62,15 +58,12 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
             </div>
             
             <div>
-              <Label htmlFor="lastName" className="block mb-2">
-                Nachname
-              </Label>
               <Input
                 id="lastName"
                 {...register("lastName", { 
                   required: "Nachname ist erforderlich"
                 })}
-                placeholder="Mustermann"
+                placeholder="Nachname"
                 className="w-full"
               />
               {errors.lastName && (
@@ -82,9 +75,6 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
           </div>
           
           <div>
-            <Label htmlFor="email" className="block mb-2">
-              E-Mail
-            </Label>
             <Input
               id="email"
               type="email"
@@ -95,7 +85,7 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
                   message: "Ungültige E-Mail-Adresse"
                 }
               })}
-              placeholder="max.mustermann@beispiel.de"
+              placeholder="E-Mail-Adresse"
               className="w-full"
             />
             {errors.email && (
@@ -106,14 +96,11 @@ const ContactFormView: React.FC<ContactFormViewProps> = ({ form, data }) => {
           </div>
           
           <div>
-            <Label htmlFor="phone" className="block mb-2">
-              Telefonnummer
-            </Label>
             <Input
               id="phone"
               type="tel"
               {...register("phone")}
-              placeholder="+49 123 456789"
+              placeholder="Telefonnummer (optional)"
               className="w-full"
             />
             {errors.phone && (

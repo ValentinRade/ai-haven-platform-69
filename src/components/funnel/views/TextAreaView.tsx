@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
@@ -43,9 +42,6 @@ const TextAreaView: React.FC<TextAreaViewProps> = ({ form, data }) => {
       {((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-4">
           <div>
-            <Label htmlFor={fieldName} className="block mb-2">
-              {data.label || "Ihre Antwort"}
-            </Label>
             <Textarea
               id={fieldName}
               {...register(fieldName, { 

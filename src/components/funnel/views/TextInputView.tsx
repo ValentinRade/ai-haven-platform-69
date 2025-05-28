@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
@@ -20,7 +19,6 @@ const TextInputView: React.FC<TextInputViewProps> = ({ form, data }) => {
   
   const title = data.title || data.content?.headline || "Bitte geben Sie Ihre Antwort ein";
   const description = data.description || data.content?.text;
-  const label = data.label || "Ihre Antwort";
   const placeholder = data.placeholder || data.inputConfig?.placeholder || "";
   
   const isRequired = data.required || 
@@ -63,9 +61,6 @@ const TextInputView: React.FC<TextInputViewProps> = ({ form, data }) => {
       {((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-4">
           <div>
-            <Label htmlFor={fieldName} className="block mb-2">
-              {label}
-            </Label>
             <Input
               id={fieldName}
               {...register(fieldName, validationRules)}

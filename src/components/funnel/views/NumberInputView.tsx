@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { FunnelData } from "../FunnelContainer";
 import { DynamicStepData } from "../DynamicStep";
@@ -33,10 +32,6 @@ const NumberInputView: React.FC<NumberInputViewProps> = ({ form, data }) => {
   const stepValue = data.step !== undefined ? data.step : 
                   data.inputConfig?.step !== undefined ? data.inputConfig.step : "1";
   
-  const inputLabel = data.label || 
-                   data.content?.headline || 
-                   "Zahlenwert eingeben";
-  
   const placeholderText = data.placeholder || 
                         data.inputConfig?.placeholder || 
                         "Bitte Zahl eingeben";
@@ -64,10 +59,6 @@ const NumberInputView: React.FC<NumberInputViewProps> = ({ form, data }) => {
       {((description && textAnimationComplete) || (!description && titleAnimationComplete)) && (
         <div className="space-y-4">
           <div>
-            <Label htmlFor={fieldName} className="block mb-2">
-              {inputLabel}
-            </Label>
-            
             <Input
               id={fieldName}
               type="number"
