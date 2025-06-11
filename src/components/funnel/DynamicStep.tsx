@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import QuestionView from "./views/QuestionView";
@@ -11,6 +10,7 @@ import DateInputView from "./views/DateInputView";
 import NumberInputView from "./views/NumberInputView";
 import SummaryView from "./views/SummaryView";
 import EndFormView from "./views/EndFormView";
+import BinaryChoiceView from "./views/BinaryChoiceView";
 
 // Export the common data structure type to fix import errors in view components
 export interface DynamicStepData {
@@ -171,6 +171,10 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
   switch (effectiveMessageType) {
     case "question":
       return <QuestionView data={stepData} form={form} onOptionSelect={onOptionSelect} />;
+    
+    case "binaryChoice":
+      console.log("Rendering BinaryChoiceView with options:", stepData.options);
+      return <BinaryChoiceView data={stepData} form={form} onOptionSelect={onOptionSelect} />;
     
     case "info":
       return <InfoView data={stepData} />;
