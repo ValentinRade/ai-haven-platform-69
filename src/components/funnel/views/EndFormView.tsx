@@ -1,17 +1,10 @@
 
-import React, { useEffect } from "react";
-import { useForm, UseFormReturn } from "react-hook-form";
+import React, { useEffect, useState } from "react";
+import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 
 interface EndFormViewProps {
   data: {
@@ -41,15 +34,20 @@ interface EndFormViewProps {
   onSuccess?: () => void;
 }
 
-type FormValues = {
-  [key: string]: string;
-};
-
 const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuccess }) => {
-  const localForm = useForm<FormValues>();
-  const form = parentForm || localForm;
-  
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: ""
+  });
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: ""
+  });
 
   useEffect(() => {
     console.log("EndFormView checking messageType:", data.messageType);
@@ -59,54 +57,116 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     }
   }, [data.messageType]);
 
-  // Extract form fields from metadata or use defaults - ENSURE ALL IDs ARE VALID STRINGS
-  const formFields = (data.metadata?.formFields || [
+  // Extract form fields from metadata or use defaults
+  const formFields = data.metadata?.formFields || [
     { id: "firstName", label: "Vorname", inputType: "text", validation: { required: true } },
     { id: "lastName", label: "Nachname", inputType: "text", validation: { required: true } },
     { id: "email", label: "E-Mail", inputType: "email", validation: { required: true, pattern: "^[^@]+@[^@]+\\.[^@]+$" } },
     { id: "phone", label: "Telefonnummer", inputType: "tel", validation: { required: true } }
-  ]).filter(field => field && field.id && typeof field.id === 'string' && field.id.trim() !== ''); // CRITICAL: Filter out invalid fields
+  ];
 
   console.log("EndFormView rendering with data:", {
     headline: data.content.headline,
     messageType: data.messageType,
     formFields: formFields.length,
-    hasSuccessCallback: !!onSuccess,
-    validFieldIds: formFields.map(f => f.id)
+    hasSuccessCallback: !!onSuccess
   });
 
-  const onSubmit = async (values: FormValues) => {
-    // Verhindere doppelte Submissions
+  // Handle input changes
+  const handleInputChange = (fieldId: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldId]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[fieldId as keyof typeof errors]) {
+      setErrors(prev => ({
+        ...prev,
+        [fieldId]: ""
+      }));
+    }
+  };
+
+  // Validate a single field
+  const validateField = (field: any, value: string) => {
+    if (field.validation?.required && !value.trim()) {
+      return "Dieses Feld ist erforderlich";
+    }
+    
+    if (field.validation?.pattern && value) {
+      const regex = new RegExp(field.validation.pattern);
+      if (!regex.test(value)) {
+        return `Ungültiges Format für ${field.label}`;
+      }
+    }
+    
+    if (field.validation?.minLength && value.length < field.validation.minLength) {
+      return `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`;
+    }
+    
+    if (field.validation?.maxLength && value.length > field.validation.maxLength) {
+      return `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`;
+    }
+    
+    return "";
+  };
+
+  // Validate all fields
+  const validateForm = () => {
+    const newErrors = { firstName: "", lastName: "", email: "", phone: "" };
+    let hasErrors = false;
+    
+    formFields.forEach(field => {
+      const error = validateField(field, formData[field.id as keyof typeof formData]);
+      if (error) {
+        newErrors[field.id as keyof typeof newErrors] = error;
+        hasErrors = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    return !hasErrors;
+  };
+
+  // Handle manual submission
+  const handleSubmit = async () => {
+    // Prevent double submissions
     if (isSubmitting) {
       console.log("EndFormView: Already submitting, ignoring duplicate submission");
       return;
     }
     
+    // Validate form
+    if (!validateForm()) {
+      console.log("EndFormView: Form validation failed");
+      return;
+    }
+    
     setIsSubmitting(true);
-    console.log("EndFormView: Form submitted with values:", values);
+    console.log("EndFormView: Manual form submission with values:", formData);
     
     try {
-      // Payload im GLEICHEN Format wie alle anderen Steps
+      // Payload in the same format as other steps
       const payload = {
-        stepId: data.stepId, // Gleiche stepId beibehalten
+        stepId: data.stepId,
         previousAnswers: {
           ...data.previousAnswers,
-          // Kontaktdaten zu previousAnswers hinzufügen
-          firstName: values.firstName,
-          lastName: values.lastName,
-          email: values.email,
-          phone: values.phone
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone
         },
         event: {
-          type: "step_submit", // Gleicher Event-Type wie andere Steps
+          type: "step_submit",
           currentStep: parseInt(data.stepId),
           timestamp: new Date().toISOString()
         }
       };
 
-      console.log("Submitting contact form data to webhook (same format as other steps):", payload);
+      console.log("Submitting contact form data to webhook:", payload);
 
-      // Webhook senden - Response ignorieren da nicht benötigt
+      // Send webhook - response ignored as not needed
       fetch(data.webhookUrl, {
         method: "POST",
         headers: {
@@ -114,17 +174,17 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         },
         body: JSON.stringify(payload)
       }).catch(error => {
-        // Webhook-Fehler loggen aber nicht blockieren
+        // Log webhook error but don't block
         console.warn("Webhook error (ignoring):", error);
       });
       
-      // Erfolgs-Toast sofort anzeigen
+      // Show success toast immediately
       toast({
         title: "Erfolg",
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
       
-      // SOFORT onSuccess aufrufen für Weiterleitung zur Danke-Seite
+      // Call onSuccess callback immediately to show thank you page
       console.log("EndFormView: Calling onSuccess callback to show thank you page");
       if (onSuccess) {
         onSuccess();
@@ -154,59 +214,34 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         <p className="text-gray-600 mb-6">{data.content.text}</p>
       </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          {formFields.map((field) => (
-            <FormField
-              key={field.id}
-              control={form.control}
-              name={field.id}
-              rules={{
-                required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
-                pattern: field.validation?.pattern
-                  ? {
-                      value: new RegExp(field.validation.pattern),
-                      message: `Ungültiges Format für ${field.label}`,
-                    }
-                  : undefined,
-                minLength: field.validation?.minLength
-                  ? {
-                      value: field.validation.minLength,
-                      message: `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`,
-                    }
-                  : undefined,
-                maxLength: field.validation?.maxLength
-                  ? {
-                      value: field.validation.maxLength,
-                      message: `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`,
-                    }
-                  : undefined,
-              }}
-              render={({ field: formField }) => (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
-                  <FormControl>
-                    <Input
-                      type={field.inputType}
-                      placeholder={field.label}
-                      {...formField}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+      <div className="space-y-4">
+        {formFields.map((field) => (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={field.id}>{field.label}</Label>
+            <Input
+              id={field.id}
+              type={field.inputType}
+              placeholder={field.label}
+              value={formData[field.id as keyof typeof formData]}
+              onChange={(e) => handleInputChange(field.id, e.target.value)}
+              className={errors[field.id as keyof typeof errors] ? "border-red-500" : ""}
             />
-          ))}
+            {errors[field.id as keyof typeof errors] && (
+              <p className="text-sm font-medium text-red-500">
+                {errors[field.id as keyof typeof errors]}
+              </p>
+            )}
+          </div>
+        ))}
 
-          <Button
-            type="submit"
-            className="w-full mt-6"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Wird gesendet..." : "Absenden"}
-          </Button>
-        </form>
-      </Form>
+        <Button
+          onClick={handleSubmit}
+          className="w-full mt-6"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Wird gesendet..." : "Absenden"}
+        </Button>
+      </div>
     </div>
   );
 };
