@@ -20,17 +20,8 @@ const NumberInputView: React.FC<NumberInputViewProps> = ({ form, data }) => {
   const title = data.content?.headline || data.title || "Bitte geben Sie einen Zahlenwert ein";
   const description = data.content?.text || data.description;
   
-  const minValue = data.min !== undefined ? data.min : 
-                 data.inputConfig?.validation?.min !== undefined ? data.inputConfig.validation.min : -Infinity;
-  
-  const maxValue = data.max !== undefined ? data.max : 
-                 data.inputConfig?.validation?.max !== undefined ? data.inputConfig.validation.max : Infinity;
-                 
   const isRequired = data.required !== undefined ? data.required : 
                    data.inputConfig?.validation?.required !== undefined ? data.inputConfig.validation.required : false;
-                   
-  const stepValue = data.step !== undefined ? data.step : 
-                  data.inputConfig?.step !== undefined ? data.inputConfig.step : "1";
   
   const placeholderText = data.placeholder || 
                         data.inputConfig?.placeholder || 
@@ -61,23 +52,12 @@ const NumberInputView: React.FC<NumberInputViewProps> = ({ form, data }) => {
           <div>
             <Input
               id={fieldName}
-              type="number"
+              type="text"
               {...register(fieldName, { 
-                required: isRequired ? "Dieses Feld ist erforderlich" : false,
-                min: {
-                  value: minValue,
-                  message: `Der Mindestwert ist ${minValue !== -Infinity ? minValue : 0}`
-                },
-                max: {
-                  value: maxValue,
-                  message: `Der Maximalwert ist ${maxValue !== Infinity ? maxValue : ''}`
-                }
+                required: isRequired ? "Dieses Feld ist erforderlich" : false
               })}
               placeholder={placeholderText}
               className="w-full"
-              min={minValue !== -Infinity ? minValue : undefined}
-              max={maxValue !== Infinity ? maxValue : undefined}
-              step={stepValue}
             />
             
             {errors[fieldName] && (
