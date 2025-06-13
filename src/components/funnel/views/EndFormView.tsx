@@ -74,24 +74,36 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     hasSuccessCallback: !!onSuccess
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: FormValues, event?: React.FormEvent) => {
+    // KRITISCH: Verhindere das Default-Verhalten des Forms
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Verhindere doppelte Submissions
+    if (isSubmitting) {
+      console.log("EndFormView: Already submitting, ignoring duplicate submission");
+      return;
+    }
+    
     setIsSubmitting(true);
     console.log("EndFormView: Form submitted with values:", values);
     
     try {
-      // Prepare the payload in the SAME FORMAT as all other steps
+      // Payload im GLEICHEN Format wie alle anderen Steps
       const payload = {
-        stepId: data.stepId, // Keep the same stepId, don't change it
+        stepId: data.stepId, // Gleiche stepId beibehalten
         previousAnswers: {
           ...data.previousAnswers,
-          // Add contact form fields to previous answers - using individual keys like other steps
+          // Kontaktdaten zu previousAnswers hinzufügen
           firstName: values.firstName,
           lastName: values.lastName,
           email: values.email,
           phone: values.phone
         },
         event: {
-          type: "step_submit", // Same event type as other steps
+          type: "step_submit", // Gleicher Event-Type wie andere Steps
           currentStep: parseInt(data.stepId),
           timestamp: new Date().toISOString()
         }
@@ -99,7 +111,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
       console.log("Submitting contact form data to webhook (same format as other steps):", payload);
 
-      // Send webhook but IGNORE the response - we don't need it for the final step
+      // Webhook senden - Response ignorieren da nicht benötigt
       fetch(data.webhookUrl, {
         method: "POST",
         headers: {
@@ -107,17 +119,17 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         },
         body: JSON.stringify(payload)
       }).catch(error => {
-        // Log error but don't block the flow
+        // Webhook-Fehler loggen aber nicht blockieren
         console.warn("Webhook error (ignoring):", error);
       });
       
-      // Show success toast immediately
+      // Erfolgs-Toast sofort anzeigen
       toast({
         title: "Erfolg",
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
       
-      // CRITICAL: Call onSuccess IMMEDIATELY to trigger thank you page
+      // SOFORT onSuccess aufrufen für Weiterleitung zur Danke-Seite
       console.log("EndFormView: Calling onSuccess callback to show thank you page");
       if (onSuccess) {
         onSuccess();
@@ -138,6 +150,17 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     }
   };
 
+  // KRITISCH: Submit-Handler der das Default-Verhalten verhindert
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log("EndFormView: Form submit event triggered");
+    
+    // React Hook Form handleSubmit verwenden
+    form.handleSubmit((values) => onSubmit(values, event))();
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -148,7 +171,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           {formFields.map((field) => (
             <FormField
               key={field.id}
