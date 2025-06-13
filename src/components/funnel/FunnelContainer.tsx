@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Loader } from "lucide-react";
@@ -579,10 +578,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     
     // Always use currentDynamicStep if available as it contains the latest response from webhook
     if (currentDynamicStep) {
-      // Ensure previousAnswers are passed along
+      // Ensure previousAnswers are passed along and add sessionChatId for EndFormView
       const enrichedStepData = {
         ...currentDynamicStep,
-        previousAnswers: currentDynamicStep.previousAnswers || allResponses
+        previousAnswers: currentDynamicStep.previousAnswers || allResponses,
+        webhookUrl: actualWebhookUrl,
+        chatId: sessionChatId // Pass the sessionChatId that was used throughout the funnel
       };
       
       return (
@@ -599,10 +600,12 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     // (this should rarely happen if webhook responses are handled correctly)
     const dynamicStepIndex = currentStep - (shouldSkipStep2 ? 2 : 3);
     if (dynamicSteps.length > 0 && dynamicStepIndex >= 0 && dynamicStepIndex < dynamicSteps.length) {
-      // Ensure previousAnswers are passed along
+      // Ensure previousAnswers are passed along and add sessionChatId for EndFormView
       const enrichedStepData = {
         ...dynamicSteps[dynamicStepIndex],
-        previousAnswers: dynamicSteps[dynamicStepIndex].previousAnswers || allResponses
+        previousAnswers: dynamicSteps[dynamicStepIndex].previousAnswers || allResponses,
+        webhookUrl: actualWebhookUrl,
+        chatId: sessionChatId // Pass the sessionChatId that was used throughout the funnel
       };
       
       return (

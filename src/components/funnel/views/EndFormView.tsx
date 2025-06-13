@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { useChatStore } from "@/store/chatStore";
 
 interface EndFormViewProps {
   data: {
@@ -29,6 +28,7 @@ interface EndFormViewProps {
     };
     previousAnswers?: any;
     webhookUrl: string;
+    chatId: string; // Add chatId as a prop
   };
   form: UseFormReturn<any>;
   onSuccess?: () => void;
@@ -55,17 +55,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     telefonnummer: ""
   });
 
-  // Get chatId from the chat store
-  const { chatId } = useChatStore();
-
-  useEffect(() => {
-    console.log("EndFormView checking messageType:", data.messageType);
-    
-    if (data.messageType === "end") {
-      console.log("EndFormView: Detected END messageType, showing contact form");
-    }
-  }, [data.messageType]);
-
   // Extract form fields from metadata or use defaults
   const formFields = data.metadata?.formFields || [
     { id: "firstName", label: "Vorname", inputType: "text", validation: { required: true } },
@@ -79,7 +68,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     messageType: data.messageType,
     formFields: formFields.length,
     hasSuccessCallback: !!onSuccess,
-    chatId: chatId
+    chatId: data.chatId // Use the chatId from props
   });
 
   // Handle input changes
@@ -170,7 +159,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
           nachname: formData.nachname,
           telefonnummer: formData.telefonnummer
         },
-        chatId: chatId, // Include chatId like other steps
+        chatId: data.chatId, // Use the same chatId that was used throughout the funnel
         event: {
           type: "step_submit",
           currentStep: parseInt(data.stepId),
