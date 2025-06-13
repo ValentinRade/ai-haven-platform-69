@@ -20,7 +20,7 @@ interface EndFormViewProps {
       text: string;
     };
     stepId: string;
-    messageType?: string; // Add messageType to properly handle "end" messages
+    messageType?: string;
     metadata?: {
       formFields?: Array<{
         id: string;
@@ -37,8 +37,8 @@ interface EndFormViewProps {
     previousAnswers?: any;
     webhookUrl: string;
   };
-  form: UseFormReturn<any>; // Parent form from FunnelContainer
-  onSuccess?: () => void;  // Add callback for success state
+  form: UseFormReturn<any>;
+  onSuccess?: () => void;
 }
 
 type FormValues = {
@@ -46,21 +46,17 @@ type FormValues = {
 };
 
 const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuccess }) => {
-  // Use a local form if no parent form is provided (for backward compatibility)
   const localForm = useForm<FormValues>();
   const form = parentForm || localForm;
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [endReached, setEndReached] = React.useState(false);
 
-  // Log when this component renders with messageType: "end"
   useEffect(() => {
     console.log("EndFormView checking messageType:", data.messageType);
     
-    // No longer automatically calling onSuccess here!
-    // We'll only show the form and wait for the user to submit it
     if (data.messageType === "end") {
-      console.log("EndFormView: Detected END messageType, but showing form first");
+      console.log("EndFormView: Detected END messageType, showing contact form");
     }
   }, [data.messageType]);
 
@@ -81,64 +77,73 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
   });
 
   const onSubmit = async (values: FormValues) => {
-    // If end state is already reached, do nothing - prevent duplicate submissions
     if (endReached) {
       console.log("EndFormView: Submission prevented - end already reached");
       return;
     }
     
-    // Mark as end reached immediately to prevent any subsequent submissions
     setEndReached(true);
     setIsSubmitting(true);
     console.log("EndFormView: Form submitted with values:", values);
     
     try {
-      // Prepare the payload for the webhook
+      // Prepare the payload for the webhook - send contact form data
       const payload = {
-        stepId: data.stepId,
-        previousAnswers: data.previousAnswers || {},
+        stepId: `contact_form_${data.stepId}`,
+        previousAnswers: {
+          ...data.previousAnswers,
+          contactForm: values // Add contact form data to previous answers
+        },
         event: {
-          type: "formSubmission",
-          data: values
+          type: "contactFormSubmission",
+          formData: values,
+          timestamp: new Date().toISOString()
         }
       };
 
-      console.log("Submitting form data to webhook:", payload);
+      console.log("Submitting contact form data to webhook:", payload);
 
-      // Send the data to the webhook
       try {
-        const fetchPromise = fetch(data.webhookUrl, {
+        const response = await fetch(data.webhookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          mode: "no-cors", // Add no-cors mode to avoid CORS issues
           body: JSON.stringify(payload)
         });
         
-        // We don't await this fetch to ensure the UI flow continues
-        fetchPromise.catch(err => {
-          // Still continue even if fetch errors out in no-cors mode
-          console.warn("Fetch error in no-cors mode (can be ignored):", err);
-        });
+        if (response.ok) {
+          const webhookResponse = await response.json();
+          console.log("Webhook response for contact form:", webhookResponse);
+          
+          // Process webhook response if needed
+          // For now, we proceed to success regardless of webhook response
+        } else {
+          console.warn("Webhook returned non-OK status:", response.status);
+        }
       } catch (webhookError) {
         console.warn("Webhook submission error (continuing anyway):", webhookError);
       }
       
-      // CRITICAL: Only NOW call onSuccess to show thank you page AFTER form submission
-      if (onSuccess) {
-        console.log("EndFormView: Calling onSuccess callback AFTER form submission");
-        onSuccess();
-      } else {
-        console.error("EndFormView: No onSuccess callback provided, cannot show thank you page!");
-      }
-      
+      // Show success toast
       toast({
         title: "Erfolg",
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
+      
+      // CRITICAL: Call onSuccess to trigger thank you page
+      if (onSuccess) {
+        console.log("EndFormView: Calling onSuccess callback to show thank you page");
+        onSuccess();
+      } else {
+        console.error("EndFormView: No onSuccess callback provided!");
+      }
+      
     } catch (error) {
-      console.error("Error in form submission:", error);
+      console.error("Error in contact form submission:", error);
+      
+      // Reset endReached on error so user can retry
+      setEndReached(false);
       
       toast({
         variant: "destructive",
@@ -159,7 +164,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         <p className="text-gray-600 mb-6">{data.content.text}</p>
       </div>
 
-      {/* Always show the form if end state hasn't been reached yet */}
       {!endReached && (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
