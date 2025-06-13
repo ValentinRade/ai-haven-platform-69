@@ -50,7 +50,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
   const form = parentForm || localForm;
   
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [endReached, setEndReached] = React.useState(false);
 
   useEffect(() => {
     console.log("EndFormView checking messageType:", data.messageType);
@@ -72,68 +71,55 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     headline: data.content.headline,
     messageType: data.messageType,
     formFields: formFields.length,
-    hasSuccessCallback: !!onSuccess,
-    endReached
+    hasSuccessCallback: !!onSuccess
   });
 
   const onSubmit = async (values: FormValues) => {
-    if (endReached) {
-      console.log("EndFormView: Submission prevented - end already reached");
-      return;
-    }
-    
-    setEndReached(true);
     setIsSubmitting(true);
     console.log("EndFormView: Form submitted with values:", values);
     
     try {
-      // Prepare the payload for the webhook - send contact form data
+      // Prepare the payload in the SAME FORMAT as all other steps
       const payload = {
-        stepId: `contact_form_${data.stepId}`,
+        stepId: data.stepId, // Keep the same stepId, don't change it
         previousAnswers: {
           ...data.previousAnswers,
-          contactForm: values // Add contact form data to previous answers
+          // Add contact form fields to previous answers - using individual keys like other steps
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          phone: values.phone
         },
         event: {
-          type: "contactFormSubmission",
-          formData: values,
+          type: "step_submit", // Same event type as other steps
+          currentStep: parseInt(data.stepId),
           timestamp: new Date().toISOString()
         }
       };
 
-      console.log("Submitting contact form data to webhook:", payload);
+      console.log("Submitting contact form data to webhook (same format as other steps):", payload);
 
-      try {
-        const response = await fetch(data.webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload)
-        });
-        
-        if (response.ok) {
-          const webhookResponse = await response.json();
-          console.log("Webhook response for contact form:", webhookResponse);
-          
-          // Process webhook response if needed
-          // For now, we proceed to success regardless of webhook response
-        } else {
-          console.warn("Webhook returned non-OK status:", response.status);
-        }
-      } catch (webhookError) {
-        console.warn("Webhook submission error (continuing anyway):", webhookError);
-      }
+      // Send webhook but IGNORE the response - we don't need it for the final step
+      fetch(data.webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload)
+      }).catch(error => {
+        // Log error but don't block the flow
+        console.warn("Webhook error (ignoring):", error);
+      });
       
-      // Show success toast
+      // Show success toast immediately
       toast({
         title: "Erfolg",
         description: "Deine Anfrage wurde erfolgreich übermittelt.",
       });
       
-      // CRITICAL: Call onSuccess to trigger thank you page
+      // CRITICAL: Call onSuccess IMMEDIATELY to trigger thank you page
+      console.log("EndFormView: Calling onSuccess callback to show thank you page");
       if (onSuccess) {
-        console.log("EndFormView: Calling onSuccess callback to show thank you page");
         onSuccess();
       } else {
         console.error("EndFormView: No onSuccess callback provided!");
@@ -141,9 +127,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       
     } catch (error) {
       console.error("Error in contact form submission:", error);
-      
-      // Reset endReached on error so user can retry
-      setEndReached(false);
       
       toast({
         variant: "destructive",
@@ -164,61 +147,59 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
         <p className="text-gray-600 mb-6">{data.content.text}</p>
       </div>
 
-      {!endReached && (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {formFields.map((field) => (
-              <FormField
-                key={field.id}
-                control={form.control}
-                name={field.id}
-                rules={{
-                  required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
-                  pattern: field.validation?.pattern
-                    ? {
-                        value: new RegExp(field.validation.pattern),
-                        message: `Ungültiges Format für ${field.label}`,
-                      }
-                    : undefined,
-                  minLength: field.validation?.minLength
-                    ? {
-                        value: field.validation.minLength,
-                        message: `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`,
-                      }
-                    : undefined,
-                  maxLength: field.validation?.maxLength
-                    ? {
-                        value: field.validation.maxLength,
-                        message: `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`,
-                      }
-                    : undefined,
-                }}
-                render={({ field: formField }) => (
-                  <FormItem>
-                    <FormLabel>{field.label}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type={field.inputType}
-                        placeholder={field.label}
-                        {...formField}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ))}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {formFields.map((field) => (
+            <FormField
+              key={field.id}
+              control={form.control}
+              name={field.id}
+              rules={{
+                required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
+                pattern: field.validation?.pattern
+                  ? {
+                      value: new RegExp(field.validation.pattern),
+                      message: `Ungültiges Format für ${field.label}`,
+                    }
+                  : undefined,
+                minLength: field.validation?.minLength
+                  ? {
+                      value: field.validation.minLength,
+                      message: `${field.label} muss mindestens ${field.validation.minLength} Zeichen lang sein`,
+                    }
+                  : undefined,
+                maxLength: field.validation?.maxLength
+                  ? {
+                      value: field.validation.maxLength,
+                      message: `${field.label} darf maximal ${field.validation.maxLength} Zeichen lang sein`,
+                    }
+                  : undefined,
+              }}
+              render={({ field: formField }) => (
+                <FormItem>
+                  <FormLabel>{field.label}</FormLabel>
+                  <FormControl>
+                    <Input
+                      type={field.inputType}
+                      placeholder={field.label}
+                      {...formField}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
 
-            <Button
-              type="submit"
-              className="w-full mt-6"
-              disabled={isSubmitting || endReached}
-            >
-              {isSubmitting ? "Wird gesendet..." : "Absenden"}
-            </Button>
-          </form>
-        </Form>
-      )}
+          <Button
+            type="submit"
+            className="w-full mt-6"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Wird gesendet..." : "Absenden"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 };
