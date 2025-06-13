@@ -75,13 +75,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     validFieldIds: formFields.map(f => f.id)
   });
 
-  const onSubmit = async (values: FormValues, event?: React.FormEvent) => {
-    // KRITISCH: Verhindere das Default-Verhalten des Forms
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    
+  const onSubmit = async (values: FormValues) => {
     // Verhindere doppelte Submissions
     if (isSubmitting) {
       console.log("EndFormView: Already submitting, ignoring duplicate submission");
@@ -151,17 +145,6 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     }
   };
 
-  // KRITISCH: Submit-Handler der das Default-Verhalten verhindert
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    console.log("EndFormView: Form submit event triggered");
-    
-    // React Hook Form handleSubmit verwenden
-    form.handleSubmit((values) => onSubmit(values, event))();
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -172,12 +155,12 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       </div>
 
       <Form {...form}>
-        <form onSubmit={handleFormSubmit} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {formFields.map((field) => (
             <FormField
               key={field.id}
               control={form.control}
-              name={field.id} // This is now guaranteed to be a valid string
+              name={field.id}
               rules={{
                 required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
                 pattern: field.validation?.pattern
