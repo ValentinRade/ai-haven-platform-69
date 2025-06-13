@@ -1,10 +1,10 @@
-
 import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { useChatStore } from "@/store/chatStore";
 
 interface EndFormViewProps {
   data: {
@@ -40,14 +40,23 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     firstName: "",
     lastName: "",
     email: "",
-    phone: ""
+    phone: "",
+    vorname: "",
+    nachname: "",
+    telefonnummer: ""
   });
   const [errors, setErrors] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    phone: ""
+    phone: "",
+    vorname: "",
+    nachname: "",
+    telefonnummer: ""
   });
+
+  // Get chatId from the chat store
+  const { chatId } = useChatStore();
 
   useEffect(() => {
     console.log("EndFormView checking messageType:", data.messageType);
@@ -69,7 +78,8 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     headline: data.content.headline,
     messageType: data.messageType,
     formFields: formFields.length,
-    hasSuccessCallback: !!onSuccess
+    hasSuccessCallback: !!onSuccess,
+    chatId: chatId
   });
 
   // Handle input changes
@@ -114,7 +124,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
 
   // Validate all fields
   const validateForm = () => {
-    const newErrors = { firstName: "", lastName: "", email: "", phone: "" };
+    const newErrors = { firstName: "", lastName: "", email: "", phone: "", vorname: "", nachname: "", telefonnummer: "" };
     let hasErrors = false;
     
     formFields.forEach(field => {
@@ -155,8 +165,12 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          phone: formData.phone
+          phone: formData.phone,
+          vorname: formData.vorname,
+          nachname: formData.nachname,
+          telefonnummer: formData.telefonnummer
         },
+        chatId: chatId, // Include chatId like other steps
         event: {
           type: "step_submit",
           currentStep: parseInt(data.stepId),
