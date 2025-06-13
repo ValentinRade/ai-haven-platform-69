@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import QuestionView from "./views/QuestionView";
@@ -44,6 +45,7 @@ export interface DynamicStepData {
   metadata?: any;
   webhookUrl?: string;
   previousAnswers?: Record<string, any>;
+  chatId?: string; // Add chatId as optional property
   
   // Additional properties used in view components
   title?: string;
@@ -73,7 +75,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
   // Add the webhookUrl to the stepData object so it can be used in EndFormView
   const enrichedStepData = {
     ...stepData,
-    webhookUrl
+    webhookUrl,
+    chatId: stepData.chatId || '' // Ensure chatId is always present
   };
 
   // Advanced logging for better debugging
@@ -91,6 +94,7 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
     hasFormSuccessCallback: !!onFormSuccess,
     title: enrichedStepData.title || enrichedStepData.content?.headline,
     description: enrichedStepData.description || enrichedStepData.content?.text,
+    chatId: enrichedStepData.chatId
   });
   
   // Improved message type detection logic with more robust fallbacks
@@ -208,7 +212,8 @@ const DynamicStep: React.FC<DynamicStepProps> = ({ form, stepData, onOptionSelec
       console.log("Rendering EndFormView with data and onSuccess callback:", {
         hasCallback: !!onFormSuccess,
         dataStepId: enrichedStepData.stepId,
-        hasPreviousAnswers: !!enrichedStepData.previousAnswers
+        hasPreviousAnswers: !!enrichedStepData.previousAnswers,
+        chatId: enrichedStepData.chatId
       });
       return <EndFormView data={enrichedStepData} form={form} onSuccess={onFormSuccess} />;
     
