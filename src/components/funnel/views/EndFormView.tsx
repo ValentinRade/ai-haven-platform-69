@@ -145,6 +145,29 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     }
   };
 
+  // KRITISCH: Wrapper Handler der IMMER preventDefault aufruft
+  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    // ERSTE PRIORITÄT: Default-Verhalten verhindern, egal was passiert
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log("EndFormView: Form submit prevented, now handling with React Hook Form");
+    
+    // ZWEITE PRIORITÄT: React Hook Form Submit-Handler ausführen
+    // Dies wird in einem try-catch gewrappt um sicherzustellen dass Fehler hier nicht nach oben propagieren
+    try {
+      form.handleSubmit(onSubmit)();
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Es gab ein Problem beim Senden des Formulars.",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -155,7 +178,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           {formFields.map((field) => (
             <FormField
               key={field.id}
