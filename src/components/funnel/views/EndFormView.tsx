@@ -59,19 +59,20 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     }
   }, [data.messageType]);
 
-  // Extract form fields from metadata or use defaults
-  const formFields = data.metadata?.formFields || [
+  // Extract form fields from metadata or use defaults - ENSURE ALL IDs ARE VALID STRINGS
+  const formFields = (data.metadata?.formFields || [
     { id: "firstName", label: "Vorname", inputType: "text", validation: { required: true } },
     { id: "lastName", label: "Nachname", inputType: "text", validation: { required: true } },
     { id: "email", label: "E-Mail", inputType: "email", validation: { required: true, pattern: "^[^@]+@[^@]+\\.[^@]+$" } },
     { id: "phone", label: "Telefonnummer", inputType: "tel", validation: { required: true } }
-  ];
+  ]).filter(field => field && field.id && typeof field.id === 'string' && field.id.trim() !== ''); // CRITICAL: Filter out invalid fields
 
   console.log("EndFormView rendering with data:", {
     headline: data.content.headline,
     messageType: data.messageType,
     formFields: formFields.length,
-    hasSuccessCallback: !!onSuccess
+    hasSuccessCallback: !!onSuccess,
+    validFieldIds: formFields.map(f => f.id)
   });
 
   const onSubmit = async (values: FormValues, event?: React.FormEvent) => {
@@ -176,7 +177,7 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
             <FormField
               key={field.id}
               control={form.control}
-              name={field.id}
+              name={field.id} // This is now guaranteed to be a valid string
               rules={{
                 required: field.validation?.required ? "Dieses Feld ist erforderlich" : false,
                 pattern: field.validation?.pattern
