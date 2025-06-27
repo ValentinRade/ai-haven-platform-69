@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ interface EndFormViewProps {
     };
     previousAnswers?: any;
     webhookUrl: string;
-    chatId: string; // Add chatId as a prop
+    chatId: string;
   };
   form: UseFormReturn<any>;
   onSuccess?: () => void;
@@ -68,8 +69,54 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     messageType: data.messageType,
     formFields: formFields.length,
     hasSuccessCallback: !!onSuccess,
-    chatId: data.chatId // Use the chatId from props
+    chatId: data.chatId
   });
+
+  // Check for autofilled values periodically
+  useEffect(() => {
+    const checkAutofillValues = () => {
+      formFields.forEach(field => {
+        const element = document.getElementById(field.id) as HTMLInputElement;
+        if (element && element.value && element.value !== formData[field.id as keyof typeof formData]) {
+          console.log(`Detected autofilled value for ${field.id}:`, element.value);
+          setFormData(prev => ({
+            ...prev,
+            [field.id]: element.value
+          }));
+        }
+      });
+    };
+
+    // Check immediately and then periodically
+    checkAutofillValues();
+    const interval = setInterval(checkAutofillValues, 1000);
+    
+    // Also check on focus/blur events
+    const handleFocusBlur = () => {
+      setTimeout(checkAutofillValues, 100);
+    };
+    
+    formFields.forEach(field => {
+      const element = document.getElementById(field.id);
+      if (element) {
+        element.addEventListener('focus', handleFocusBlur);
+        element.addEventListener('blur', handleFocusBlur);
+        element.addEventListener('change', handleFocusBlur);
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      formFields.forEach(field => {
+        const element = document.getElementById(field.id);
+        if (element) {
+          element.removeEventListener('focus', handleFocusBlur);
+          element.removeEventListener('blur', handleFocusBlur);
+          element.removeEventListener('change', handleFocusBlur);
+        }
+      });
+    };
+  }, [formFields]);
 
   // Handle input changes
   const handleInputChange = (fieldId: string, value: string) => {
@@ -111,13 +158,28 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
     return "";
   };
 
+  // Get current form values from DOM elements (to catch autofilled values)
+  const getCurrentFormValues = () => {
+    const currentValues = { ...formData };
+    
+    formFields.forEach(field => {
+      const element = document.getElementById(field.id) as HTMLInputElement;
+      if (element && element.value) {
+        currentValues[field.id as keyof typeof currentValues] = element.value;
+      }
+    });
+    
+    return currentValues;
+  };
+
   // Validate all fields
   const validateForm = () => {
+    const currentValues = getCurrentFormValues();
     const newErrors = { firstName: "", lastName: "", email: "", phone: "", vorname: "", nachname: "", telefonnummer: "" };
     let hasErrors = false;
     
     formFields.forEach(field => {
-      const error = validateField(field, formData[field.id as keyof typeof formData]);
+      const error = validateField(field, currentValues[field.id as keyof typeof currentValues]);
       if (error) {
         newErrors[field.id as keyof typeof newErrors] = error;
         hasErrors = true;
@@ -136,30 +198,51 @@ const EndFormView: React.FC<EndFormViewProps> = ({ data, form: parentForm, onSuc
       return;
     }
     
-    // Validate form
-    if (!validateForm()) {
+    // Get the most current form values (including autofilled ones)
+    const currentValues = getCurrentFormValues();
+    console.log("EndFormView: Current form values before submission:", currentValues);
+    
+    // Update state with current values
+    setFormData(currentValues);
+    
+    // Validate form with current values
+    const newErrors = { firstName: "", lastName: "", email: "", phone: "", vorname: "", nachname: "", telefonnummer: "" };
+    let hasErrors = false;
+    
+    formFields.forEach(field => {
+      const error = validateField(field, currentValues[field.id as keyof typeof currentValues]);
+      if (error) {
+        newErrors[field.id as keyof typeof newErrors] = error;
+        hasErrors = true;
+      }
+    });
+    
+    setErrors(newErrors);
+    
+    if (hasErrors) {
       console.log("EndFormView: Form validation failed");
       return;
     }
     
     setIsSubmitting(true);
-    console.log("EndFormView: Manual form submission with values:", formData);
+    console.log("EndFormView: Manual form submission with values:", currentValues);
     
     try {
-      // Payload in the same format as other steps
+      // Payload with ALL collected data
       const payload = {
         stepId: data.stepId,
         previousAnswers: {
           ...data.previousAnswers,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          phone: formData.phone,
-          vorname: formData.vorname,
-          nachname: formData.nachname,
-          telefonnummer: formData.telefonnummer
+          // Use current values to ensure autofilled data is included
+          firstName: currentValues.firstName,
+          lastName: currentValues.lastName,
+          email: currentValues.email,
+          phone: currentValues.phone,
+          vorname: currentValues.vorname,
+          nachname: currentValues.nachname,
+          telefonnummer: currentValues.telefonnummer
         },
-        chatId: data.chatId, // Use the same chatId that was used throughout the funnel
+        chatId: data.chatId,
         event: {
           type: "step_submit",
           currentStep: parseInt(data.stepId),
