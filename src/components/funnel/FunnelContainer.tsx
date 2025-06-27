@@ -119,7 +119,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     }
   }, [reachedEndState, onFunnelComplete]);
 
-  const sendDataToWebhook = async (data: FunnelData) => {
+  const sendDataToWebhook = async (data: FunnelData, skipToContact: boolean = false) => {
     // If we've already reached an end state, don't send more requests
     if (reachedEndState) {
       console.log("Funnel has already reached end state, skipping webhook request");
@@ -133,6 +133,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     try {
       console.log("Sending funnel data to webhook:", data);
       console.log("Using session chatId:", sessionChatId);
+      console.log("Skip to contact form:", skipToContact);
       
       // First, add current data to allResponses
       const updatedResponses = { ...allResponses, ...data };
@@ -145,8 +146,9 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
         stepId: currentStep.toString(),
         previousAnswers: updatedResponses, // Send ALL collected answers, not just current step
         chatId: sessionChatId, // Include the session-specific chatId
+        skipToContact: skipToContact, // Add flag to indicate skip to contact form
         event: {
-          type: "step_submit",
+          type: skipToContact ? "skip_to_contact" : "step_submit",
           currentStep,
           timestamp: new Date().toISOString()
         }
@@ -368,6 +370,34 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
     
     // REMOVED: The setTimeout that automatically advanced to the next step
     // Now the user must explicitly click the "Next" button to proceed
+  };
+
+  const handleSkipToContact = async () => {
+    if (reachedEndState) {
+      console.log("Funnel has already reached end state, ignoring skip to contact");
+      return;
+    }
+    
+    const currentData = getValues();
+    console.log("Skip to contact requested with current data:", currentData);
+    
+    try {
+      setIsProcessingResponse(true);
+      const result = await sendDataToWebhook(currentData, true);
+      
+      if (result && result.response) {
+        console.log("Received skip to contact response:", JSON.stringify(result.response, null, 2));
+        setCurrentDynamicStep(result.response);
+        
+        if (result.response.messageType === "end") {
+          console.log("Skip to contact successful - showing contact form");
+        }
+      }
+    } catch (error) {
+      console.error("Error in skip to contact:", error);
+    } finally {
+      setIsProcessingResponse(false);
+    }
   };
 
   const onNext = async () => {
@@ -649,7 +679,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
         )}
         
         {!success && !isProcessingResponse && currentDynamicStep?.messageType !== "end" && !reachedEndState && (
-          <div className="flex justify-between mt-8">
+          <div className="flex justify-between items-center mt-8">
             {currentStep > 1 ? (
               <Button 
                 type="button" 
@@ -660,25 +690,29 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
                 <ArrowLeft className="mr-2 h-4 w-4" /> Zurück
               </Button>
             ) : (
-              <div></div> // Empty div to maintain layout with flexbox
+              <div></div>
             )}
             
-            {currentStep < totalSteps ? (
+            {/* Show "Skip to Contact" button from step 3 onwards */}
+            {currentStep >= 3 && (
               <Button 
                 type="button" 
-                onClick={onNext}
-                disabled={isLoading || reachedEndState || (currentStep === 1 && !step1Selection) || (currentStep === 2 && !form.watch("step2Selection"))}
-              >
-                {isLoading ? 'Lädt...' : 'Weiter'}
-              </Button>
-            ) : (
-              <Button 
-                type="submit"
+                variant="secondary"
+                onClick={handleSkipToContact}
                 disabled={isLoading || reachedEndState}
+                className="mx-4"
               >
-                {isLoading ? 'Wird gesendet...' : 'Absenden'}
+                Anfrage jetzt Absenden
               </Button>
             )}
+            
+            <Button 
+              type="button" 
+              onClick={onNext}
+              disabled={isLoading || reachedEndState || (currentStep === 1 && !step1Selection) || (currentStep === 2 && !form.watch("step2Selection"))}
+            >
+              {isLoading ? 'Lädt...' : 'Weiter'}
+            </Button>
           </div>
         )}
       </form>
