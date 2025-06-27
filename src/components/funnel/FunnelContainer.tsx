@@ -702,7 +702,7 @@ const FunnelContainer: React.FC<FunnelContainerProps> = ({
                 disabled={isLoading || reachedEndState}
                 className="mx-4"
               >
-                Anfrage jetzt Absenden
+                Anfrage jetzt absenden
               </Button>
             )}
             
